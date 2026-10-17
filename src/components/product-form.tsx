@@ -37,7 +37,10 @@ export function ProductForm({ product, dept, model }: { product: ProductDetail; 
 
   const matches = (values: Record<string, string>) =>
     product.variants.find((v) => options.every((o) => v.selectedOptions.find((s) => s.name === o.name)?.value === values[o.name]));
-  const variant = options.every((o) => selection[o.name]) ? matches(selection) : undefined;
+  const complete = options.every((o) => selection[o.name]);
+  const variant = complete ? matches(selection) : undefined;
+  // Every option is chosen but the product has no variant for that combination.
+  const unavailable = complete && !variant;
   const price = variant?.price ?? product.priceRange.minVariantPrice;
   const size = sizeOption ? selection[sizeOption.name] : undefined;
   const soldOut = variant ? !variant.availableForSale : false;
@@ -65,10 +68,17 @@ export function ProductForm({ product, dept, model }: { product: ProductDetail; 
     }
     setAdding(true);
     setStatus(null);
-    const result = await add(variant.id);
-    setAdding(false);
+    const failed = "We couldn’t add this to your bag. Check your connection and try again.";
+    let result: Awaited<ReturnType<typeof add>>;
+    try {
+      result = await add(variant.id);
+    } catch {
+      result = { cart: null, error: failed };
+    } finally {
+      setAdding(false);
+    }
     if (result.error || !result.cart) {
-      setStatus({ kind: "error", text: result.error ?? "We couldn’t add this to your bag. Check your connection and try again." });
+      setStatus({ kind: "error", text: result.error ?? failed });
       return;
     }
     const label = variantLabel(variant.selectedOptions);
@@ -85,9 +95,11 @@ export function ProductForm({ product, dept, model }: { product: ProductDetail; 
       ? "Try again"
       : status?.kind === "added"
         ? "Added to bag"
-        : variant || !sizeOption
-          ? "Add to bag"
-          : "Select a size";
+        : unavailable
+          ? "Unavailable"
+          : variant || !sizeOption
+            ? "Add to bag"
+            : "Select a size";
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
@@ -176,12 +188,12 @@ export function ProductForm({ product, dept, model }: { product: ProductDetail; 
         </div>
       )}
 
-      {otherOptions.map((o) => (
+      {otherOptions.map((o, i) => (
         <div key={o.name} className="flex flex-col gap-2.5 md:gap-3">
-          <span id={`${id}-${o.name}`} className="text-[11px] font-semibold tracking-[0.14em] uppercase md:text-[12px]">
+          <span id={`${id}-opt-${i}`} className="text-[11px] font-semibold tracking-[0.14em] uppercase md:text-[12px]">
             {o.name}
           </span>
-          <div role="group" aria-labelledby={`${id}-${o.name}`} className="flex flex-wrap gap-2">
+          <div role="group" aria-labelledby={`${id}-opt-${i}`} className="flex flex-wrap gap-2">
             {o.optionValues.map((v) => {
               const on = selection[o.name] === v.name;
               return (
@@ -208,7 +220,7 @@ export function ProductForm({ product, dept, model }: { product: ProductDetail; 
             <button
               type="button"
               onClick={addToBag}
-              disabled={adding || !product.availableForSale}
+              disabled={adding || unavailable || !product.availableForSale}
               className="btn btn-ink h-14 flex-1 gap-2.5 px-4 disabled:opacity-60"
             >
               {product.availableForSale ? ctaLabel : "Sold out"}
@@ -254,7 +266,7 @@ function NotifyPanel({ label }: { label: string }) {
   const [state, formAction, pending] = useActionState(notifyAction, null);
   const id = useId();
   return (
-    <form action={formAction} noValidate className="flex flex-col gap-3 bg-stone p-4 md:p-5">
+    <form key={state?.values?.email} action={formAction} noValidate className="flex flex-col gap-3 bg-stone p-4 md:p-5">
       <p className="text-[14px] leading-[1.5] md:text-[15px]">
         <strong className="font-medium">{label} is sold out.</strong> <span className="text-ink-2">We’ll email you once, when it’s back.</span>
       </p>
@@ -267,6 +279,7 @@ function NotifyPanel({ label }: { label: string }) {
           name="email"
           type="email"
           autoComplete="email"
+          defaultValue={state?.values?.email}
           placeholder="Email address"
           className="h-[52px] min-w-0 flex-1 border border-line bg-white px-3.5 md:h-14 md:px-4"
         />

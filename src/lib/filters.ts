@@ -21,7 +21,13 @@ export function parseFilters(value: string | string[] | undefined): string[] {
   const list = Array.isArray(value) ? value : value ? [value] : [];
   return list.filter((v) => {
     try {
-      return typeof JSON.parse(v) === "object";
+      const parsed: unknown = JSON.parse(v);
+      if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) return false;
+      if ("price" in parsed) {
+        const price = (parsed as { price: unknown }).price;
+        return price !== null && typeof price === "object";
+      }
+      return true;
     } catch {
       return false;
     }

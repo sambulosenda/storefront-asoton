@@ -31,7 +31,8 @@ export async function loadMoreAction(args: {
   return { products: page.products, endCursor: page.pageInfo.endCursor, hasNextPage: page.pageInfo.hasNextPage };
 }
 
-export type FormState = { ok: boolean; message: string } | null;
+/** `values` echoes what was typed, so a form can refill itself after React resets it. */
+export type FormState = { ok: boolean; message: string; values?: Record<string, string> } | null;
 
 const NOT_SET_UP = "Sign-ups aren’t switched on yet. Please try again soon.";
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -41,18 +42,21 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // (customerCreate with acceptsMarketing), Klaviyo or a contact service here.
 
 export async function subscribeAction(_: FormState, data: FormData): Promise<FormState> {
-  if (!EMAIL.test(String(data.get("email") ?? ""))) return { ok: false, message: "Enter an email address, like name@example.com." };
-  return { ok: false, message: NOT_SET_UP };
+  const values = { email: String(data.get("email") ?? "") };
+  if (!EMAIL.test(values.email)) return { ok: false, message: "Enter an email address, like name@example.com.", values };
+  return { ok: false, message: NOT_SET_UP, values };
 }
 
 export async function notifyAction(_: FormState, data: FormData): Promise<FormState> {
-  if (!EMAIL.test(String(data.get("email") ?? ""))) return { ok: false, message: "Enter an email address, like name@example.com." };
-  return { ok: false, message: "Back-in-stock emails aren’t switched on yet. Please check back soon." };
+  const values = { email: String(data.get("email") ?? "") };
+  if (!EMAIL.test(values.email)) return { ok: false, message: "Enter an email address, like name@example.com.", values };
+  return { ok: false, message: "Back-in-stock emails aren’t switched on yet. Please check back soon.", values };
 }
 
 export async function contactAction(_: FormState, data: FormData): Promise<FormState> {
-  if (!String(data.get("name") ?? "").trim()) return { ok: false, message: "Enter your name." };
-  if (!EMAIL.test(String(data.get("email") ?? ""))) return { ok: false, message: "Enter an email address, like name@example.com." };
-  if (!String(data.get("message") ?? "").trim()) return { ok: false, message: "Write a message." };
-  return { ok: false, message: "The contact form isn’t connected yet. Please email us instead." };
+  const values = Object.fromEntries(["name", "email", "order", "topic", "message"].map((k) => [k, String(data.get(k) ?? "")]));
+  if (!values.name.trim()) return { ok: false, message: "Enter your name.", values };
+  if (!EMAIL.test(values.email)) return { ok: false, message: "Enter an email address, like name@example.com.", values };
+  if (!values.message.trim()) return { ok: false, message: "Write a message.", values };
+  return { ok: false, message: "The contact form isn’t connected yet. Please email us instead.", values };
 }

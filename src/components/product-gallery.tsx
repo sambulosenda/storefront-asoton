@@ -71,7 +71,9 @@ export function ProductGallery({
       <div className="hidden grid-cols-[repeat(auto-fit,minmax(min(320px,100%),1fr))] gap-3 md:grid">
         {slides.length === 0 && <div className="col-span-full aspect-[4/5]">{placeholder}</div>}
         {slides.map((image, i) => {
-          const full = i === 0 || i === 3 || (i === slides.length - 1 && i % 2 === 1 && i > 3);
+          // After the opening rows (0 full, 1–2 paired, 3 full) photos pair up, so a last photo alone in its row goes full width.
+          const orphan = i === slides.length - 1 && (i === 1 || (i > 3 && i % 2 === 0));
+          const full = i === 0 || i === 3 || orphan;
           return (
             <div
               key={image.url}

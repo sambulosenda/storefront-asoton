@@ -21,7 +21,7 @@ export function Newsletter() {
             New pieces, restocks and the stories behind the cloth. Once or twice a month, never more.
           </p>
         </div>
-        <form action={formAction} noValidate className="flex max-w-[560px] flex-col gap-3 md:flex-[1_1_420px]">
+        <form key={state?.values?.email} action={formAction} noValidate className="flex max-w-[560px] flex-col gap-3 md:flex-[1_1_420px]">
           <label htmlFor={`${id}-email`} className="text-[11px] tracking-[0.14em] text-ink-2 uppercase md:text-[12px]">
             Email address
           </label>
@@ -31,6 +31,7 @@ export function Newsletter() {
               name="email"
               type="email"
               autoComplete="email"
+              defaultValue={state?.values?.email}
               placeholder="you@example.com"
               aria-describedby={state ? `${id}-status` : undefined}
               className="h-[52px] min-w-0 flex-1 bg-transparent placeholder:text-muted focus:outline-none"

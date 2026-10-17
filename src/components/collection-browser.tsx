@@ -22,6 +22,7 @@ export function CollectionBrowser({
   filters,
   selected,
   sort,
+  sorts,
   categories,
   categoriesLabel,
   editorial,
@@ -33,6 +34,8 @@ export function CollectionBrowser({
   filters: Filter[];
   selected: string[];
   sort: SortKey;
+  /** Sort options to offer; defaults to all of them. */
+  sorts?: SortKey[];
   categories: Category[];
   categoriesLabel: string;
   editorial?: ReactNode;
@@ -123,7 +126,7 @@ export function CollectionBrowser({
               Filter{selected.length > 0 && ` (${selected.length})`}
             </button>
           )}
-          <SortMenu sort={sort} onChange={(s) => navigate({ sort: s })} className="h-[52px] justify-center" />
+          <SortMenu sort={sort} sorts={sorts} onChange={(s) => navigate({ sort: s })} className="h-[52px] justify-center" />
         </div>
         {/* Tablet and desktop */}
         <div className="page-x hidden md:block">
@@ -150,7 +153,7 @@ export function CollectionBrowser({
                   Filter{selected.length > 0 && ` (${selected.length})`}
                 </button>
               )}
-              <SortMenu sort={sort} onChange={(s) => navigate({ sort: s })} className="h-11 px-1" />
+              <SortMenu sort={sort} sorts={sorts} onChange={(s) => navigate({ sort: s })} className="h-11 px-1" />
               <div role="group" aria-label="Products per row" className="flex gap-1">
                 <button
                   type="button"
@@ -268,9 +271,20 @@ export function CollectionBrowser({
   );
 }
 
-function SortMenu({ sort, onChange, className = "" }: { sort: SortKey; onChange: (sort: SortKey) => void; className?: string }) {
+function SortMenu({
+  sort,
+  sorts,
+  onChange,
+  className = "",
+}: {
+  sort: SortKey;
+  sorts?: SortKey[];
+  onChange: (sort: SortKey) => void;
+  className?: string;
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const options = sorts ? SORTS.filter((s) => sorts.includes(s.key)) : SORTS;
   const current = SORTS.find((s) => s.key === sort) ?? SORTS[0];
 
   useEffect(() => {
@@ -301,7 +315,7 @@ function SortMenu({ sort, onChange, className = "" }: { sort: SortKey; onChange:
       </button>
       {open && (
         <ul className="absolute top-full right-0 z-30 min-w-[220px] border border-line bg-paper py-2 shadow-[0_12px_32px_-16px_rgba(20,19,16,0.35)]">
-          {SORTS.map((s) => (
+          {options.map((s) => (
             <li key={s.key}>
               <button
                 type="button"

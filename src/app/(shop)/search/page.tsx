@@ -5,7 +5,11 @@ import { CollectionBrowser } from "@/components/collection-browser";
 import { CollectionSkeleton } from "@/components/skeletons";
 import { parseSort } from "@/lib/filters";
 import { searchProducts } from "@/lib/shopify";
+import type { SortKey } from "@/lib/shopify/types";
 import { popularSearches } from "@/lib/site";
+
+// Shopify search only sorts by relevance or price.
+const SEARCH_SORTS: SortKey[] = ["featured", "price-asc", "price-desc"];
 
 export const metadata: Metadata = { title: "Search" };
 
@@ -36,7 +40,8 @@ function PopularLinks() {
 async function SearchResults({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;
   const q = (Array.isArray(params.q) ? params.q[0] : params.q ?? "").trim().slice(0, 100);
-  const sort = parseSort(params.sort);
+  const parsed = parseSort(params.sort);
+  const sort = SEARCH_SORTS.includes(parsed) ? parsed : "featured";
   const results = q ? await searchProducts({ query: q, sort }) : null;
 
   return (
@@ -101,6 +106,7 @@ async function SearchResults({ searchParams }: { searchParams: Promise<Record<st
           filters={[]}
           selected={[]}
           sort={sort}
+          sorts={SEARCH_SORTS}
           categories={[]}
           categoriesLabel="Search"
           query={q}

@@ -50,7 +50,10 @@ export function Sheet({
     <dialog
       ref={ref}
       {...aria}
-      onClose={onClose}
+      // dialog.close() from the effect also fires "close"; forward only user dismissals (Escape).
+      onClose={() => {
+        if (open) onClose();
+      }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
