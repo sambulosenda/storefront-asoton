@@ -10,7 +10,7 @@ import { ProductForm } from "@/components/product-form";
 import { ProductGallery } from "@/components/product-gallery";
 import { ProductSkeleton } from "@/components/skeletons";
 import { clothLinks, deliveryThreshold } from "@/lib/catalog";
-import { clothByName, clothFor } from "@/lib/cloths";
+import { clothByName, clothOf } from "@/lib/cloths";
 import { getCountry } from "@/lib/market";
 import { getProduct, getRecommendations } from "@/lib/shopify";
 import { site, siteUrl } from "@/lib/site";
@@ -51,8 +51,7 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
     deliveryThreshold(),
   ]);
 
-  const text = [product.title, product.productType, ...product.tags].join(" ");
-  const clothKey = (clothByName(product.clothFields?.name) ?? clothFor(text))?.key;
+  const clothKey = (clothByName(product.clothFields?.name) ?? clothOf(product))?.key;
   const cloth = cloths.find((c) => c.key === clothKey);
   const dept = product.collections.some((c) => c.handle === "men") ? "men" : "women";
   const department = product.collections.find((c) => c.handle === "women" || c.handle === "men");

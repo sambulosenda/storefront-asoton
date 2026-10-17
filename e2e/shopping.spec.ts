@@ -33,6 +33,20 @@ test("the department tiles show the collection's photo when it has one", async (
   await expect(tiles.getByRole("link", { name: /^Men/ }).locator("img")).toHaveCount(0);
 });
 
+test("the cloth band only offers cloths the store has pieces in, shown with one of them", async ({ page, isMobile }) => {
+  await page.goto("/");
+  const band = page.getByRole("region", { name: "Shop by cloth" });
+  await expect(band.getByText("Bògòlanfini")).toHaveCount(0);
+  if (isMobile) {
+    await expect(band.getByRole("link", { name: "Adire Wrap Dress" })).toHaveAttribute("href", "/products/adire-wrap-dress");
+    await expect(band.getByRole("link", { name: /^Wax print/ })).toHaveAttribute("href", "/search?q=ankara");
+  } else {
+    await band.getByRole("button", { name: /Kente/ }).click();
+    await expect(band.getByRole("link", { name: "Kente Panel Midi Skirt" })).toHaveAttribute("href", "/products/kente-panel-midi-skirt");
+    await expect(band.getByRole("link", { name: "Shop kente" })).toHaveAttribute("href", "/search?q=kente");
+  }
+});
+
 test("a collection filters and sorts through the URL", async ({ page, isMobile }) => {
   await page.goto("/collections/women");
   await expect(page.getByRole("heading", { level: 1, name: "Women" })).toBeVisible();

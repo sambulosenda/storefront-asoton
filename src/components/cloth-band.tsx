@@ -2,16 +2,21 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Garment } from "@/components/cloth";
+import { ProductVisual } from "@/components/cloth";
 import { ArrowRight } from "@/components/icons";
-import type { ClothLink } from "@/lib/catalog";
+import type { StockedCloth } from "@/lib/catalog";
 
 const LINE = "border-[rgba(245,244,241,0.22)]";
 
-/** "Start with the cloth": the five cloths on the indigo band. Hover or focus a cloth to preview it. */
-export function ClothBand({ cloths }: { cloths: ClothLink[] }) {
+/**
+ * "Start with the cloth": the cloths the store has pieces in, on the indigo band, each previewed
+ * with one of those pieces. Hover or focus a cloth to preview it.
+ */
+export function ClothBand({ cloths }: { cloths: StockedCloth[] }) {
   const [active, setActive] = useState(0);
-  const current = cloths[active];
+  if (cloths.length === 0) return null;
+  const [first] = cloths;
+  const current = cloths[active] ?? first;
 
   const heading = (
     <>
@@ -31,13 +36,15 @@ export function ClothBand({ cloths }: { cloths: ClothLink[] }) {
           </h2>
           <p className="leading-[1.6] text-[#C5C9D8]">{intro}</p>
         </div>
-        <div className="mt-8 flex h-[448px] items-center justify-center bg-stone">
-          <div className="aspect-[3/4] w-[66%]">
-            <Garment garment={cloths[0].garment} cloth={cloths[0].key} />
-          </div>
-        </div>
+        <Link
+          href={`/products/${first.product.handle}`}
+          aria-label={first.product.title}
+          className="relative mt-8 flex h-[448px] items-center justify-center overflow-hidden bg-stone"
+        >
+          <ProductVisual product={first.product} image={first.product.featuredImage} sizes="100vw" drawingWidth="66%" />
+        </Link>
         <p className="mt-3 mb-6 text-[13px] leading-[1.6] text-[#C5C9D8]">
-          {cloths[0].shown ?? `Shown: the ${cloths[0].piece}. ${cloths[0].caption}`}
+          Shown: {first.product.title}. {first.caption}
         </p>
         <ul className={`border-t ${LINE}`}>
           {cloths.map((cloth) => (
@@ -91,12 +98,22 @@ export function ClothBand({ cloths }: { cloths: ClothLink[] }) {
           </ul>
         </div>
         <div className="flex min-w-0 flex-[5_1_400px] flex-col gap-5">
-          <div className="relative flex aspect-[4/5] items-center justify-center bg-stone">
-            <div className="aspect-[3/4] w-[66%]">
-              <Garment garment={current.garment} cloth={current.key} />
-            </div>
-            <span className="absolute bottom-4 left-5 text-[12px] tracking-[0.06em] text-ink-2">{current.piece}</span>
-          </div>
+          <Link
+            href={`/products/${current.product.handle}`}
+            className="relative flex aspect-[4/5] items-center justify-center overflow-hidden bg-stone text-ink-2 no-underline hover:text-ink"
+          >
+            <ProductVisual
+              key={current.product.handle}
+              product={current.product}
+              image={current.product.featuredImage}
+              sizes="(min-width: 768px) 40vw, 100vw"
+              drawingWidth="66%"
+            />
+            {/* The chip keeps the name readable on a white product photo. */}
+            <span className="absolute bottom-4 left-5 bg-stone/85 px-1.5 py-0.5 text-[12px] tracking-[0.06em]">
+              {current.product.title}
+            </span>
+          </Link>
           <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-4">
             <p aria-live="polite" className="max-w-[400px] flex-[1_1_260px] text-[14px] leading-[1.6] text-[#C5C9D8]">
               {current.caption}

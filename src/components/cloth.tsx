@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { GARMENTS, clothFor, garmentFor, type ClothKey, type GarmentKey } from "@/lib/cloths";
+import { GARMENTS, clothOf, garmentFor, type ClothKey, type GarmentKey } from "@/lib/cloths";
 import type { Image as ShopifyImage } from "@/lib/shopify/types";
 
 /** SVG pattern fills for each cloth. Rendered once in the root layout; referenced as url(#pat-…). */
@@ -138,7 +138,7 @@ type Describable = { title: string; productType?: string; tags?: string[] };
 /** The garment drawing that stands in for a product photo. */
 export function drawingFor(product: Describable) {
   const text = [product.title, product.productType, ...(product.tags ?? [])].join(" ");
-  return { garment: garmentFor(text), cloth: clothFor(text)?.key ?? "adire" };
+  return { garment: garmentFor(text), cloth: clothOf(product)?.key ?? "adire" };
 }
 
 /**
