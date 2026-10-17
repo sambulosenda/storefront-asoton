@@ -3,9 +3,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { homeFeature, stockedCloths } from "@/lib/catalog";
 import { getCampaign } from "@/lib/shopify";
-import { story } from "@/lib/site";
+import { site, story } from "@/lib/site";
 
-export const metadata: Metadata = { title: "Our story" };
+export const metadata: Metadata = {
+  title: "Our story",
+  description: `Who makes ${site.brand}'s clothing, and the West African cloths it is cut from.`,
+  alternates: { canonical: "/story" },
+};
 
 const BELIEFS = [
   {

@@ -8,7 +8,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...pages,
     ...collections.map((c) => ({ url: `${siteUrl}/collections/${c.handle}`, lastModified: c.updatedAt })),
-    ...products.map((p) => ({ url: `${siteUrl}/products/${p.handle}`, lastModified: p.updatedAt })),
+    ...products.map((p) => ({
+      url: `${siteUrl}/products/${p.handle}`,
+      lastModified: p.updatedAt,
+      images: p.images.nodes.map((i) => i.url),
+    })),
     ...policyHandles.map((h) => ({ url: `${siteUrl}/policies/${h}` })),
   ];
 }

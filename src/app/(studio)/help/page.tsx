@@ -3,7 +3,11 @@ import { ContactForm } from "@/components/contact-form";
 import { HelpNav } from "@/components/help-nav";
 import { deliveryRates, site } from "@/lib/site";
 
-export const metadata: Metadata = { title: "Help" };
+export const metadata: Metadata = {
+  title: "Help",
+  description: `Sizes, delivery, returns, care and how to reach ${site.brand}.`,
+  alternates: { canonical: "/help" },
+};
 
 const CARE = [
   {

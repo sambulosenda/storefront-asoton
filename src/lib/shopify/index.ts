@@ -305,6 +305,8 @@ const productDetailQuery = /* GraphQL */ `
         nodes {
           id
           title
+          sku
+          barcode
           availableForSale
           price {
             amount
@@ -829,24 +831,31 @@ export async function getPolicy(handle: PolicyHandle): Promise<{ title: string; 
 
 /** Every product and collection handle, for the sitemap. */
 export async function getSitemapEntries(): Promise<{
-  products: { handle: string; updatedAt: string }[];
+  products: { handle: string; updatedAt: string; images: { nodes: { url: string }[] } }[];
   collections: { handle: string; updatedAt: string }[];
 }> {
   "use cache";
   cacheTag("products");
 
-  type Page = { nodes: { handle: string; updatedAt: string }[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } };
+  type Page<T = { handle: string; updatedAt: string }> = { nodes: T[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } };
+  type ProductNode = { handle: string; updatedAt: string; images: { nodes: { url: string }[] } };
   try {
-    const products: Page["nodes"] = [];
+    const products: ProductNode[] = [];
     let after: string | null = null;
-    // Ten pages of 250 is far more than this catalog needs; the cap keeps a bad cursor from looping.
-    for (let i = 0; i < 10; i++) {
-      const data: { products: Page } = await shopifyFetch<{ products: Page }>(
+    // Pages of 50 keep each query under the 1,000 cost limit of tokenless access. Fifty pages
+    // is far more than this catalog needs; the cap keeps a bad cursor from looping.
+    for (let i = 0; i < 50; i++) {
+      const data: { products: Page<ProductNode> } = await shopifyFetch<{ products: Page<ProductNode> }>(
         `query SitemapProducts($after: String) {
-          products(first: 250, after: $after) {
+          products(first: 50, after: $after) {
             nodes {
               handle
               updatedAt
+              images(first: 10) {
+                nodes {
+                  url
+                }
+              }
             }
             pageInfo {
               hasNextPage

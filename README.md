@@ -56,7 +56,7 @@ The newsletter, back-in-stock and contact forms validate input but don't send an
 
 ## Search engines and sharing
 
-`/sitemap.xml` lists every product, collection and policy, `/robots.txt` keeps filtered and sorted listings out of the index, and product pages carry Google product data. Set `SITE_URL` (for example `https://asotone.com`) so links in these use the real domain.
+`/sitemap.xml` lists every product (with its photos), collection and policy, and `/robots.txt` keeps filtered and sorted listings out of the index. Search results and collections that don't exist in Shopify yet carry a noindex tag. Product pages carry Google product and breadcrumb data, collections carry breadcrumb data, and the home page names the shop for Google's brand panel. Set `SITE_URL` (for example `https://asotone.com`) before building, since the sitemap and robots file are built once and use it for every link. Shopify fields that feed search results: each product's SEO title and description (else the first 160 characters of its description), image alt text, SKU and barcode (sent as the GTIN).
 
 ## Tests
 

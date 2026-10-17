@@ -12,7 +12,8 @@ import { popularSearches } from "@/lib/site";
 // Shopify search only sorts by relevance or price.
 const SEARCH_SORTS: SortKey[] = ["featured", "price-asc", "price-desc"];
 
-export const metadata: Metadata = { title: "Search" };
+// Results pages stay out of search engines, but their links to products are still followed.
+export const metadata: Metadata = { title: "Search", robots: { index: false, follow: true } };
 
 export default function SearchPage({ searchParams }: PageProps<"/search">) {
   return (

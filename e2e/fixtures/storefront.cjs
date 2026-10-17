@@ -117,8 +117,8 @@ function respond(query, vars) {
       const image = vars.handle === "women" ? { url: "https://cdn.shopify.com/s/files/fixture/women.jpg", altText: null, width: 1200, height: 1500 } : null;
       return { collection: { id: "c", handle: vars.handle, title: titles[vars.handle], description: "", image, products: { filters: filtersFor(list), pageInfo: { hasNextPage: start + vars.first < list.length, endCursor: String(start + vars.first) }, nodes: page.map(card) } } };
     }
-    case "SitemapProducts": return { products: { nodes: products.map((p) => ({ handle: p.handle, updatedAt: "2026-10-01T00:00:00Z" })), pageInfo: { hasNextPage: false, endCursor: null } } };
-    case "SitemapCollections": return { collections: { nodes: ["new-in", "women", "men"].map((handle) => ({ handle, updatedAt: "2026-10-01T00:00:00Z" })), pageInfo: { hasNextPage: false, endCursor: null } } };
+    case "SitemapProducts": return { products: { nodes: products.map((p) => ({ handle: p.handle, updatedAt: "2026-10-01T00:00:00Z", images: { nodes: [] } })), pageInfo: { hasNextPage: false, endCursor: null } } };
+    case "SitemapCollections": return { collections: { nodes: ["new-in", "women", "men"].map((handle) => ({ handle, updatedAt: "2026-10-01T00:00:00Z", images: { nodes: [] } })), pageInfo: { hasNextPage: false, endCursor: null } } };
     case "Products": return { products: { nodes: products.slice(0, vars.first).map(card), pageInfo: { hasNextPage: false, endCursor: null } } };
     case "Product": {
       const p = byHandle(vars.handle);
