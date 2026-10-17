@@ -35,7 +35,9 @@ The pages fall back gracefully when these are missing, but they look like the de
 
 - **Collections** with the handles `new-in`, `women`, `men` and `accessories`.
 - **Menus** with the handles `women` and `men` (the category tabs and the mobile menu).
-- **Metaobjects**: `campaign` (the home hero) and `cloth` (name, technique, origin, caption, collection) entries.
+- **Metaobjects**:
+  - `campaign`, with an entry whose handle is `home`, for the home hero and the phone menu's promo tile. Fields: `label` (single line text, the small line above the headline), `headline` (single line text), `body` (multi-line text) and `image` (file). Without it, the hero leads with the newest product: its photo, its name and a link to it.
+  - `cloth` (name, technique, origin, caption, collection) entries.
 - **Product metafields**: `custom.care`, `custom.fit`, `custom.model`, `custom.cloth`, plus `reviews.rating` and `reviews.rating_count` from a reviews app.
 - **Shop metafield** `custom.free_delivery_threshold` (the free delivery amount in the announcement bar).
 - **Search & Discovery** filters for cloth, colour, size, price and availability.

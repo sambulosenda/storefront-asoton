@@ -1,19 +1,28 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { Garment } from "@/components/cloth";
 import { MarketButton } from "@/components/market-selector";
 import { BagIcon, CloseIcon, MinusIcon, PlusIcon } from "@/components/icons";
 import { Sheet } from "@/components/sheet";
 import { useStore } from "@/components/store-provider";
-import type { MenuLink } from "@/lib/shopify/types";
+import type { Image as ShopifyImage, MenuLink } from "@/lib/shopify/types";
 import { site } from "@/lib/site";
 
 export type MenuGroup = { label: string; links: MenuLink[] };
+export type MenuPromo = { label: string; title: string; href: string; image: ShopifyImage | null };
 
 /** The full-screen menu on phones, and a left drawer on tablets where the nav doesn't fit. */
-export function MobileMenu({ groups, accountUrl }: { groups: MenuGroup[]; accountUrl: string | null }) {
+export function MobileMenu({
+  groups,
+  accountUrl,
+  promo,
+}: {
+  groups: MenuGroup[];
+  accountUrl: string | null;
+  promo: MenuPromo | null;
+}) {
   const { overlay, close, open, cart } = useStore();
   const [expanded, setExpanded] = useState<string | null>(null);
   const count = cart?.totalQuantity ?? 0;
@@ -104,18 +113,24 @@ export function MobileMenu({ groups, accountUrl }: { groups: MenuGroup[]; accoun
             )}
           </ul>
 
-          <Link href="/lookbook" className="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-4 bg-stone p-3 no-underline">
-            <span className="flex h-[120px] items-center justify-center bg-paper">
-              <span className="block w-[78px]">
-                <Garment garment="dress" cloth="adire" strokeWidth={1.5} />
+          {promo && (
+            <Link
+              href={promo.href}
+              onClick={close}
+              className={`grid items-center gap-4 bg-stone p-3 no-underline ${promo.image ? "grid-cols-[96px_minmax(0,1fr)]" : ""}`}
+            >
+              {promo.image && (
+                <span className="relative h-[120px] overflow-hidden bg-paper">
+                  <Image src={promo.image.url} alt="" fill sizes="96px" className="object-cover" />
+                </span>
+              )}
+              <span className="flex flex-col gap-1">
+                <span className="text-[11px] tracking-[0.14em] text-ink-2 uppercase">{promo.label}</span>
+                <span className="font-display text-[22px] leading-[1.1]">{promo.title}</span>
+                <span className="text-[13px] underline underline-offset-4">Shop now</span>
               </span>
-            </span>
-            <span className="flex flex-col gap-1">
-              <span className="text-[11px] tracking-[0.14em] text-ink-2 uppercase">New season</span>
-              <span className="font-display text-[22px] leading-[1.1]">The Indigo Edit</span>
-              <span className="text-[13px] underline underline-offset-4">Shop now</span>
-            </span>
-          </Link>
+            </Link>
+          )}
         </nav>
 
         <div className="flex-none border-t border-line px-4 pt-2 pb-6">

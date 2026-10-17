@@ -3,9 +3,12 @@ import { acceptCookies } from "./helpers";
 
 test.beforeEach(async ({ page }) => acceptCookies(page));
 
-test("home page shows the campaign and new pieces", async ({ page }) => {
+test("without a campaign, the home hero leads with the newest piece", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Indigo");
+  // The fixture store has no "home" campaign metaobject, so none of the design's sample copy shows.
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Adire Wrap Dress");
+  await expect(page.getByText("The Indigo Edit")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Shop now" }).first()).toHaveAttribute("href", "/products/adire-wrap-dress");
   await expect(page.getByRole("heading", { name: "New in" })).toBeVisible();
   await expect(page.getByRole("link", { name: /Adire Wrap Dress/ }).first()).toBeVisible();
 });
