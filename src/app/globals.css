@@ -1,26 +1,146 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-paper: #f5f4f1;
+  --color-stone: #e8e5df;
+  --color-stone-2: #dcd8d0;
+  --color-line: #d8d4cc;
+  --color-line-soft: #e2dfd8;
+  --color-line-cloth: #cfcac1;
+  --color-skeleton: #e1ddd6;
+  --color-ink: #141310;
+  --color-ink-2: #57534c;
+  --color-muted: #8a857c;
+  --color-indigo: #1e2a55;
+  --color-error: #8c2f23;
+  --color-night-text: #b5b0a6;
+  --color-night-line: #3a3732;
+  --color-night-soft: #d2cdc4;
+  --color-garment-base: #cfc8bd;
+
+  --font-sans: var(--font-hanken), "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: var(--font-bodoni), "Bodoni 72", Didot, Georgia, serif;
+
+  --breakpoint-nav: 53.75rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@utility page-x {
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 4vw, 48px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Small caps-style labels: "Shop the edit", section labels, table heads. */
+@utility label-caps {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+@utility eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+
+@utility btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  padding-inline: 32px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@utility btn-ink {
+  background: var(--color-ink);
+  color: var(--color-paper);
+  border: 0;
+  &:hover {
+    color: var(--color-paper);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@utility btn-outline {
+  background: transparent;
+  color: var(--color-ink);
+  border: 1px solid var(--color-ink);
+}
+
+@utility arrow-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer base {
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Links are underlined unless a component says otherwise, as in the design. */
+  a {
+    color: var(--color-ink);
+    text-decoration-line: underline;
+  }
+
+  a:hover {
+    color: var(--color-indigo);
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-indigo);
+    outline-offset: 3px;
+  }
+
+  em {
+    font-style: italic;
+  }
+
+  dialog {
+    max-width: none;
+    max-height: none;
+    padding: 0;
+    border: 0;
+    background: var(--color-paper);
+    color: var(--color-ink);
+  }
+
+  dialog::backdrop {
+    background: rgb(20 19 16 / 0.5);
+  }
+
+  input[type="search"]::-webkit-search-cancel-button {
+    display: none;
+  }
 }
