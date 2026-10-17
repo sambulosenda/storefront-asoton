@@ -8,11 +8,12 @@ import {
   type Product,
   type SortKey,
 } from "@/lib/shopify";
+import { getCountry } from "@/lib/market";
 
 export async function searchAction(query: string): Promise<PredictiveResults> {
   const q = query.trim().slice(0, 100);
   if (!q) return { queries: [], collections: [], products: [] };
-  return predictiveSearch(q);
+  return predictiveSearch(q, await getCountry());
 }
 
 export type MoreResult = { products: Product[]; endCursor: string | null; hasNextPage: boolean };
@@ -25,9 +26,10 @@ export async function loadMoreAction(args: {
   filters: string[];
   after: string;
 }): Promise<MoreResult> {
+  const country = await getCountry();
   const page = args.query
-    ? await searchProducts({ query: args.query, sort: args.sort, after: args.after })
-    : await getCollectionOrAll({ handle: args.handle ?? "all", sort: args.sort, filters: args.filters, after: args.after });
+    ? await searchProducts({ query: args.query, sort: args.sort, after: args.after, country })
+    : await getCollectionOrAll({ handle: args.handle ?? "all", sort: args.sort, filters: args.filters, after: args.after, country });
   return { products: page.products, endCursor: page.pageInfo.endCursor, hasNextPage: page.pageInfo.hasNextPage };
 }
 

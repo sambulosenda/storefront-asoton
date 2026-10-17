@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { MarketButton } from "@/components/header";
+import { MarketButton, MarketLabel } from "@/components/market-selector";
 import { MinusIcon, PlusIcon } from "@/components/icons";
 import { useStore } from "@/components/store-provider";
 import { footerNav, site } from "@/lib/site";
@@ -123,7 +123,7 @@ export function Footer() {
             © {year} {site.brand}
           </span>
           <LegalLinks className="gap-x-6 gap-y-2" />
-          <span>{site.market}</span>
+          <MarketButton className="text-night-text" />
         </div>
       </div>
     </footer>
@@ -148,7 +148,7 @@ export function CompactFooter() {
           </button>
         </div>
         <span>
-          © {year} {site.brand} · {site.market}
+          © {year} {site.brand} · <MarketLabel />
         </span>
       </div>
     </footer>
@@ -163,7 +163,9 @@ export function MinimalFooter() {
         <span>
           © {year} {site.brand}
         </span>
-        <span>{site.market}</span>
+        <span>
+          <MarketLabel />
+        </span>
       </div>
     </footer>
   );

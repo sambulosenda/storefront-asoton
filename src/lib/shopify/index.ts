@@ -25,10 +25,23 @@ const token = process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN;
 /** Shopify-hosted customer account sign-in, or null on the demo store. */
 export const accountUrl = domain ? `https://${domain}/account` : null;
 
+/**
+ * Prices and availability for a country (Shopify Markets): adds `$country` and the
+ * `@inContext` directive to the first query in the document.
+ */
+export function withCountry(query: string) {
+  return query.replace(
+    /\bquery\s+(\w+)\s*(?:\(([^)]*)\))?\s*\{/,
+    (_, name: string, vars?: string) =>
+      `query ${name}(${vars?.trim() ? `${vars.trim()}, ` : ""}$country: CountryCode) @inContext(country: $country) {`,
+  );
+}
+
 export async function shopifyFetch<T>(
   query: string,
   variables?: Record<string, unknown>,
 ): Promise<T> {
+  if (variables?.country) query = withCountry(query);
   const res = await fetch(endpoint, {
     signal: AbortSignal.timeout(10_000),
     method: "POST",
@@ -114,6 +127,8 @@ type CollectionArgs = {
   filters?: string[];
   after?: string | null;
   first?: number;
+  /** ISO country code for market prices; the store's default market when omitted. */
+  country?: string;
 };
 
 /**
@@ -126,6 +141,7 @@ export async function getCollection({
   filters = [],
   after = null,
   first = 12,
+  country,
 }: CollectionArgs): Promise<CollectionPage | null> {
   "use cache";
   cacheTag("products", `collection-${handle}`);
@@ -188,6 +204,7 @@ export async function getCollection({
         sortKey: key,
         reverse,
         filters: filters.flatMap(parseFilter),
+        country,
       },
     );
     cacheLife("hours");
@@ -228,7 +245,8 @@ export async function getProducts({
   first = 12,
   sort = "featured",
   after = null,
-}: { first?: number; sort?: SortKey; after?: string | null } = {}): Promise<{
+  country,
+}: { first?: number; sort?: SortKey; after?: string | null; country?: string } = {}): Promise<{
   products: Product[];
   pageInfo: { hasNextPage: boolean; endCursor: string | null };
 }> {
@@ -251,7 +269,7 @@ export async function getProducts({
           }
         }
       }`,
-      { first, after, sortKey: ALL_PRODUCT_SORTS[sort], reverse: SORTS[sort].reverse },
+      { first, after, sortKey: ALL_PRODUCT_SORTS[sort], reverse: SORTS[sort].reverse, country },
     );
     cacheLife("hours");
     return { products: data.products.nodes, pageInfo: data.products.pageInfo };
@@ -266,7 +284,7 @@ export async function getProducts({
 export async function getCollectionOrAll(args: CollectionArgs): Promise<CollectionPage> {
   const page = await getCollection(args);
   if (page) return page;
-  const all = await getProducts({ first: args.first, sort: args.sort, after: args.after });
+  const all = await getProducts({ first: args.first, sort: args.sort, after: args.after, country: args.country });
   return { collection: null, products: all.products, filters: [], pageInfo: all.pageInfo };
 }
 
@@ -337,14 +355,14 @@ const productDetailQuery = /* GraphQL */ `
   }
 `;
 
-export async function getProduct(handle: string): Promise<ProductDetail | null> {
+export async function getProduct(handle: string, country?: string): Promise<ProductDetail | null> {
   "use cache";
   cacheTag("products", `product-${handle}`);
 
   try {
     const data = await shopifyFetch<{ product: RawProductDetail | null }>(
       `${fragments}${productDetailQuery}`,
-      { handle },
+      { handle, country },
     );
     cacheLife("hours");
     const p = data.product;
@@ -396,7 +414,7 @@ function parseRating(value: string | undefined) {
   }
 }
 
-export async function getRecommendations(productId: string): Promise<Product[]> {
+export async function getRecommendations(productId: string, country?: string): Promise<Product[]> {
   "use cache";
   cacheTag("products");
 
@@ -410,12 +428,14 @@ export async function getRecommendations(productId: string): Promise<Product[]> 
     const complementary = await shopifyFetch<{ productRecommendations: Product[] | null }>(query, {
       productId,
       intent: "COMPLEMENTARY",
+      country,
     });
     let products = complementary.productRecommendations ?? [];
     if (products.length === 0) {
       const related = await shopifyFetch<{ productRecommendations: Product[] | null }>(query, {
         productId,
         intent: "RELATED",
+        country,
       });
       products = related.productRecommendations ?? [];
     }
@@ -433,11 +453,13 @@ export async function searchProducts({
   sort = "featured",
   after = null,
   first = 12,
+  country,
 }: {
   query: string;
   sort?: SortKey;
   after?: string | null;
   first?: number;
+  country?: string;
 }): Promise<{ products: Product[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } }> {
   "use cache";
   cacheTag("products");
@@ -464,7 +486,7 @@ export async function searchProducts({
           }
         }
       }`,
-      { query, first, after, sortKey, reverse: sort === "price-desc" },
+      { query, first, after, sortKey, reverse: sort === "price-desc", country },
     );
     cacheLife("hours");
     return { products: data.search.nodes.filter((n) => n && "handle" in n), pageInfo: data.search.pageInfo };
@@ -475,7 +497,7 @@ export async function searchProducts({
   }
 }
 
-export async function predictiveSearch(query: string): Promise<PredictiveResults> {
+export async function predictiveSearch(query: string, country?: string): Promise<PredictiveResults> {
   "use cache";
   cacheTag("products");
 
@@ -496,7 +518,7 @@ export async function predictiveSearch(query: string): Promise<PredictiveResults
           }
         }
       }`,
-      { query },
+      { query, country },
     );
     cacheLife("hours");
     return data.predictiveSearch ?? { queries: [], collections: [], products: [] };
@@ -734,6 +756,103 @@ export async function getPolicy(handle: PolicyHandle): Promise<{ title: string; 
 
 // ---------------------------------------------------------------- Cart
 
+/** Every product and collection handle, for the sitemap. */
+export async function getSitemapEntries(): Promise<{
+  products: { handle: string; updatedAt: string }[];
+  collections: { handle: string; updatedAt: string }[];
+}> {
+  "use cache";
+  cacheTag("products");
+
+  type Page = { nodes: { handle: string; updatedAt: string }[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } };
+  try {
+    const products: Page["nodes"] = [];
+    let after: string | null = null;
+    // Ten pages of 250 is far more than this catalog needs; the cap keeps a bad cursor from looping.
+    for (let i = 0; i < 10; i++) {
+      const data: { products: Page } = await shopifyFetch<{ products: Page }>(
+        `query SitemapProducts($after: String) {
+          products(first: 250, after: $after) {
+            nodes {
+              handle
+              updatedAt
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
+        }`,
+        { after },
+      );
+      products.push(...data.products.nodes);
+      if (!data.products.pageInfo.hasNextPage) break;
+      after = data.products.pageInfo.endCursor;
+    }
+    const data = await shopifyFetch<{ collections: Page }>(
+      `query SitemapCollections {
+        collections(first: 250) {
+          nodes {
+            handle
+            updatedAt
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }`,
+    );
+    cacheLife("hours");
+    return { products, collections: data.collections.nodes };
+  } catch (error) {
+    console.error(error);
+    cacheLife("minutes");
+    return { products: [], collections: [] };
+  }
+}
+
+export type Market = { isoCode: string; name: string; currency: { isoCode: string; symbol: string } };
+
+/** The countries the store sells to (Settings → Markets), and the default one. */
+export async function getMarkets(): Promise<{ countries: Market[]; fallback: Market | null }> {
+  "use cache";
+  cacheTag("markets");
+
+  try {
+    const data = await shopifyFetch<{ localization: { country: Market; availableCountries: Market[] } }>(
+      `query Markets {
+        localization {
+          country {
+            ...MarketFields
+          }
+          availableCountries {
+            ...MarketFields
+          }
+        }
+      }
+      fragment MarketFields on Country {
+        isoCode
+        name
+        currency {
+          isoCode
+          symbol
+        }
+      }`,
+    );
+    cacheLife("hours");
+    const { country, availableCountries } = data.localization;
+    return {
+      countries: [...availableCountries].sort((a, b) => a.name.localeCompare(b.name)),
+      fallback: country,
+    };
+  } catch (error) {
+    console.error(error);
+    cacheLife("minutes");
+    return { countries: [], fallback: null };
+  }
+}
+
 export const cartFields = /* GraphQL */ `
   fragment CartFields on Cart {
     id
@@ -792,8 +911,8 @@ export const cartQueries = {
     }
   `,
   create: /* GraphQL */ `
-    mutation CartCreate($lines: [CartLineInput!]) {
-      cartCreate(input: { lines: $lines }) {
+    mutation CartCreate($lines: [CartLineInput!], $buyerIdentity: CartBuyerIdentityInput) {
+      cartCreate(input: { lines: $lines, buyerIdentity: $buyerIdentity }) {
         cart {
           ...CartFields
         }
@@ -818,6 +937,18 @@ export const cartQueries = {
   update: /* GraphQL */ `
     mutation CartLinesUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!) {
       cartLinesUpdate(cartId: $cartId, lines: $lines) {
+        cart {
+          ...CartFields
+        }
+        userErrors {
+          message
+        }
+      }
+    }
+  `,
+  buyer: /* GraphQL */ `
+    mutation CartBuyerIdentityUpdate($cartId: ID!, $buyerIdentity: CartBuyerIdentityInput!) {
+      cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
         cart {
           ...CartFields
         }

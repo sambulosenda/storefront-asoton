@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense } from "react";
-import { AccountIcon, BagIcon, ChevronDown, MenuIcon, SearchIcon } from "@/components/icons";
+import { AccountIcon, BagIcon, MenuIcon, SearchIcon } from "@/components/icons";
+import { MarketButton } from "@/components/market-selector";
 import { useStore } from "@/components/store-provider";
 import { nav, site } from "@/lib/site";
 
@@ -19,16 +20,6 @@ export function AnnouncementBar({ threshold }: { threshold: string }) {
         <MarketButton className="min-h-10 text-[12px] tracking-[0.06em] text-paper" />
       </div>
     </div>
-  );
-}
-
-/** Country and currency. Only the UK market is set up, so this is a label for now. */
-export function MarketButton({ className = "" }: { className?: string }) {
-  return (
-    <span className={`inline-flex items-center gap-1.5 ${className}`}>
-      {site.market}
-      <ChevronDown />
-    </span>
   );
 }
 

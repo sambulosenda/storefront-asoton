@@ -51,7 +51,8 @@ export function ProductGallery({
                 src={image.url}
                 alt={image.altText ?? `${title}, photo ${i + 1}`}
                 fill
-                priority={i === 0}
+                loading={i === 0 ? "eager" : undefined}
+                fetchPriority={i === 0 ? "high" : undefined}
                 sizes="100vw"
                 className="object-cover"
               />
@@ -83,7 +84,8 @@ export function ProductGallery({
                 src={image.url}
                 alt={image.altText ?? `${title}, photo ${i + 1}`}
                 fill
-                priority={i === 0}
+                loading={i === 0 ? "eager" : undefined}
+                fetchPriority={i === 0 ? "high" : undefined}
                 sizes={full ? "(min-width: 1440px) 760px, 55vw" : "(min-width: 1440px) 380px, 28vw"}
                 className="object-cover"
               />

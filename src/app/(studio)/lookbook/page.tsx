@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { colourLine, formatMoney } from "@/lib/format";
+import { getCountry } from "@/lib/market";
 import { getProduct, type ProductDetail } from "@/lib/shopify";
 import { story } from "@/lib/site";
 
@@ -48,16 +50,7 @@ function PieceRow({ piece, compact }: { piece: Piece; compact?: boolean }) {
   );
 }
 
-export default async function LookbookPage() {
-  const looks = await Promise.all(
-    LOOKS.map(async (look) => ({
-      ...look,
-      pieces: (await Promise.all(look.handles.map(getProduct))).filter((p): p is ProductDetail => Boolean(p)),
-    })),
-  );
-  const shopHref = (look: (typeof looks)[number]) =>
-    look.pieces[0] ? `/products/${look.pieces[0].handle}` : `/search?q=${encodeURIComponent(look.search)}`;
-
+export default function LookbookPage() {
   return (
     <>
       <section className="relative aspect-[4/5] max-h-[820px] w-full bg-[#1F2438] text-paper md:aspect-[16/9]">
@@ -75,6 +68,38 @@ export default async function LookbookPage() {
         </p>
       </section>
 
+      {/* Prices follow the shopper's country, so the looks render per request. */}
+      <Suspense fallback={<div className="min-h-dvh" />}>
+        <Looks />
+      </Suspense>
+
+      <section className="border-t border-line">
+        <div className="page-x flex flex-col items-center gap-6 py-20 text-center md:py-24">
+          <p className="font-display text-[clamp(32px,3.4vw,48px)] leading-[1.05]">Every piece, in one place</p>
+          <Link href="/collections/new-in" className="btn btn-ink md:px-9">
+            Shop the edit
+          </Link>
+        </div>
+      </section>
+    </>
+  );
+}
+
+async function Looks() {
+  const country = await getCountry();
+  const looks = await Promise.all(
+    LOOKS.map(async (look) => ({
+      ...look,
+      pieces: (await Promise.all(look.handles.map((handle) => getProduct(handle, country)))).filter(
+        (p): p is ProductDetail => Boolean(p),
+      ),
+    })),
+  );
+  const shopHref = (look: (typeof looks)[number]) =>
+    look.pieces[0] ? `/products/${look.pieces[0].handle}` : `/search?q=${encodeURIComponent(look.search)}`;
+
+  return (
+    <>
       {looks.slice(0, 2).map((look, i) => (
         <section
           key={look.title}
@@ -135,14 +160,6 @@ export default async function LookbookPage() {
         </div>
       </section>
 
-      <section className="border-t border-line">
-        <div className="page-x flex flex-col items-center gap-6 py-20 text-center md:py-24">
-          <p className="font-display text-[clamp(32px,3.4vw,48px)] leading-[1.05]">Every piece, in one place</p>
-          <Link href="/collections/new-in" className="btn btn-ink md:px-9">
-            Shop the edit
-          </Link>
-        </div>
-      </section>
     </>
   );
 }

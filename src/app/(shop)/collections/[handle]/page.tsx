@@ -5,6 +5,7 @@ import { CollectionBrowser } from "@/components/collection-browser";
 import { Editorial } from "@/components/editorial";
 import { CollectionSkeleton } from "@/components/skeletons";
 import { parseFilters, parseSort } from "@/lib/filters";
+import { getCountry } from "@/lib/market";
 import { getCollection, getCollectionOrAll, getMenu } from "@/lib/shopify";
 import { departments } from "@/lib/site";
 
@@ -17,6 +18,8 @@ export async function generateMetadata({ params }: PageProps<"/collections/[hand
   return {
     title: page?.collection?.title ?? titleFromHandle(handle),
     description: page?.collection?.description || departments[handle]?.intro,
+    // Sorted and filtered views point search engines back at the plain collection.
+    alternates: { canonical: `/collections/${handle}` },
   };
 }
 
@@ -35,10 +38,10 @@ async function Collection({
   params: Promise<{ handle: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [{ handle }, query] = await Promise.all([params, searchParams]);
+  const [{ handle }, query, country] = await Promise.all([params, searchParams, getCountry()]);
   const sort = parseSort(query.sort);
   const filters = parseFilters(query.filter);
-  const [page, menu] = await Promise.all([getCollectionOrAll({ handle, sort, filters }), getMenu(handle)]);
+  const [page, menu] = await Promise.all([getCollectionOrAll({ handle, sort, filters, country }), getMenu(handle)]);
 
   const department = departments[handle];
   const title = page.collection?.title ?? titleFromHandle(handle);
@@ -72,7 +75,7 @@ async function Collection({
       </section>
 
       <CollectionBrowser
-        key={JSON.stringify([sort, filters])}
+        key={JSON.stringify([sort, filters, country])}
         products={page.products}
         pageInfo={page.pageInfo}
         filters={page.filters}
