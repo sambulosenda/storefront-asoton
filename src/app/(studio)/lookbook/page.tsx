@@ -1,50 +1,25 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { colourLine, formatMoney } from "@/lib/format";
 import { getCountry } from "@/lib/market";
-import { getProduct, type ProductDetail } from "@/lib/shopify";
-import { story } from "@/lib/site";
+import { getCampaign, getCollectionOrAll, getLooks, type Look, type Product } from "@/lib/shopify";
+import { site } from "@/lib/site";
 
 export const metadata: Metadata = { title: "Lookbook" };
 
-// Pieces are looked up by handle (Shopify's default handle is the title in kebab case).
-// Pieces that aren't in the store yet are left out.
-const LOOKS = [
-  {
-    title: "Indigo, head to toe",
-    tone: "#2B3049",
-    handles: ["adire-wrap-dress", "adire-headwrap"],
-    search: "adire",
-  },
-  {
-    title: "For the occasion",
-    tone: "#3E2A2E",
-    handles: ["aso-oke-agbada-set", "aso-oke-fila-cap"],
-    search: "aso-oke",
-  },
-  {
-    title: "Dressed as a pair",
-    tones: ["#4A3F3A", "#2F3438"],
-    handles: ["kente-panel-midi-skirt", "adire-kaftan", "wax-print-puff-sleeve-top", "adire-drawstring-trousers"],
-    search: "kente",
-  },
-];
+// Each look gets the next of the design's grounds while it has no photo.
+const TONES = ["#2B3049", "#3E2A2E", "#4A3F3A", "#2F3438"];
 
-type Piece = Pick<ProductDetail, "handle" | "title" | "options" | "priceRange">;
-
-function PieceRow({ piece, compact }: { piece: Piece; compact?: boolean }) {
+function PieceRow({ piece }: { piece: Product }) {
   const colour = colourLine(piece.options);
   return (
     <Link href={`/products/${piece.handle}`} className="flex items-baseline justify-between gap-4 py-3.5 text-[15px] no-underline">
-      {compact ? (
-        <span>{piece.title}</span>
-      ) : (
-        <span>
-          <span className="font-medium">{piece.title}</span>
-          {colour && <span className="text-[13px] text-ink-2"> · {colour}</span>}
-        </span>
-      )}
+      <span>
+        <span className="font-medium">{piece.title}</span>
+        {colour && <span className="text-[13px] text-ink-2"> · {colour}</span>}
+      </span>
       <span className="whitespace-nowrap">{formatMoney(piece.priceRange.minVariantPrice)}</span>
     </Link>
   );
@@ -53,20 +28,7 @@ function PieceRow({ piece, compact }: { piece: Piece; compact?: boolean }) {
 export default function LookbookPage() {
   return (
     <>
-      <section className="relative aspect-[4/5] max-h-[820px] w-full bg-[#1F2438] text-paper md:aspect-[16/9]">
-        <div className="absolute bottom-[clamp(24px,4vw,56px)] left-[clamp(16px,4vw,48px)] flex flex-col gap-4 pr-4">
-          <span className="text-[12px] tracking-[0.16em] text-[#C5C9D8] uppercase">Lookbook · Autumn/Winter 2026</span>
-          <h1 className="font-display text-[clamp(56px,9vw,136px)] leading-[0.9] tracking-[-0.02em]">
-            The <em>Indigo</em> Edit
-          </h1>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-[760px] px-[clamp(16px,4vw,48px)] py-16 text-center md:py-24">
-        <p className="font-display text-[clamp(24px,2.2vw,32px)] leading-[1.35]">
-          Three looks in adire, aso-oke and kente, photographed in {story.lookbookLocation}. Every piece is in the shop.
-        </p>
-      </section>
+      <Hero />
 
       {/* Prices follow the shopper's country, so the looks render per request. */}
       <Suspense fallback={<div className="min-h-dvh" />}>
@@ -77,7 +39,7 @@ export default function LookbookPage() {
         <div className="page-x flex flex-col items-center gap-6 py-20 text-center md:py-24">
           <p className="font-display text-[clamp(32px,3.4vw,48px)] leading-[1.05]">Every piece, in one place</p>
           <Link href="/collections/new-in" className="btn btn-ink md:px-9">
-            Shop the edit
+            Shop new in
           </Link>
         </div>
       </section>
@@ -85,81 +47,112 @@ export default function LookbookPage() {
   );
 }
 
-async function Looks() {
-  const country = await getCountry();
-  const looks = await Promise.all(
-    LOOKS.map(async (look) => ({
-      ...look,
-      pieces: (await Promise.all(look.handles.map((handle) => getProduct(handle, country)))).filter(
-        (p): p is ProductDetail => Boolean(p),
-      ),
-    })),
-  );
-  const shopHref = (look: (typeof looks)[number]) =>
-    look.pieces[0] ? `/products/${look.pieces[0].handle}` : `/search?q=${encodeURIComponent(look.search)}`;
+/**
+ * The "lookbook" campaign metaobject sets the hero's words and photo. Without one, the hero
+ * is titled Lookbook and uses the first look's photo, or the newest product's.
+ */
+async function Hero() {
+  const [campaign, looks, newIn] = await Promise.all([
+    getCampaign("lookbook"),
+    getLooks(),
+    getCollectionOrAll({ handle: "new-in", first: 1 }),
+  ]);
+  const image =
+    campaign?.image ?? looks[0]?.image ?? looks[0]?.products[0]?.featuredImage ?? newIn.products[0]?.featuredImage ?? null;
 
   return (
     <>
-      {looks.slice(0, 2).map((look, i) => (
-        <section
-          key={look.title}
-          aria-labelledby={`look-${i + 1}`}
-          className={`page-x flex flex-wrap items-end gap-x-16 gap-y-10 pb-20 md:pb-[120px] ${i === 1 ? "flex-wrap-reverse" : ""}`}
-        >
-          <div
-            style={{ backgroundColor: look.tone }}
-            className={`aspect-[4/5] max-h-[820px] min-w-0 flex-[3_1_520px] ${i === 1 ? "order-2" : ""}`}
-          />
-          <div className="flex max-w-[420px] min-w-0 flex-[2_1_320px] flex-col gap-5">
-            <span className="text-[12px] tracking-[0.14em] text-ink-2">Look {String(i + 1).padStart(2, "0")}</span>
-            <h2 id={`look-${i + 1}`} className="font-display text-[36px] leading-[1.05] md:text-[40px]">
-              {look.title}
-            </h2>
-            {look.pieces.length > 0 && (
-              <ul className="border-t border-line">
-                {look.pieces.map((piece) => (
-                  <li key={piece.handle} className="border-b border-line">
-                    <PieceRow piece={piece} />
-                  </li>
-                ))}
-              </ul>
-            )}
-            <Link href={shopHref(look)} className="btn btn-ink self-start">
-              Shop the look
-            </Link>
-          </div>
-        </section>
-      ))}
-
-      <section aria-labelledby="look-3" className="page-x flex flex-col gap-8 pb-20 md:pb-[120px]">
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(420px,100%),1fr))] gap-6">
-          {looks[2].tones!.map((tone) => (
-            <div key={tone} style={{ backgroundColor: tone }} className="aspect-[4/5] max-h-[820px]" />
-          ))}
-        </div>
-        <div className="flex flex-wrap items-end justify-between gap-x-16 gap-y-6">
-          <div className="flex flex-col gap-3">
-            <span className="text-[12px] tracking-[0.14em] text-ink-2">Look 03</span>
-            <h2 id="look-3" className="font-display text-[36px] leading-[1.05] md:text-[40px]">
-              {looks[2].title}
-            </h2>
-          </div>
-          {looks[2].pieces.length > 0 ? (
-            <ul className="grid max-w-[760px] flex-[1_1_520px] grid-cols-[repeat(auto-fit,minmax(min(240px,100%),1fr))] gap-x-8">
-              {looks[2].pieces.map((piece) => (
-                <li key={piece.handle} className="border-t border-line">
-                  <PieceRow piece={piece} compact />
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <Link href={shopHref(looks[2])} className="btn btn-ink">
-              Shop the look
-            </Link>
-          )}
+      <section className="relative aspect-[4/5] max-h-[820px] w-full overflow-hidden bg-[#1F2438] text-paper md:aspect-[16/9]">
+        {image && (
+          <>
+            <Image src={image.url} alt={image.altText ?? ""} fill preload sizes="100vw" className="object-cover" />
+            {/* Keeps the white type readable on light photos. */}
+            <div className="absolute inset-0 bg-linear-to-t from-[#1F2438]/80 via-[#1F2438]/25 to-transparent" />
+          </>
+        )}
+        <div className="absolute bottom-[clamp(24px,4vw,56px)] left-[clamp(16px,4vw,48px)] flex flex-col gap-4 pr-4">
+          <span className="text-[12px] tracking-[0.16em] text-[#C5C9D8] uppercase">{campaign?.label ?? site.brand}</span>
+          <h1 className="font-display text-[clamp(56px,9vw,136px)] leading-[0.9] tracking-[-0.02em]">
+            {campaign?.headline ?? "Lookbook"}
+          </h1>
         </div>
       </section>
 
+      {campaign?.body && (
+        <section className="mx-auto max-w-[760px] px-[clamp(16px,4vw,48px)] py-16 text-center md:py-24">
+          <p className="font-display text-[clamp(24px,2.2vw,32px)] leading-[1.35]">{campaign.body}</p>
+        </section>
+      )}
     </>
+  );
+}
+
+/** The "look" metaobjects, or until there are some, the newest pieces one at a time. */
+async function Looks() {
+  const country = await getCountry();
+  const looks = await getLooks(country);
+  const fromProducts = looks.length === 0;
+  const shown: Look[] = fromProducts
+    ? (await getCollectionOrAll({ handle: "new-in", first: 4, country })).products.map((p) => ({
+        handle: p.handle,
+        title: p.title,
+        body: null,
+        image: p.featuredImage,
+        products: [p],
+      }))
+    : looks;
+
+  return (
+    <div className={fromProducts ? "pt-16 md:pt-24" : undefined}>
+      {shown.map((look, i) => {
+        const image = look.image ?? look.products[0]?.featuredImage ?? null;
+        const flip = i % 2 === 1;
+        return (
+          <section
+            key={look.handle}
+            aria-labelledby={`look-${i + 1}`}
+            className={`page-x flex flex-wrap items-end gap-x-16 gap-y-10 pb-20 md:pb-[120px] ${flip ? "flex-wrap-reverse" : ""}`}
+          >
+            <div
+              style={{ backgroundColor: TONES[i % TONES.length] }}
+              className={`relative aspect-[4/5] max-h-[820px] min-w-0 flex-[3_1_520px] overflow-hidden ${flip ? "order-2" : ""}`}
+            >
+              {image && (
+                <Image
+                  src={image.url}
+                  alt={image.altText ?? look.title}
+                  fill
+                  sizes="(min-width: 768px) 60vw, 100vw"
+                  className="object-cover"
+                />
+              )}
+            </div>
+            <div className="flex max-w-[420px] min-w-0 flex-[2_1_320px] flex-col gap-5">
+              <span className="text-[12px] tracking-[0.14em] text-ink-2">
+                {fromProducts ? "New in" : `Look ${String(i + 1).padStart(2, "0")}`}
+              </span>
+              <h2 id={`look-${i + 1}`} className="font-display text-[36px] leading-[1.05] md:text-[40px]">
+                {look.title}
+              </h2>
+              {look.body && <p className="leading-[1.6] text-ink-2">{look.body}</p>}
+              {look.products.length > 0 && (
+                <>
+                  <ul className="border-t border-line">
+                    {look.products.map((piece) => (
+                      <li key={piece.handle} className="border-b border-line">
+                        <PieceRow piece={piece} />
+                      </li>
+                    ))}
+                  </ul>
+                  <Link href={`/products/${look.products[0].handle}`} className="btn btn-ink self-start">
+                    {fromProducts ? "Shop now" : "Shop the look"}
+                  </Link>
+                </>
+              )}
+            </div>
+          </section>
+        );
+      })}
+    </div>
   );
 }

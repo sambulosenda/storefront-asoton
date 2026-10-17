@@ -62,45 +62,21 @@ export const footerNav = [
   },
 ];
 
-/** Department copy, keyed by collection handle. */
-export const departments: Record<
-  string,
-  {
-    intro: string;
-    editorial?: {
-      label: string;
-      title: string;
-      body: string;
-      cta: string;
-      href: string;
-      tone: string;
-      imageFirst: boolean;
-    };
-  }
-> = {
+/**
+ * Department pages, keyed by collection handle. The intro shows until the collection has a
+ * description in Shopify. The editorial block between the product grids comes from the
+ * "campaign" metaobject with the same handle; these set its colour and which side the picture sits.
+ */
+export const departments: Record<string, { intro: string; tone: string; imageFirst: boolean }> = {
   women: {
     intro: "Dresses, sets, boubous and headwraps in adire, kente, aso-oke, bògòlan and wax-print cloth.",
-    editorial: {
-      label: "The Indigo Edit",
-      title: "Wear it head to toe",
-      body: "The wrap dress, the headwrap and the kaftan are cut from the same indigo adire, so they work together or apart.",
-      cta: "Shop the edit",
-      href: "/search?q=adire",
-      tone: "#2B3049",
-      imageFirst: true,
-    },
+    tone: "#2B3049",
+    imageFirst: true,
   },
   men: {
     intro: "Kaftans, agbada, shirts and trousers in aso-oke, kente, bògòlan, adire and wax-print cloth.",
-    editorial: {
-      label: "For the occasion",
-      title: "Agbada, cut with room to move",
-      body: "Three pieces in hand-loomed aso-oke: the flowing outer robe, a shirt and trousers. Made for weddings, naming ceremonies and every celebration in between.",
-      cta: "Shop agbada",
-      href: "/search?q=agbada",
-      tone: "#2F3438",
-      imageFirst: false,
-    },
+    tone: "#2F3438",
+    imageFirst: false,
   },
 };
 
@@ -112,7 +88,6 @@ export const story = {
   makers: "[Who makes the pieces and how you work with them: the tailors, dyers and weavers. Name them where you can.]",
   quote: "[A sentence from the founder, in their own words, on why this matters.]",
   founder: "[FOUNDER NAME]",
-  lookbookLocation: "[LOCATION]",
 };
 
 /** Delivery services shown on the Help page. Match these to Shopify's shipping settings. */

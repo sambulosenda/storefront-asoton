@@ -6,7 +6,7 @@ import { Editorial } from "@/components/editorial";
 import { CollectionSkeleton } from "@/components/skeletons";
 import { parseFilters, parseSort } from "@/lib/filters";
 import { getCountry } from "@/lib/market";
-import { getCollection, getCollectionOrAll, getMenu } from "@/lib/shopify";
+import { getCampaign, getCollection, getCollectionOrAll, getMenu } from "@/lib/shopify";
 import { departments } from "@/lib/site";
 
 const titleFromHandle = (handle: string) =>
@@ -41,12 +41,29 @@ async function Collection({
   const [{ handle }, query, country] = await Promise.all([params, searchParams, getCountry()]);
   const sort = parseSort(query.sort);
   const filters = parseFilters(query.filter);
-  const [page, menu] = await Promise.all([getCollectionOrAll({ handle, sort, filters, country }), getMenu(handle)]);
+  const [page, menu, campaign] = await Promise.all([
+    getCollectionOrAll({ handle, sort, filters, country }),
+    getMenu(handle),
+    getCampaign(handle),
+  ]);
 
   const department = departments[handle];
   const title = page.collection?.title ?? titleFromHandle(handle);
   const intro = page.collection?.description || department?.intro;
   const path = `/collections/${handle}`;
+  // The editorial block only shows once its campaign metaobject exists in Shopify.
+  const editorial = campaign?.headline
+    ? {
+        label: campaign.label,
+        title: campaign.headline,
+        body: campaign.body,
+        cta: campaign.cta ?? "Shop now",
+        href: campaign.link,
+        image: campaign.image,
+        tone: department?.tone ?? "#2B3049",
+        imageFirst: department?.imageFirst ?? true,
+      }
+    : null;
   const categories = [
     { title: "All", href: path, current: true },
     ...menu.filter((link) => link.href !== path).map((link) => ({ ...link, current: false })),
@@ -83,7 +100,7 @@ async function Collection({
         sort={sort}
         categories={categories}
         categoriesLabel={`${title} categories`}
-        editorial={department?.editorial && <Editorial content={department.editorial} />}
+        editorial={editorial && <Editorial content={editorial} />}
         handle={handle}
       />
     </>

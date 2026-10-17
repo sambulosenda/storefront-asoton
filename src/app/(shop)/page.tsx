@@ -29,6 +29,8 @@ export default async function HomePage() {
   const image = campaign?.image ?? lead?.featuredImage ?? null;
   // The small picture beside the copy: the newest piece under a campaign, the next one otherwise.
   const featured = campaign ? newest : next;
+  const ctaHref = campaign ? (campaign.link ?? "/collections/new-in") : lead ? `/products/${lead.handle}` : "/collections/new-in";
+  const ctaLabel = campaign ? (campaign.cta ?? "Shop the edit") : lead ? "Shop now" : "Shop new in";
   // The design sets a three-word headline at display size; product names get a smaller one.
   const long = headline.length > 20;
 
@@ -70,11 +72,8 @@ export default async function HomePage() {
             </h1>
             <p className="max-w-[420px] leading-[1.6] text-ink-2 md:text-[17px]">{body}</p>
             <div className="flex flex-wrap items-center gap-x-8 gap-y-4 pt-2">
-              <Link
-                href={lead ? `/products/${lead.handle}` : "/collections/new-in"}
-                className="btn btn-ink w-full md:w-auto md:px-9"
-              >
-                {campaign ? "Shop the edit" : lead ? "Shop now" : "Shop new in"}
+              <Link href={ctaHref} className="btn btn-ink w-full md:w-auto md:px-9">
+                {ctaLabel}
               </Link>
               <div className="hidden gap-6 text-[14px] md:flex">
                 <Link href="/collections/women" className="py-3 underline-offset-[6px]">

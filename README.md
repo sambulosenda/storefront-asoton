@@ -36,7 +36,11 @@ The pages fall back gracefully when these are missing, but they look like the de
 - **Collections** with the handles `new-in`, `women`, `men` and `accessories`.
 - **Menus** with the handles `women` and `men` (the category tabs and the mobile menu).
 - **Metaobjects**:
-  - `campaign`, with an entry whose handle is `home`, for the home hero and the phone menu's promo tile. Fields: `label` (single line text, the small line above the headline), `headline` (single line text), `body` (multi-line text) and `image` (file). Without it, the hero leads with the newest product: its photo, its name and a link to it.
+  - `campaign`, with fields `label` (single line text, the small line above the headline), `headline` (single line text), `body` (multi-line text), `image` (file), and optionally `cta` (button text) and `link` (where the button goes, such as `/collections/women`). Its entries, by handle:
+    - `home`: the home hero and the phone menu's promo tile. Without it, the hero leads with the first product in the `new-in` collection (or the newest product, if that collection doesn't exist): its photo, its name and a link to it.
+    - `women`, `men` (any collection handle): the editorial block between the product grids on that collection page. Without one, the block isn't shown.
+    - `lookbook`: the lookbook's opening photo, title and intro. Without it, the page is titled Lookbook and uses the first look's photo.
+  - `look`, with fields `title` (single line text), `body` (multi-line text, optional), `image` (file) and `products` (list of products). Each entry is a look on the lookbook page, with the pieces listed under it. Until there are looks, the page shows the newest products one at a time.
   - `cloth` (name, technique, origin, caption, collection) entries.
 - **Product metafields**: `custom.care`, `custom.fit`, `custom.model`, `custom.cloth`, plus `reviews.rating` and `reviews.rating_count` from a reviews app.
 - **Shop metafield** `custom.free_delivery_threshold` (the free delivery amount in the announcement bar).

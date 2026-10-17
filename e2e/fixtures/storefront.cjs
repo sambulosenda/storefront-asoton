@@ -135,6 +135,7 @@ function respond(query, vars) {
       return { menu: items ? { items: items.map((t) => ({ title: t, url: `https://x/collections/${handleOf(t)}`, resource: { handle: `${vars.handle}-${handleOf(t)}` } })) } : null };
     }
     case "Cloths": return { metaobjects: { nodes: [] } };
+    case "Looks": return { metaobjects: { nodes: [] } };
     case "Campaign": return { metaobject: null };
     case "Threshold": return { shop: { metafield: { value: '{"amount":"150.00","currency_code":"GBP"}' } } };
     case "Policies": return { shop: { privacyPolicy: { title: "Privacy policy", body: "<p>Policy text.</p>" }, termsOfService: null, refundPolicy: null, shippingPolicy: null } };

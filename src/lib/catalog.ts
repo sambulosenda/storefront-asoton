@@ -50,7 +50,8 @@ export async function clothLinks(): Promise<ClothLink[]> {
 
 /**
  * What the home hero and the menu's promo lead with: the "home" campaign metaobject when it
- * exists, and the newest two pieces (from the new-in collection, or the whole catalog).
+ * exists, and the first two pieces in New in (the new-in collection in its own order, or the
+ * newest products when that collection doesn't exist).
  */
 export async function homeFeature() {
   const [campaign, newIn] = await Promise.all([getCampaign("home"), getCollectionOrAll({ handle: "new-in", first: 2 })]);
