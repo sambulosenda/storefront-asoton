@@ -59,7 +59,7 @@ async function Collection({
         body: campaign.body,
         cta: campaign.cta ?? "Shop now",
         href: campaign.link,
-        image: campaign.image,
+        image: campaign.image ?? page.collection?.image ?? null,
         tone: department?.tone ?? "#2B3049",
         imageFirst: department?.imageFirst ?? true,
       }
