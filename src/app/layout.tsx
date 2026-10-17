@@ -8,7 +8,7 @@ import { MobileMenu } from "@/components/mobile-menu";
 import { SearchOverlay } from "@/components/search-overlay";
 import { SizeGuide } from "@/components/size-guide";
 import { StoreProvider } from "@/components/store-provider";
-import { clothLinks, deliveryThreshold, departmentMenu, homeFeature } from "@/lib/catalog";
+import { deliveryThreshold, departmentMenu, homeFeature, stockedCloths } from "@/lib/catalog";
 import { accountUrl, getMarkets } from "@/lib/shopify";
 import { site, siteUrl } from "@/lib/site";
 import "./globals.css";
@@ -39,7 +39,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     deliveryThreshold(),
     departmentMenu("women"),
     departmentMenu("men"),
-    clothLinks(),
+    stockedCloths(),
     getMarkets(),
     homeFeature(),
   ]);
@@ -59,7 +59,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     { label: "Women", links: [{ title: "All women", href: "/collections/women" }, ...women] },
     { label: "Men", links: [{ title: "All men", href: "/collections/men" }, ...men] },
     { label: "Shop by cloth", links: cloths.map((c) => ({ title: c.name, href: c.href })) },
-  ];
+  ].filter((group) => group.links.length > 0);
 
   return (
     <html lang="en-GB" className={`${bodoni.variable} ${hanken.variable}`}>

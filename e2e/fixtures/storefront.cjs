@@ -15,17 +15,19 @@ let market = MARKETS[0];
 const marketOut = ({ rate, ...m }) => m;
 const WOMEN = ["6", "8", "10", "12", "14", "16", "18", "20"];
 const MEN = ["S", "M", "L", "XL", "XXL", "3XL"];
+// The bògòlan pieces carry no tag, so a search for "bogolan" finds nothing and the home page
+// leaves that cloth out, as it would for a store with no bògòlan.
 const CATALOG = [
   ["Adire Wrap Dress", "Indigo", "Dress", "women", 185, ["new", "adire"]],
   ["Aso-oke Kaftan", "Ecru and gold", "Kaftan", "men", 240, ["new", "aso-oke"]],
-  ["Wax-print Two-piece Set", "Terracotta", "Set", "women", 165, ["wax print"]],
-  ["Bògòlan Overshirt", "Umber", "Shirt", "men", 150, ["bogolan"]],
+  ["Wax-print Two-piece Set", "Terracotta", "Set", "women", 165, ["wax print", "ankara"]],
+  ["Bògòlan Overshirt", "Umber", "Shirt", "men", 150, []],
   ["Adire Headwrap", "Indigo", "Headwrap", "women", 45, ["adire"]],
   ["Kente Panel Midi Skirt", "Gold and forest", "Skirt", "women", 175, ["kente"]],
   ["Adire Kaftan", "Indigo", "Kaftan", "men", 195, ["adire"]],
   ["Aso-oke Boubou", "Ecru and gold", "Boubou", "women", 260, ["aso-oke"]],
-  ["Bògòlan Shirt Dress", "Umber", "Dress", "women", 170, ["bogolan"]],
-  ["Wax-print Maxi Dress", "Terracotta", "Dress", "women", 155, ["wax print"]],
+  ["Bògòlan Shirt Dress", "Umber", "Dress", "women", 170, []],
+  ["Wax-print Maxi Dress", "Terracotta", "Dress", "women", 155, ["wax print", "ankara"]],
   ["Kente Stole", "Gold and forest", "Stole", "men", 85, ["kente"]],
   ["Adire Drawstring Trousers", "Indigo", "Trousers", "men", 110, ["adire"]],
   ["Aso-oke Agbada Set", "Wine and gold", "Agbada", "men", 420, ["aso-oke"]],

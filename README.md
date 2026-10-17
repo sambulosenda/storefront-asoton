@@ -44,7 +44,8 @@ The pages fall back gracefully when these are missing, but they look like the de
     - `workshop`: the wide photo on the Our story page. Without it, that photo isn't shown.
     - `lookbook`: the lookbook's opening photo, title and intro. Without it, the page is titled Lookbook and uses the first look's photo.
   - `look`, with fields `title` (single line text), `body` (multi-line text, optional), `image` (file) and `products` (list of products). Each entry is a look on the lookbook page, with the pieces listed under it. Until there are looks, the page shows the newest products one at a time.
-  - `cloth` (name, technique, origin, caption, collection) entries.
+  - `cloth` (name, technique, origin, caption, collection) entries. They change a cloth's words and point it at a collection.
+- **Shop by cloth** (home page, menu and Our story page) lists only the cloths the store has pieces in, and previews each with one of those pieces. A cloth's pieces are its `cloth` entry's collection, or else the products a search for its name finds (`ankara` for wax print) whose title, type or tags name the cloth. The section is hidden if no cloth has any.
 - **Product metafields**: `custom.care`, `custom.fit`, `custom.model`, `custom.cloth`, plus `reviews.rating` and `reviews.rating_count` from a reviews app.
 - **Shop metafield** `custom.free_delivery_threshold` (the free delivery amount in the announcement bar).
 - **Search & Discovery** filters for cloth, colour, size, price and availability.

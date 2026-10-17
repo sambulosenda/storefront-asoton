@@ -11,12 +11,10 @@ export type Cloth = {
   /** Short origin for tight spaces, e.g. "Nigeria". */
   country: string;
   shop: string;
-  garment: GarmentKey;
-  piece: string;
+  /** The search word that finds this cloth's pieces in the store. */
+  query: string;
   caption: string;
   about?: string;
-  /** The shorter caption under the phone-sized preview on the home page. */
-  shown?: string;
   styles?: { name: string; note: string }[];
   care: string;
 };
@@ -29,12 +27,9 @@ export const CLOTHS: Cloth[] = [
     origin: "Yorùbá · Nigeria",
     country: "Nigeria",
     shop: "Shop adire",
-    garment: "dress",
-    piece: "Adire Wrap Dress",
+    query: "adire",
     caption:
       "Adire eleko: cassava-starch paste is painted or stencilled onto cotton, then the cloth goes into the indigo. Where the paste sat, the pattern stays pale.",
-    shown:
-      "Shown: the Adire Wrap Dress. Adire eleko is made by painting cassava-starch paste onto cotton before the cloth goes into the indigo.",
     about:
       "Adire means “tied and dyed” in Yorùbá. The pattern comes from stopping indigo reaching parts of the cloth, and the way it is stopped gives each style its name. Abeokuta, in south-west Nigeria, remains one of its best-known centres.",
     styles: [
@@ -51,8 +46,7 @@ export const CLOTHS: Cloth[] = [
     origin: "Asante and Ewe · Ghana",
     country: "Ghana",
     shop: "Shop kente",
-    garment: "skirt",
-    piece: "Kente Panel Midi Skirt",
+    query: "kente",
     caption:
       "Kente is woven on narrow looms in strips a few inches wide, then sewn edge to edge. Each pattern has its own name.",
     care: "Dry clean. Store folded in a breathable bag, out of direct sunlight, so the woven strips keep their shape.",
@@ -64,8 +58,7 @@ export const CLOTHS: Cloth[] = [
     origin: "Bamana · Mali",
     country: "Mali",
     shop: "Shop bògòlan",
-    garment: "overshirt",
-    piece: "Bògòlan Overshirt",
+    query: "bogolan",
     caption:
       "Cotton is dyed in a leaf bath, then painted by hand with fermented river mud. The dark ground is the mud; the motifs are the cloth left unpainted.",
     care: "Dry clean, or a brief cold hand wash without bleach or strong detergent, which can fade the mud dye.",
@@ -77,8 +70,7 @@ export const CLOTHS: Cloth[] = [
     origin: "Yorùbá · Nigeria",
     country: "Nigeria",
     shop: "Shop aso-oke",
-    garment: "agbada",
-    piece: "Aso-oke Agbada Set",
+    query: "aso-oke",
     caption:
       "Aso-oke is hand-loomed in narrow strips by Yorùbá weavers and kept for the big days: weddings, naming ceremonies, celebrations.",
     care: "Dry clean. Store folded in a breathable bag, out of direct sunlight, so the woven strips keep their shape.",
@@ -90,26 +82,35 @@ export const CLOTHS: Cloth[] = [
     origin: "West and Central Africa",
     country: "West and Central Africa",
     shop: "Shop wax print",
-    garment: "twopiece",
-    piece: "Wax-print Two-piece Set",
+    // Most shoppers, and the store's own titles, call wax print "Ankara".
+    query: "ankara",
     caption:
       "A resin resist is printed onto cotton before dyeing, which gives wax print its fine crackle. Many patterns carry names and sayings.",
     care: "Wash cold on a gentle cycle, inside out, with similar colours. Iron on the reverse while slightly damp.",
   },
 ];
 
+// Only the cloths' own names: "indigo" is also a colour, and an agbada can be cut from any cloth.
 const CLOTH_WORDS: [ClothKey, RegExp][] = [
-  ["adire", /adire|indigo/i],
+  ["adire", /adire/i],
   ["kente", /kente/i],
   ["bogolan", /b[oò]g[oò]lan|mud ?cloth/i],
-  ["asooke", /aso[- ]?oke|agbada/i],
+  ["asooke", /as[eo][- ]?oke/i],
   ["wax", /wax|ankara/i],
 ];
 
-/** Guess the cloth from a product's title, type and tags. */
+/** Guess the cloth from a piece of text, such as a product's title, type and tags. */
 export function clothFor(text: string): Cloth | null {
   const hit = CLOTH_WORDS.find(([, re]) => re.test(text));
   return hit ? CLOTHS.find((c) => c.key === hit[0])! : null;
+}
+
+/**
+ * A product's cloth. The title decides when it names one, because tags are often search words
+ * ("adire pant" on Ankara trousers); the type and tags only fill in when it doesn't.
+ */
+export function clothOf(product: { title: string; productType?: string; tags?: string[] }): Cloth | null {
+  return clothFor(product.title) ?? clothFor([product.productType, ...(product.tags ?? [])].join(" "));
 }
 
 export function clothByName(name: string | null | undefined): Cloth | null {

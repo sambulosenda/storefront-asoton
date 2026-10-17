@@ -1,7 +1,7 @@
 // Store navigation and the cloth list, from Shopify when set up there and from the
 // design's defaults otherwise.
 
-import { CLOTHS, clothByName, type Cloth } from "@/lib/cloths";
+import { CLOTHS, clothByName, clothOf, type Cloth } from "@/lib/cloths";
 import { formatMoney } from "@/lib/format";
 import {
   getCampaign,
@@ -42,20 +42,46 @@ export async function departmentMenu(dept: "women" | "men"): Promise<MenuLink[]>
   return links.length > 0 ? links : DEFAULT_MENUS[dept];
 }
 
-export type ClothLink = Cloth & { href: string };
+export type ClothLink = Cloth & { collection: string | null; href: string };
 
 /** The five cloths, linked to their collection when the "cloth" metaobject names one. */
 export async function clothLinks(): Promise<ClothLink[]> {
   const entries = await getCloths();
   return CLOTHS.map((cloth) => {
     const entry = entries.find((e) => clothByName(e.name)?.key === cloth.key);
+    const collection = entry?.collectionHandle ?? null;
     return {
       ...cloth,
       technique: entry?.technique ?? cloth.technique,
       origin: entry?.origin ?? cloth.origin,
       caption: entry?.caption ?? cloth.caption,
-      href: entry?.collectionHandle ? `/collections/${entry.collectionHandle}` : search(cloth.name),
+      collection,
+      href: collection ? `/collections/${collection}` : search(cloth.query),
     };
+  });
+}
+
+export type StockedCloth = ClothLink & { product: Product };
+
+/**
+ * The cloths the store has pieces in, each with one piece to show for it (the first with a photo):
+ * from the cloth's collection when it has one, else from the products its search word finds.
+ * Cloths with no pieces are left out.
+ */
+export async function stockedCloths(): Promise<StockedCloth[]> {
+  const cloths = await clothLinks();
+  const pieces = await Promise.all(
+    cloths.map(async (cloth) => {
+      const products = cloth.collection
+        ? ((await getCollection({ handle: cloth.collection, first: 8 }))?.products ?? [])
+        : // Search matches loosely, so keep only pieces that are this cloth.
+          (await searchProducts({ query: cloth.query, first: 8 })).products.filter((p) => clothOf(p)?.key === cloth.key);
+      return products.find((p) => p.featuredImage) ?? products[0] ?? null;
+    }),
+  );
+  return cloths.flatMap((cloth, i) => {
+    const product = pieces[i];
+    return product ? [{ ...cloth, product }] : [];
   });
 }
 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { clothLinks, homeFeature } from "@/lib/catalog";
+import { homeFeature, stockedCloths } from "@/lib/catalog";
 import { getCampaign } from "@/lib/shopify";
 import { story } from "@/lib/site";
 
@@ -21,7 +21,7 @@ const BELIEFS = [
 
 export default async function StoryPage() {
   const [cloths, storyCampaign, workshopCampaign, { products }] = await Promise.all([
-    clothLinks(),
+    stockedCloths(),
     getCampaign("story"),
     getCampaign("workshop"),
     homeFeature(),
@@ -85,25 +85,27 @@ export default async function StoryPage() {
         </figure>
       </section>
 
-      <section aria-labelledby="start" className="page-x flex flex-wrap items-end justify-between gap-x-16 gap-y-8 py-20 md:py-[120px]">
-        <div className="flex max-w-[560px] flex-[1_1_420px] flex-col gap-4">
-          <h2 id="start" className="font-display text-[clamp(40px,4vw,56px)] leading-[1.05] tracking-[-0.01em]">
-            Start with the <em>cloth</em>
-          </h2>
-          <p className="leading-[1.6] text-ink-2">Five cloths, each with its own technique and history.</p>
-        </div>
-        <nav aria-label="Shop by cloth" className="flex flex-[1_1_480px] flex-wrap gap-2">
-          {cloths.map((cloth) => (
-            <Link
-              key={cloth.key}
-              href={cloth.href}
-              className="inline-flex h-12 items-center border border-ink px-5 text-[15px] no-underline hover:bg-ink hover:text-paper"
-            >
-              {cloth.name}
-            </Link>
-          ))}
-        </nav>
-      </section>
+      {cloths.length > 0 && (
+        <section aria-labelledby="start" className="page-x flex flex-wrap items-end justify-between gap-x-16 gap-y-8 py-20 md:py-[120px]">
+          <div className="flex max-w-[560px] flex-[1_1_420px] flex-col gap-4">
+            <h2 id="start" className="font-display text-[clamp(40px,4vw,56px)] leading-[1.05] tracking-[-0.01em]">
+              Start with the <em>cloth</em>
+            </h2>
+            <p className="leading-[1.6] text-ink-2">Each cloth has its own technique and history.</p>
+          </div>
+          <nav aria-label="Shop by cloth" className="flex flex-[1_1_480px] flex-wrap gap-2">
+            {cloths.map((cloth) => (
+              <Link
+                key={cloth.key}
+                href={cloth.href}
+                className="inline-flex h-12 items-center border border-ink px-5 text-[15px] no-underline hover:bg-ink hover:text-paper"
+              >
+                {cloth.name}
+              </Link>
+            ))}
+          </nav>
+        </section>
+      )}
     </>
   );
 }

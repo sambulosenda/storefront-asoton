@@ -7,7 +7,7 @@ import { ArrowRight } from "@/components/icons";
 import { Newsletter } from "@/components/newsletter";
 import { ProductGrid, ProductRail } from "@/components/product-card";
 import { GridSkeleton } from "@/components/skeletons";
-import { clothLinks, departmentImage, homeFeature } from "@/lib/catalog";
+import { departmentImage, homeFeature, stockedCloths } from "@/lib/catalog";
 import { getCountry } from "@/lib/market";
 import { getCollectionOrAll } from "@/lib/shopify";
 import { nav, site } from "@/lib/site";
@@ -20,7 +20,7 @@ const DEPARTMENTS = [
 export default async function HomePage() {
   const [{ campaign, collection, products }, cloths, departmentImages] = await Promise.all([
     homeFeature(),
-    clothLinks(),
+    stockedCloths(),
     Promise.all(DEPARTMENTS.map((d) => departmentImage(d.handle))),
   ]);
   const [newest, next] = products;
