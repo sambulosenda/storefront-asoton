@@ -39,6 +39,20 @@ The pages fall back gracefully when these are missing, but they look like the de
 - **Product metafields**: `custom.care`, `custom.fit`, `custom.model`, `custom.cloth`, plus `reviews.rating` and `reviews.rating_count` from a reviews app.
 - **Shop metafield** `custom.free_delivery_threshold` (the free delivery amount in the announcement bar).
 - **Search & Discovery** filters for cloth, colour, size, price and availability.
+- **Markets** for each country you sell to. The country and currency selector in the header and footer lists them and only appears once there are two or more; prices, the bag and checkout then follow the shopper's choice. The free delivery amount and delivery copy stay in pounds.
 - Storefront API permissions for products, collections, metaobjects, navigation menus, policies and checkouts (cart).
 
 The newsletter, back-in-stock and contact forms validate input but don't send anything yet; they need a backend (for example a Shopify Flow or email provider).
+
+## Search engines and sharing
+
+`/sitemap.xml` lists every product, collection and policy, `/robots.txt` keeps filtered and sorted listings out of the index, and product pages carry Google product data. Set `SITE_URL` (for example `https://asotone.com`) so links in these use the real domain.
+
+## Tests
+
+```bash
+npx playwright install chromium   # once
+npm run test:e2e
+```
+
+The browser tests build the site and run it against a small fake store in `e2e/fixtures/storefront.cjs`, so they never touch the real Shopify store. They cover the bag, filters, search, the country selector and sold-out sizes on a desktop and a phone screen, and check every page with axe for WCAG 2.1 AA problems. The same checks, plus lint and type checks, run on every pull request.

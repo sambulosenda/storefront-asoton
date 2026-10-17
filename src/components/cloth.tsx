@@ -165,7 +165,7 @@ export function ProductVisual({
         alt={image.altText ?? product.title}
         fill
         sizes={sizes}
-        priority={priority}
+        loading={priority ? "eager" : undefined}
         className="object-cover"
       />
     );

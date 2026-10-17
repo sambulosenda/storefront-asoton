@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { CollectionBrowser } from "@/components/collection-browser";
 import { CollectionSkeleton } from "@/components/skeletons";
 import { parseSort } from "@/lib/filters";
+import { getCountry } from "@/lib/market";
 import { searchProducts } from "@/lib/shopify";
 import type { SortKey } from "@/lib/shopify/types";
 import { popularSearches } from "@/lib/site";
@@ -38,11 +39,11 @@ function PopularLinks() {
 }
 
 async function SearchResults({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const params = await searchParams;
+  const [params, country] = await Promise.all([searchParams, getCountry()]);
   const q = (Array.isArray(params.q) ? params.q[0] : params.q ?? "").trim().slice(0, 100);
   const parsed = parseSort(params.sort);
   const sort = SEARCH_SORTS.includes(parsed) ? parsed : "featured";
-  const results = q ? await searchProducts({ query: q, sort }) : null;
+  const results = q ? await searchProducts({ query: q, sort, country }) : null;
 
   return (
     <>
@@ -100,7 +101,7 @@ async function SearchResults({ searchParams }: { searchParams: Promise<Record<st
 
       {results && results.products.length > 0 && (
         <CollectionBrowser
-          key={JSON.stringify([q, sort])}
+          key={JSON.stringify([q, sort, country])}
           products={results.products}
           pageInfo={results.pageInfo}
           filters={[]}

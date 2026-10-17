@@ -11,17 +11,24 @@ import { ProductGallery } from "@/components/product-gallery";
 import { ProductSkeleton } from "@/components/skeletons";
 import { clothLinks, deliveryThreshold } from "@/lib/catalog";
 import { clothByName, clothFor } from "@/lib/cloths";
+import { getCountry } from "@/lib/market";
 import { getProduct, getRecommendations } from "@/lib/shopify";
-import { site } from "@/lib/site";
+import { site, siteUrl } from "@/lib/site";
 
 export async function generateMetadata({ params }: PageProps<"/products/[handle]">): Promise<Metadata> {
   const { handle } = await params;
   const product = await getProduct(handle);
   if (!product) return {};
+  const title = product.seo.title ?? product.title;
+  const description = product.seo.description ?? product.description.slice(0, 160);
+  // Setting openGraph replaces the layout's, so the shared fields are repeated here.
+  // Without a product photo the site's share image is used.
+  const image = product.featuredImage ? { url: product.featuredImage.url, alt: product.featuredImage.altText ?? title } : "/opengraph-image";
   return {
-    title: product.seo.title ?? product.title,
-    description: product.seo.description ?? product.description.slice(0, 160),
-    openGraph: product.featuredImage ? { images: [product.featuredImage.url] } : undefined,
+    title,
+    description,
+    alternates: { canonical: `/products/${handle}` },
+    openGraph: { title, description, siteName: site.brand, locale: "en_GB", images: [image] },
   };
 }
 
@@ -34,12 +41,12 @@ export default function ProductPage({ params }: PageProps<"/products/[handle]">)
 }
 
 async function Product({ params }: { params: Promise<{ handle: string }> }) {
-  const { handle } = await params;
-  const product = await getProduct(handle);
+  const [{ handle }, country] = await Promise.all([params, getCountry()]);
+  const product = await getProduct(handle, country);
   if (!product) notFound();
 
   const [recommendations, cloths, threshold] = await Promise.all([
-    getRecommendations(product.id),
+    getRecommendations(product.id, country),
     clothLinks(),
     deliveryThreshold(),
   ]);
@@ -74,8 +81,36 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
     { name: "Origin", note: cloth.origin },
   ] : []);
 
+  // Product details for search results (price, stock and rating stars).
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    description: product.description,
+    url: `${siteUrl}/products/${product.handle}`,
+    image: product.images.map((i) => i.url),
+    brand: { "@type": "Brand", name: site.brand },
+    offers: product.variants.map((v) => ({
+      "@type": "Offer",
+      sku: v.id.split("/").pop(),
+      name: v.title,
+      price: v.price.amount,
+      priceCurrency: v.price.currencyCode,
+      availability: `https://schema.org/${v.availableForSale ? "InStock" : "OutOfStock"}`,
+      url: `${siteUrl}/products/${product.handle}`,
+    })),
+    ...(product.rating && product.ratingCount
+      ? { aggregateRating: { "@type": "AggregateRating", ratingValue: product.rating, reviewCount: product.ratingCount } }
+      : {}),
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        // Escape "<" so product text can't close the script tag.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
       <nav aria-label="Breadcrumb" className="page-x hidden py-6 text-[13px] text-ink-2 md:block">
         <ol className="flex flex-wrap gap-2">
           <li>

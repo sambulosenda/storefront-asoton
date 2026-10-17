@@ -1,6 +1,12 @@
 // Shop-wide copy and settings. Values in [BRACKETS] are placeholders from the design:
 // replace them here once the real numbers are decided.
 
+/** The public address of the shop, for the sitemap and links shared elsewhere. Set SITE_URL in production. */
+export const siteUrl = (
+  process.env.SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000")
+).replace(/\/$/, "");
+
 export const site = {
   brand: "AsoTone",
   tagline: "Contemporary African clothing for women and men.",

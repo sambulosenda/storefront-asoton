@@ -1,7 +1,8 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { cartFields, cartQueries, shopifyFetch, type Cart } from "@/lib/shopify";
+import { COUNTRY_COOKIE, getCountry } from "@/lib/market";
+import { cartFields, cartQueries, getMarkets, shopifyFetch, type Cart } from "@/lib/shopify";
 
 const CART_COOKIE = "cart_id";
 
@@ -56,9 +57,10 @@ export async function addToCart(merchandiseId: string, quantity = 1): Promise<Ca
       // An expired or completed cart comes back null: start a fresh one.
       if (data.cartLinesAdd.cart) return result(data.cartLinesAdd);
     }
+    const country = await getCountry();
     const data = await shopifyFetch<{ cartCreate: MutationResult }>(
       cartFields + cartQueries.create,
-      { lines },
+      { lines, buyerIdentity: country ? { countryCode: country } : undefined },
     );
     if (data.cartCreate.cart) await saveCartId(data.cartCreate.cart.id);
     return result(data.cartCreate);
@@ -92,4 +94,26 @@ export async function updateCartLine(lineId: string, quantity: number): Promise<
 
 function result({ cart, userErrors }: MutationResult): CartResult {
   return { cart: normalize(cart), error: userErrors[0]?.message ?? null };
+}
+
+/** Switches the shop to another country's prices, and moves the bag over with it. */
+export async function setCountry(code: string): Promise<{ ok: boolean }> {
+  const { countries } = await getMarkets();
+  if (!countries.some((c) => c.isoCode === code)) return { ok: false };
+  (await cookies()).set(COUNTRY_COOKIE, code, {
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+  const id = await cartId();
+  if (id) {
+    try {
+      await shopifyFetch(cartFields + cartQueries.buyer, { cartId: id, buyerIdentity: { countryCode: code } });
+    } catch (error) {
+      // The bag keeps its old currency until checkout, where Shopify asks again.
+      console.error(error);
+    }
+  }
+  return { ok: true };
 }

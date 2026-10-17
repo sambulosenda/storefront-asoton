@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Garment } from "@/components/cloth";
-import { MarketButton } from "@/components/header";
+import { MarketButton } from "@/components/market-selector";
 import { BagIcon, CloseIcon, MinusIcon, PlusIcon } from "@/components/icons";
 import { Sheet } from "@/components/sheet";
 import { useStore } from "@/components/store-provider";

@@ -1,10 +1,32 @@
 "use client";
 
-import { createContext, use, useCallback, useEffect, useMemo, useState, useTransition, type ReactNode } from "react";
-import { addToCart, getCart, updateCartLine, type CartResult } from "@/lib/cart-actions";
+import {
+  createContext,
+  use,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+  useTransition,
+  type ReactNode,
+} from "react";
+import { addToCart, getCart, setCountry, updateCartLine, type CartResult } from "@/lib/cart-actions";
+import type { Market } from "@/lib/shopify";
 import type { Cart } from "@/lib/shopify/types";
 
-export type Overlay = "cart" | "search" | "menu" | "size-guide" | null;
+export type Overlay = "cart" | "search" | "menu" | "size-guide" | "market" | null;
+
+const COUNTRY_EVENT = "country-change";
+
+function subscribeCountry(onChange: () => void) {
+  window.addEventListener(COUNTRY_EVENT, onChange);
+  return () => window.removeEventListener(COUNTRY_EVENT, onChange);
+}
+
+function readCountry() {
+  return document.cookie.match(/(?:^|; )country=([A-Z]{2})/)?.[1] ?? null;
+}
 
 type Store = {
   cart: Cart | null;
@@ -18,6 +40,12 @@ type Store = {
   close: () => void;
   sizeGuideDept: "women" | "men";
   openSizeGuide: (dept?: "women" | "men") => void;
+  /** Countries the store sells to, and the one prices are shown in. */
+  markets: Market[];
+  market: Market | null;
+  chooseCountry: (code: string) => void;
+  /** True while the shop switches to another country. */
+  switchingCountry: boolean;
 };
 
 const StoreContext = createContext<Store | null>(null);
@@ -28,12 +56,23 @@ export function useStore() {
   return store;
 }
 
-export function StoreProvider({ children }: { children: ReactNode }) {
+export function StoreProvider({
+  children,
+  markets,
+  defaultMarket,
+}: {
+  children: ReactNode;
+  markets: Market[];
+  defaultMarket: Market | null;
+}) {
   const [cart, setCart] = useState<Cart | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [overlay, setOverlay] = useState<Overlay>(null);
   const [sizeGuideDept, setSizeGuideDept] = useState<"women" | "men">("women");
   const [pending, startTransition] = useTransition();
+  const [switchingCountry, startSwitching] = useTransition();
+  const code = useSyncExternalStore(subscribeCountry, readCountry, () => null);
+  const market = markets.find((m) => m.isoCode === code) ?? defaultMarket;
 
   useEffect(() => {
     getCart().then(setCart, () => {});
@@ -77,6 +116,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [cart],
   );
 
+  const chooseCountry = useCallback((next: string) => {
+    startSwitching(async () => {
+      // Setting the cookie in the action re-renders the page with the new prices.
+      const result = await setCountry(next);
+      if (!result.ok) return;
+      window.dispatchEvent(new Event(COUNTRY_EVENT));
+      setCart(await getCart());
+    });
+  }, []);
+
   const store = useMemo<Store>(
     () => ({
       cart,
@@ -92,8 +141,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (dept) setSizeGuideDept(dept);
         setOverlay("size-guide");
       },
+      markets,
+      market,
+      chooseCountry,
+      switchingCountry,
     }),
-    [cart, pending, notice, add, setQuantity, overlay, sizeGuideDept],
+    [cart, pending, notice, add, setQuantity, overlay, sizeGuideDept, markets, market, chooseCountry, switchingCountry],
   );
 
   return <StoreContext value={store}>{children}</StoreContext>;

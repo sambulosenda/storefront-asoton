@@ -1,11 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import { ClothBand } from "@/components/cloth-band";
 import { Garment } from "@/components/cloth";
 import { ArrowRight } from "@/components/icons";
 import { Newsletter } from "@/components/newsletter";
 import { ProductGrid, ProductRail } from "@/components/product-card";
+import { GridSkeleton } from "@/components/skeletons";
 import { clothLinks } from "@/lib/catalog";
+import { getCountry } from "@/lib/market";
 import { getCampaign, getCollectionOrAll } from "@/lib/shopify";
 import { nav, site } from "@/lib/site";
 
@@ -15,11 +18,7 @@ const DEPARTMENTS = [
 ];
 
 export default async function HomePage() {
-  const [campaign, newIn, cloths] = await Promise.all([
-    getCampaign("home"),
-    getCollectionOrAll({ handle: "new-in", first: 4 }),
-    clothLinks(),
-  ]);
+  const [campaign, cloths] = await Promise.all([getCampaign("home"), clothLinks()]);
 
   const label = campaign?.label ?? "Collection 01 — Autumn/Winter 2026";
   const body =
@@ -39,7 +38,7 @@ export default async function HomePage() {
       src={campaign.image.url}
       alt={campaign.image.altText ?? ""}
       fill
-      priority
+      preload
       sizes="(min-width: 768px) 58vw, 100vw"
       className="object-cover"
     />
@@ -95,27 +94,16 @@ export default async function HomePage() {
         ))}
       </nav>
 
-      {/* New in */}
-      {newIn.products.length > 0 && (
-        <section aria-labelledby="new-in" className="pb-16 md:page-x md:pb-[120px]">
-          <div className="flex flex-wrap items-center justify-between gap-4 px-4 pb-5 md:items-end md:px-0 md:pb-8">
-            <h2 id="new-in" className="font-display text-[32px] leading-none md:text-[clamp(36px,3.4vw,48px)] md:tracking-[-0.01em]">
-              New in
-            </h2>
-            <Link
-              href="/collections/new-in"
-              className="inline-flex min-h-11 items-center gap-2.5 text-[12px] tracking-[0.12em] uppercase underline-offset-[6px] md:arrow-link md:py-3"
-            >
-              View all
-              <ArrowRight size={18} className="hidden md:block" />
-            </Link>
+      {/* New in: prices follow the shopper's country, so this part renders per request. */}
+      <Suspense
+        fallback={
+          <div className="px-4 pb-16 md:page-x md:pb-[120px]">
+            <GridSkeleton count={4} />
           </div>
-          <div className="md:hidden">
-            <ProductRail products={newIn.products} />
-          </div>
-          <ProductGrid products={newIn.products} tight className="hidden md:grid" />
-        </section>
-      )}
+        }
+      >
+        <NewIn />
+      </Suspense>
 
       {/* Departments */}
       <section
@@ -185,5 +173,30 @@ export default async function HomePage() {
 
       <Newsletter />
     </>
+  );
+}
+
+async function NewIn() {
+  const newIn = await getCollectionOrAll({ handle: "new-in", first: 4, country: await getCountry() });
+  if (newIn.products.length === 0) return null;
+  return (
+    <section aria-labelledby="new-in" className="pb-16 md:page-x md:pb-[120px]">
+      <div className="flex flex-wrap items-center justify-between gap-4 px-4 pb-5 md:items-end md:px-0 md:pb-8">
+        <h2 id="new-in" className="font-display text-[32px] leading-none md:text-[clamp(36px,3.4vw,48px)] md:tracking-[-0.01em]">
+          New in
+        </h2>
+        <Link
+          href="/collections/new-in"
+          className="inline-flex min-h-11 items-center gap-2.5 text-[12px] tracking-[0.12em] uppercase underline-offset-[6px] md:arrow-link md:py-3"
+        >
+          View all
+          <ArrowRight size={18} className="hidden md:block" />
+        </Link>
+      </div>
+      <div className="md:hidden">
+        <ProductRail products={newIn.products} />
+      </div>
+      <ProductGrid products={newIn.products} tight className="hidden md:grid" />
+    </section>
   );
 }

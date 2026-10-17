@@ -175,7 +175,7 @@ export function ProductForm({ product, dept, model }: { product: ProductDetail; 
                       : on
                         ? "border-ink text-muted line-through"
                         : out
-                          ? "border-line-soft text-muted line-through"
+                          ? "border-line-soft text-ink-2 line-through"
                           : "border-line hover:border-ink"
                   }`}
                 >

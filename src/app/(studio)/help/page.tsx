@@ -50,7 +50,7 @@ export default function HelpPage() {
             <h2 id="h-delivery" className={h2}>
               Delivery
             </h2>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Delivery options">
               <table className="w-full min-w-[520px] border-collapse text-[15px]">
                 <thead>
                   <tr>

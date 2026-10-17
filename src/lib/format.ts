@@ -6,6 +6,8 @@ export function formatMoney({ amount, currencyCode }: Money) {
   return new Intl.NumberFormat("en-GB", {
     style: "currency",
     currency: currencyCode,
+    // "$240" rather than en-GB's "US$240" for shoppers who switched country.
+    currencyDisplay: "narrowSymbol",
     minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
     maximumFractionDigits: 2,
   }).format(value);
