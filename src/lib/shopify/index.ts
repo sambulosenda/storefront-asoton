@@ -842,11 +842,12 @@ export async function getSitemapEntries(): Promise<{
   try {
     const products: ProductNode[] = [];
     let after: string | null = null;
-    // Ten pages of 250 is far more than this catalog needs; the cap keeps a bad cursor from looping.
-    for (let i = 0; i < 10; i++) {
+    // Pages of 50 keep each query under the 1,000 cost limit of tokenless access. Fifty pages
+    // is far more than this catalog needs; the cap keeps a bad cursor from looping.
+    for (let i = 0; i < 50; i++) {
       const data: { products: Page<ProductNode> } = await shopifyFetch<{ products: Page<ProductNode> }>(
         `query SitemapProducts($after: String) {
-          products(first: 250, after: $after) {
+          products(first: 50, after: $after) {
             nodes {
               handle
               updatedAt

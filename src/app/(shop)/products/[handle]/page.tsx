@@ -17,8 +17,9 @@ import { getProduct, getRecommendations } from "@/lib/shopify";
 import { site, siteUrl } from "@/lib/site";
 
 export async function generateMetadata({ params }: PageProps<"/products/[handle]">): Promise<Metadata> {
-  const { handle } = await params;
-  const product = await getProduct(handle);
+  const [{ handle }, country] = await Promise.all([params, getCountry()]);
+  // Same market as the page, so a piece sold only outside the default market isn't a 404.
+  const product = await getProduct(handle, country);
   // Throwing here, before the page streams, sends search engines a real 404 status.
   if (!product) notFound();
   const title = product.seo.title ?? product.title;
@@ -35,6 +36,16 @@ export async function generateMetadata({ params }: PageProps<"/products/[handle]
     alternates: { canonical: `/products/${handle}` },
     openGraph: { title, description, url: `/products/${handle}`, siteName: site.brand, locale: "en_GB", images: [image] },
   };
+}
+
+/** A GTIN-8, 12, 13 or 14 barcode with a correct check digit. */
+function isGtin(code: string) {
+  if (!/^(\d{8}|\d{12,14})$/.test(code)) return false;
+  const digits = [...code].map(Number);
+  const check = digits.pop()!;
+  // From the right, digits are weighted 3, 1, 3, 1…
+  const sum = digits.reverse().reduce((total, d, i) => total + d * (i % 2 ? 1 : 3), 0);
+  return (10 - (sum % 10)) % 10 === check;
 }
 
 /** A description shortened to fit a search result snippet, cut at a word. */
@@ -107,7 +118,7 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
       "@type": "Offer",
       // Shopify's own SKU and barcode when set, else the variant's id.
       sku: v.sku || v.id.split("/").pop(),
-      ...(v.barcode && /^\d{8,14}$/.test(v.barcode) ? { gtin: v.barcode } : {}),
+      ...(v.barcode && isGtin(v.barcode) ? { gtin: v.barcode } : {}),
       name: v.title,
       price: v.price.amount,
       priceCurrency: v.price.currencyCode,
