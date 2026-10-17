@@ -5,6 +5,7 @@ import { Suspense, type ReactNode } from "react";
 import { Accordion } from "@/components/accordion";
 import { ClothSwatch, drawingFor } from "@/components/cloth";
 import { ArrowRight, StarIcon } from "@/components/icons";
+import { breadcrumbs, JsonLd } from "@/components/json-ld";
 import { ProductGrid, ProductRail } from "@/components/product-card";
 import { ProductForm } from "@/components/product-form";
 import { ProductGallery } from "@/components/product-gallery";
@@ -18,9 +19,13 @@ import { site, siteUrl } from "@/lib/site";
 export async function generateMetadata({ params }: PageProps<"/products/[handle]">): Promise<Metadata> {
   const { handle } = await params;
   const product = await getProduct(handle);
-  if (!product) return {};
+  // Throwing here, before the page streams, sends search engines a real 404 status.
+  if (!product) notFound();
   const title = product.seo.title ?? product.title;
-  const description = product.seo.description ?? product.description.slice(0, 160);
+  const description =
+    product.seo.description ||
+    summary(product.description) ||
+    `${product.title}, contemporary African clothing from ${site.brand}. UK delivery and ${site.returnDays}-day returns.`;
   // Setting openGraph replaces the layout's, so the shared fields are repeated here.
   // Without a product photo the site's share image is used.
   const image = product.featuredImage ? { url: product.featuredImage.url, alt: product.featuredImage.altText ?? title } : "/opengraph-image";
@@ -28,8 +33,16 @@ export async function generateMetadata({ params }: PageProps<"/products/[handle]
     title,
     description,
     alternates: { canonical: `/products/${handle}` },
-    openGraph: { title, description, siteName: site.brand, locale: "en_GB", images: [image] },
+    openGraph: { title, description, url: `/products/${handle}`, siteName: site.brand, locale: "en_GB", images: [image] },
   };
+}
+
+/** A description shortened to fit a search result snippet, cut at a word. */
+function summary(text: string, max = 160) {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (clean.length <= max) return clean;
+  const cut = clean.slice(0, max - 1);
+  return `${cut.slice(0, cut.lastIndexOf(" ")).replace(/[,;:.\s]+$/, "")}…`;
 }
 
 export default function ProductPage({ params }: PageProps<"/products/[handle]">) {
@@ -81,35 +94,43 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
   ] : []);
 
   // Product details for search results (price, stock and rating stars).
+  const url = `${siteUrl}/products/${product.handle}`;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.title,
-    description: product.description,
-    url: `${siteUrl}/products/${product.handle}`,
-    image: product.images.map((i) => i.url),
+    description: product.description || undefined,
+    url,
+    image: product.images.length ? product.images.map((i) => i.url) : product.featuredImage?.url,
     brand: { "@type": "Brand", name: site.brand },
     offers: product.variants.map((v) => ({
       "@type": "Offer",
-      sku: v.id.split("/").pop(),
+      // Shopify's own SKU and barcode when set, else the variant's id.
+      sku: v.sku || v.id.split("/").pop(),
+      ...(v.barcode && /^\d{8,14}$/.test(v.barcode) ? { gtin: v.barcode } : {}),
       name: v.title,
       price: v.price.amount,
       priceCurrency: v.price.currencyCode,
       availability: `https://schema.org/${v.availableForSale ? "InStock" : "OutOfStock"}`,
-      url: `${siteUrl}/products/${product.handle}`,
+      itemCondition: "https://schema.org/NewCondition",
+      seller: { "@type": "Organization", name: site.brand },
+      url,
     })),
     ...(product.rating && product.ratingCount
       ? { aggregateRating: { "@type": "AggregateRating", ratingValue: product.rating, reviewCount: product.ratingCount } }
       : {}),
   };
 
+  const trail = [
+    { name: "Home", path: "/" },
+    ...crumbs.map((c) => ({ name: c.title, path: `/collections/${c.handle}` })),
+    { name: product.title, path: `/products/${product.handle}` },
+  ];
+
   return (
     <>
-      <script
-        type="application/ld+json"
-        // Escape "<" so product text can't close the script tag.
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
-      />
+      <JsonLd data={jsonLd} />
+      <JsonLd data={breadcrumbs(siteUrl, trail)} />
       <nav aria-label="Breadcrumb" className="page-x hidden py-6 text-[13px] text-ink-2 md:block">
         <ol className="flex flex-wrap gap-2">
           <li>

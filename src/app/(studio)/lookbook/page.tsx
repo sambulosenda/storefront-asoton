@@ -7,7 +7,11 @@ import { getCountry } from "@/lib/market";
 import { getCampaign, getCollectionOrAll, getLooks, type Look, type Product } from "@/lib/shopify";
 import { site } from "@/lib/site";
 
-export const metadata: Metadata = { title: "Lookbook" };
+export const metadata: Metadata = {
+  title: "Lookbook",
+  description: `Looks from ${site.brand}: contemporary African clothing for women and men, styled head to toe.`,
+  alternates: { canonical: "/lookbook" },
+};
 
 // Each look gets the next of the design's grounds while it has no photo.
 const TONES = ["#2B3049", "#3E2A2E", "#4A3F3A", "#2F3438"];

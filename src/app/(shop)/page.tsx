@@ -1,21 +1,40 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ClothBand } from "@/components/cloth-band";
 import { ProductVisual } from "@/components/cloth";
 import { ArrowRight } from "@/components/icons";
+import { JsonLd } from "@/components/json-ld";
 import { Newsletter } from "@/components/newsletter";
 import { ProductGrid, ProductRail } from "@/components/product-card";
 import { GridSkeleton } from "@/components/skeletons";
 import { departmentImage, homeFeature, stockedCloths } from "@/lib/catalog";
 import { getCountry } from "@/lib/market";
 import { getCollectionOrAll } from "@/lib/shopify";
-import { nav, site } from "@/lib/site";
+import { nav, site, siteUrl } from "@/lib/site";
 
 const DEPARTMENTS = [
   { handle: "women", title: "Women", href: "/collections/women", blurb: "Dresses, sets, boubous, headwraps", cta: "Shop women", tone: "#4A3F3A", soft: "#DCD5CC" },
   { handle: "men", title: "Men", href: "/collections/men", blurb: "Kaftans, agbada, shirts, trousers", cta: "Shop men", tone: "#2F3438", soft: "#D2D5D8" },
 ];
+
+export const metadata: Metadata = {
+  title: { absolute: `${site.brand} · ${site.tagline.replace(/\.$/, "")}` },
+  alternates: { canonical: "/" },
+};
+
+// Who runs the shop, for the brand panel and site name in search results.
+const profiles = Object.values(site.social).filter((url) => url.startsWith("http"));
+const organization = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: site.brand,
+  url: siteUrl,
+  description: site.description,
+  ...(profiles.length ? { sameAs: profiles } : {}),
+};
+const website = { "@context": "https://schema.org", "@type": "WebSite", name: site.brand, url: siteUrl };
 
 export default async function HomePage() {
   const [{ campaign, collection, products }, cloths, departmentImages] = await Promise.all([
@@ -51,6 +70,8 @@ export default async function HomePage() {
 
   return (
     <>
+      <JsonLd data={organization} />
+      <JsonLd data={website} />
       {/* Hero */}
       <section className="md:page-x md:flex md:flex-wrap md:gap-12 md:pt-8 md:pb-[120px]">
         <div className="relative h-[488px] overflow-hidden bg-[#2B3049] md:aspect-[4/5] md:h-auto md:max-h-[860px] md:min-w-0 md:flex-[7_1_560px]">

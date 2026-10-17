@@ -3,11 +3,12 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { CollectionBrowser } from "@/components/collection-browser";
 import { Editorial } from "@/components/editorial";
+import { breadcrumbs, JsonLd } from "@/components/json-ld";
 import { CollectionSkeleton } from "@/components/skeletons";
 import { parseFilters, parseSort } from "@/lib/filters";
 import { getCountry } from "@/lib/market";
 import { getCampaign, getCollection, getCollectionOrAll, getMenu } from "@/lib/shopify";
-import { departments } from "@/lib/site";
+import { departments, site, siteUrl } from "@/lib/site";
 
 const titleFromHandle = (handle: string) =>
   handle.replace(/-/g, " ").replace(/^\w/, (c) => c.toUpperCase());
@@ -15,11 +16,25 @@ const titleFromHandle = (handle: string) =>
 export async function generateMetadata({ params }: PageProps<"/collections/[handle]">): Promise<Metadata> {
   const { handle } = await params;
   const page = await getCollection({ handle, first: 1 });
+  const collection = page?.collection;
+  const title = collection?.title ?? titleFromHandle(handle);
+  const description = collection?.description || departments[handle]?.intro;
   return {
-    title: page?.collection?.title ?? titleFromHandle(handle),
-    description: page?.collection?.description || departments[handle]?.intro,
+    title,
+    description,
     // Sorted and filtered views point search engines back at the plain collection.
     alternates: { canonical: `/collections/${handle}` },
+    openGraph: {
+      title,
+      description,
+      url: `/collections/${handle}`,
+      siteName: site.brand,
+      locale: "en_GB",
+      images: [collection?.image ? { url: collection.image.url, alt: collection.image.altText ?? title } : "/opengraph-image"],
+    },
+    // Until the collection exists in Shopify the page shows the whole catalog, which
+    // search engines would see as a copy of every other stand-in page.
+    ...(collection ? {} : { robots: { index: false, follow: true } }),
   };
 }
 
@@ -71,6 +86,14 @@ async function Collection({
 
   return (
     <>
+      {page.collection && (
+        <JsonLd
+          data={breadcrumbs(siteUrl, [
+            { name: "Home", path: "/" },
+            { name: title, path },
+          ])}
+        />
+      )}
       <section className="page-x pt-4 md:pt-8">
         <nav aria-label="Breadcrumb" className="text-[12px] text-ink-2 md:text-[13px]">
           <ol className="flex flex-wrap gap-2">

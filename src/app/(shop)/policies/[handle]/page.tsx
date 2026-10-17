@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPolicy, policyHandles, type PolicyHandle } from "@/lib/shopify";
+import { site } from "@/lib/site";
 
 const isPolicy = (handle: string): handle is PolicyHandle => (policyHandles as string[]).includes(handle);
 
@@ -11,7 +12,12 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<"/policies/[handle]">): Promise<Metadata> {
   const { handle } = await params;
   const policy = isPolicy(handle) ? await getPolicy(handle) : null;
-  return { title: policy?.title };
+  if (!policy) notFound();
+  return {
+    title: policy.title,
+    description: `${site.brand}'s ${policy.title.toLowerCase()}.`,
+    alternates: { canonical: `/policies/${handle}` },
+  };
 }
 
 export default async function PolicyPage({ params }: PageProps<"/policies/[handle]">) {

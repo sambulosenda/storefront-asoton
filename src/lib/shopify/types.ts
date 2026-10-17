@@ -17,6 +17,8 @@ export type Product = {
 export type Variant = {
   id: string;
   title: string;
+  sku: string | null;
+  barcode: string | null;
   availableForSale: boolean;
   price: Money;
   compareAtPrice: Money | null;
