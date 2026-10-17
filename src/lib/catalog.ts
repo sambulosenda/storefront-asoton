@@ -3,8 +3,19 @@
 
 import { CLOTHS, clothByName, type Cloth } from "@/lib/cloths";
 import { formatMoney } from "@/lib/format";
-import { getCampaign, getCloths, getCollectionOrAll, getFreeDeliveryThreshold, getMenu, type MenuLink } from "@/lib/shopify";
-import { site } from "@/lib/site";
+import {
+  getCampaign,
+  getCloths,
+  getCollection,
+  getCollectionOrAll,
+  getFreeDeliveryThreshold,
+  getMenu,
+  searchProducts,
+  type Image,
+  type MenuLink,
+  type Product,
+} from "@/lib/shopify";
+import { departments, site } from "@/lib/site";
 
 const search = (q: string) => `/search?q=${encodeURIComponent(q)}`;
 
@@ -56,6 +67,19 @@ export async function clothLinks(): Promise<ClothLink[]> {
 export async function homeFeature() {
   const [campaign, newIn] = await Promise.all([getCampaign("home"), getCollectionOrAll({ handle: "new-in", first: 2 })]);
   return { campaign, collection: newIn.collection, products: newIn.products };
+}
+
+const firstPhoto = (products: Product[]) => products.find((p) => p.featuredImage)?.featuredImage ?? null;
+
+/**
+ * The picture on a department tile: the collection's own image, else its first product photo.
+ * Until the collection exists, the first photo the department's search word finds.
+ */
+export async function departmentImage(handle: string): Promise<Image | null> {
+  const page = await getCollection({ handle, first: 4 });
+  if (page) return page.collection?.image ?? firstPhoto(page.products);
+  const search = departments[handle]?.imageSearch;
+  return search ? firstPhoto((await searchProducts({ query: search, first: 4 })).products) : null;
 }
 
 export async function deliveryThreshold() {

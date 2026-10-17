@@ -67,16 +67,19 @@ export const footerNav = [
  * description in Shopify. The editorial block between the product grids comes from the
  * "campaign" metaobject with the same handle; these set its colour and which side the picture sits.
  */
-export const departments: Record<string, { intro: string; tone: string; imageFirst: boolean }> = {
+export const departments: Record<string, { intro: string; tone: string; imageFirst: boolean; imageSearch: string }> = {
   women: {
     intro: "Dresses, sets, boubous and headwraps in adire, kente, aso-oke, bògòlan and wax-print cloth.",
     tone: "#2B3049",
     imageFirst: true,
+    // Until the collection exists, the home page's tile shows the first product this search finds.
+    imageSearch: "dress",
   },
   men: {
     intro: "Kaftans, agbada, shirts and trousers in aso-oke, kente, bògòlan, adire and wax-print cloth.",
     tone: "#2F3438",
     imageFirst: false,
+    imageSearch: "kaftan",
   },
 };
 

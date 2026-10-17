@@ -108,7 +108,9 @@ function respond(query, vars) {
       const start = vars.after ? Number(vars.after) : 0;
       const page = list.slice(start, start + vars.first);
       const titles = { women: "Women", men: "Men", "new-in": "New in" };
-      return { collection: { id: "c", handle: vars.handle, title: titles[vars.handle], description: "", image: null, products: { filters: filtersFor(list), pageInfo: { hasNextPage: start + vars.first < list.length, endCursor: String(start + vars.first) }, nodes: page.map(card) } } };
+      // Only Women has a collection image, so the home page shows one tile with a photo and one without.
+      const image = vars.handle === "women" ? { url: "https://cdn.shopify.com/s/files/fixture/women.jpg", altText: null, width: 1200, height: 1500 } : null;
+      return { collection: { id: "c", handle: vars.handle, title: titles[vars.handle], description: "", image, products: { filters: filtersFor(list), pageInfo: { hasNextPage: start + vars.first < list.length, endCursor: String(start + vars.first) }, nodes: page.map(card) } } };
     }
     case "SitemapProducts": return { products: { nodes: products.map((p) => ({ handle: p.handle, updatedAt: "2026-10-01T00:00:00Z" })), pageInfo: { hasNextPage: false, endCursor: null } } };
     case "SitemapCollections": return { collections: { nodes: ["new-in", "women", "men"].map((handle) => ({ handle, updatedAt: "2026-10-01T00:00:00Z" })), pageInfo: { hasNextPage: false, endCursor: null } } };

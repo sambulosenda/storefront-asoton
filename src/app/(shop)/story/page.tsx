@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
-import { clothLinks } from "@/lib/catalog";
+import { clothLinks, homeFeature } from "@/lib/catalog";
+import { getCampaign } from "@/lib/shopify";
 import { story } from "@/lib/site";
 
 export const metadata: Metadata = { title: "Our story" };
@@ -18,7 +20,16 @@ const BELIEFS = [
 ];
 
 export default async function StoryPage() {
-  const cloths = await clothLinks();
+  const [cloths, storyCampaign, workshopCampaign, { products }] = await Promise.all([
+    clothLinks(),
+    getCampaign("story"),
+    getCampaign("workshop"),
+    homeFeature(),
+  ]);
+  // The "story" and "workshop" campaign entries hold this page's photos. Until the first exists,
+  // the portrait shows the newest piece; the workshop picture only shows once it's set.
+  const portrait = storyCampaign?.image ?? products.find((p) => p.featuredImage)?.featuredImage ?? null;
+  const workshop = workshopCampaign?.image ?? null;
 
   return (
     <>
@@ -32,7 +43,18 @@ export default async function StoryPage() {
           </h1>
           <p className="max-w-[600px] text-[17px] leading-[1.6] text-ink-2 md:text-[19px]">{story.opening}</p>
         </div>
-        <div className="aspect-[4/5] max-h-[640px] w-full min-w-0 flex-[4_1_320px] bg-[#4A3F3A]" />
+        <div className="relative aspect-[4/5] max-h-[640px] w-full min-w-0 flex-[4_1_320px] overflow-hidden bg-[#4A3F3A]">
+          {portrait && (
+            <Image
+              src={portrait.url}
+              alt={portrait.altText ?? ""}
+              fill
+              preload
+              sizes="(min-width: 768px) 35vw, 100vw"
+              className="object-cover"
+            />
+          )}
+        </div>
       </section>
 
       <section
@@ -48,9 +70,13 @@ export default async function StoryPage() {
         ))}
       </section>
 
-      <section aria-label="Workshop" className="page-x pb-20 md:pb-[120px]">
-        <div className="aspect-[4/3] bg-[#2B3049] md:aspect-[21/9]" />
-      </section>
+      {workshop && (
+        <section aria-label="Workshop" className="page-x pb-20 md:pb-[120px]">
+          <div className="relative aspect-[4/3] overflow-hidden bg-[#2B3049] md:aspect-[21/9]">
+            <Image src={workshop.url} alt={workshop.altText ?? ""} fill sizes="100vw" className="object-cover" />
+          </div>
+        </section>
+      )}
 
       <section aria-label="From the founder" className="bg-ink text-paper">
         <figure className="mx-auto flex max-w-[1100px] flex-col gap-8 px-[clamp(16px,4vw,48px)] py-20 md:py-[120px]">

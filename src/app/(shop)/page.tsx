@@ -7,18 +7,22 @@ import { ArrowRight } from "@/components/icons";
 import { Newsletter } from "@/components/newsletter";
 import { ProductGrid, ProductRail } from "@/components/product-card";
 import { GridSkeleton } from "@/components/skeletons";
-import { clothLinks, homeFeature } from "@/lib/catalog";
+import { clothLinks, departmentImage, homeFeature } from "@/lib/catalog";
 import { getCountry } from "@/lib/market";
 import { getCollectionOrAll } from "@/lib/shopify";
 import { nav, site } from "@/lib/site";
 
 const DEPARTMENTS = [
-  { title: "Women", href: "/collections/women", blurb: "Dresses, sets, boubous, headwraps", cta: "Shop women", tone: "#4A3F3A", soft: "#DCD5CC" },
-  { title: "Men", href: "/collections/men", blurb: "Kaftans, agbada, shirts, trousers", cta: "Shop men", tone: "#2F3438", soft: "#D2D5D8" },
+  { handle: "women", title: "Women", href: "/collections/women", blurb: "Dresses, sets, boubous, headwraps", cta: "Shop women", tone: "#4A3F3A", soft: "#DCD5CC" },
+  { handle: "men", title: "Men", href: "/collections/men", blurb: "Kaftans, agbada, shirts, trousers", cta: "Shop men", tone: "#2F3438", soft: "#D2D5D8" },
 ];
 
 export default async function HomePage() {
-  const [{ campaign, collection, products }, cloths] = await Promise.all([homeFeature(), clothLinks()]);
+  const [{ campaign, collection, products }, cloths, departmentImages] = await Promise.all([
+    homeFeature(),
+    clothLinks(),
+    Promise.all(DEPARTMENTS.map((d) => departmentImage(d.handle))),
+  ]);
   const [newest, next] = products;
 
   // The "home" campaign metaobject sets the hero. Without one, the newest piece leads it.
@@ -124,13 +128,26 @@ export default async function HomePage() {
         aria-label="Shop by department"
         className="flex flex-col gap-3 px-4 pb-16 md:page-x md:grid md:grid-cols-[repeat(auto-fit,minmax(min(420px,100%),1fr))] md:gap-6 md:pb-[120px]"
       >
-        {DEPARTMENTS.map((d) => (
+        {DEPARTMENTS.map((d, i) => (
           <Link
             key={d.href}
             href={d.href}
             style={{ backgroundColor: d.tone }}
             className="relative block h-[448px] overflow-hidden text-paper no-underline hover:text-paper md:aspect-[4/5] md:h-auto md:max-h-[820px]"
           >
+            {departmentImages[i] && (
+              <>
+                <Image
+                  src={departmentImages[i].url}
+                  alt=""
+                  fill
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  className="object-cover"
+                />
+                {/* Keeps the white type readable on light photos. */}
+                <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-transparent" />
+              </>
+            )}
             <div className="absolute inset-x-5 bottom-5 flex flex-wrap items-end justify-between gap-3 md:inset-x-8 md:bottom-8 md:gap-4">
               <div className="flex flex-col gap-1 md:gap-2">
                 <span className="font-display text-[40px] leading-none md:text-[clamp(44px,4vw,64px)]">{d.title}</span>

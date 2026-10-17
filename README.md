@@ -33,12 +33,15 @@ The store is **My Store 2** (`iwsv0v-te.myshopify.com`). With no env vars at all
 
 The pages fall back gracefully when these are missing, but they look like the design only once they exist:
 
-- **Collections** with the handles `new-in`, `women`, `men` and `accessories`.
+- **Collections** with the handles `new-in`, `women`, `men` and `accessories`. Until `women` and `men` exist, those pages list every product.
+  - The Women and Men tiles on the home page show the collection's image (set it under **Collection image** in the admin). Without one, they show the collection's first product photo, and until the collection exists, the first photo a search for the word in `departments` in `src/lib/site.ts` finds (`dress` and `kaftan`).
 - **Menus** with the handles `women` and `men` (the category tabs and the mobile menu).
 - **Metaobjects**:
   - `campaign`, with fields `label` (single line text, the small line above the headline), `headline` (single line text), `body` (multi-line text), `image` (file), and optionally `cta` (button text) and `link` (where the button goes, such as `/collections/women`). Its entries, by handle:
     - `home`: the home hero and the phone menu's promo tile. Without it, the hero leads with the first product in the `new-in` collection (or the newest product, if that collection doesn't exist): its photo, its name and a link to it.
-    - `women`, `men` (any collection handle): the editorial block between the product grids on that collection page. Without one, the block isn't shown.
+    - `women`, `men` (any collection handle): the editorial block between the product grids on that collection page. Its photo is the entry's image, else the collection's image. Without an entry, the block isn't shown.
+    - `story`: the portrait on the Our story page. Without it, the portrait is the newest product's photo.
+    - `workshop`: the wide photo on the Our story page. Without it, that photo isn't shown.
     - `lookbook`: the lookbook's opening photo, title and intro. Without it, the page is titled Lookbook and uses the first look's photo.
   - `look`, with fields `title` (single line text), `body` (multi-line text, optional), `image` (file) and `products` (list of products). Each entry is a look on the lookbook page, with the pieces listed under it. Until there are looks, the page shows the newest products one at a time.
   - `cloth` (name, technique, origin, caption, collection) entries.
