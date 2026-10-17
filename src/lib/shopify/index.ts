@@ -24,6 +24,7 @@ async function shopifyFetch<T>(
   variables?: Record<string, unknown>,
 ): Promise<T> {
   const res = await fetch(endpoint, {
+    signal: AbortSignal.timeout(10_000),
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -64,7 +65,6 @@ const productFields = /* GraphQL */ `
 
 export async function getProducts(first = 12): Promise<Product[]> {
   "use cache";
-  cacheLife("hours");
   cacheTag("products");
 
   try {
@@ -79,16 +79,18 @@ export async function getProducts(first = 12): Promise<Product[]> {
       }`,
       { first },
     );
+    cacheLife("hours");
     return data.products.nodes;
   } catch (error) {
     console.error(error);
+    // Keep failures short-lived so the catalog recovers soon after Shopify does.
+    cacheLife("minutes");
     return [];
   }
 }
 
 export async function getProduct(handle: string): Promise<Product | null> {
   "use cache";
-  cacheLife("hours");
   cacheTag("products", `product-${handle}`);
 
   try {
@@ -101,9 +103,11 @@ export async function getProduct(handle: string): Promise<Product | null> {
       }`,
       { handle },
     );
+    cacheLife("hours");
     return data.product;
   } catch (error) {
     console.error(error);
+    cacheLife("minutes");
     return null;
   }
 }
