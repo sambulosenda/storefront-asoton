@@ -3,7 +3,7 @@
 
 import { CLOTHS, clothByName, type Cloth } from "@/lib/cloths";
 import { formatMoney } from "@/lib/format";
-import { getCloths, getFreeDeliveryThreshold, getMenu, type MenuLink } from "@/lib/shopify";
+import { getCampaign, getCloths, getCollectionOrAll, getFreeDeliveryThreshold, getMenu, type MenuLink } from "@/lib/shopify";
 import { site } from "@/lib/site";
 
 const search = (q: string) => `/search?q=${encodeURIComponent(q)}`;
@@ -46,6 +46,16 @@ export async function clothLinks(): Promise<ClothLink[]> {
       href: entry?.collectionHandle ? `/collections/${entry.collectionHandle}` : search(cloth.name),
     };
   });
+}
+
+/**
+ * What the home hero and the menu's promo lead with: the "home" campaign metaobject when it
+ * exists, and the first two pieces in New in (the new-in collection in its own order, or the
+ * newest products when that collection doesn't exist).
+ */
+export async function homeFeature() {
+  const [campaign, newIn] = await Promise.all([getCampaign("home"), getCollectionOrAll({ handle: "new-in", first: 2 })]);
+  return { campaign, collection: newIn.collection, products: newIn.products };
 }
 
 export async function deliveryThreshold() {

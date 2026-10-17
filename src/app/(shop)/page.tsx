@@ -2,14 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ClothBand } from "@/components/cloth-band";
-import { Garment } from "@/components/cloth";
+import { ProductVisual } from "@/components/cloth";
 import { ArrowRight } from "@/components/icons";
 import { Newsletter } from "@/components/newsletter";
 import { ProductGrid, ProductRail } from "@/components/product-card";
 import { GridSkeleton } from "@/components/skeletons";
-import { clothLinks } from "@/lib/catalog";
+import { clothLinks, homeFeature } from "@/lib/catalog";
 import { getCountry } from "@/lib/market";
-import { getCampaign, getCollectionOrAll } from "@/lib/shopify";
+import { getCollectionOrAll } from "@/lib/shopify";
 import { nav, site } from "@/lib/site";
 
 const DEPARTMENTS = [
@@ -18,25 +18,26 @@ const DEPARTMENTS = [
 ];
 
 export default async function HomePage() {
-  const [campaign, cloths] = await Promise.all([getCampaign("home"), clothLinks()]);
+  const [{ campaign, collection, products }, cloths] = await Promise.all([homeFeature(), clothLinks()]);
+  const [newest, next] = products;
 
-  const label = campaign?.label ?? "Collection 01 — Autumn/Winter 2026";
-  const body =
-    campaign?.body ??
-    "Resist-dyed adire cloth, cut into clean, modern shapes — wrap dresses and two-piece sets for her, kaftans and agbada for him.";
-  const headline = campaign?.headline ? (
-    campaign.headline
-  ) : (
-    <>
-      The <em>Indigo</em>
-      <br />
-      Edit
-    </>
-  );
-  const campaignImage = campaign?.image && (
+  // The "home" campaign metaobject sets the hero. Without one, the newest piece leads it.
+  const lead = campaign ? null : newest;
+  const label = campaign?.label ?? "New in";
+  const headline = campaign?.headline ?? lead?.title ?? site.brand;
+  const body = campaign?.body ?? (collection?.description || site.description);
+  const image = campaign?.image ?? lead?.featuredImage ?? null;
+  // The small picture beside the copy: the newest piece under a campaign, the next one otherwise.
+  const featured = campaign ? newest : next;
+  const ctaHref = campaign ? (campaign.link ?? "/collections/new-in") : lead ? `/products/${lead.handle}` : "/collections/new-in";
+  const ctaLabel = campaign ? (campaign.cta ?? "Shop the edit") : lead ? "Shop now" : "Shop new in";
+  // The design sets a three-word headline at display size; product names get a smaller one.
+  const long = headline.length > 20;
+
+  const heroImage = image && (
     <Image
-      src={campaign.image.url}
-      alt={campaign.image.altText ?? ""}
+      src={image.url}
+      alt={image.altText ?? lead?.title ?? ""}
       fill
       preload
       sizes="(min-width: 768px) 58vw, 100vw"
@@ -49,18 +50,30 @@ export default async function HomePage() {
       {/* Hero */}
       <section className="md:page-x md:flex md:flex-wrap md:gap-12 md:pt-8 md:pb-[120px]">
         <div className="relative h-[488px] overflow-hidden bg-[#2B3049] md:aspect-[4/5] md:h-auto md:max-h-[860px] md:min-w-0 md:flex-[7_1_560px]">
-          {campaignImage}
+          {lead && heroImage ? (
+            <Link href={`/products/${lead.handle}`} className="absolute inset-0">
+              {heroImage}
+            </Link>
+          ) : (
+            heroImage
+          )}
         </div>
         <div className="flex min-w-0 flex-col justify-between gap-12 px-4 pt-7 pb-8 md:flex-[5_1_380px] md:px-0 md:pt-6 md:pb-0">
           <div className="flex flex-col gap-4 md:gap-7">
             <span className="text-[11px] tracking-[0.16em] text-ink-2 uppercase md:text-[12px]">{label}</span>
-            <h1 className="font-display text-[52px] leading-[0.95] tracking-[-0.02em] md:text-[clamp(56px,6.4vw,96px)] md:leading-[0.94]">
+            <h1
+              className={`font-display tracking-[-0.02em] ${
+                long
+                  ? "text-[40px] leading-[1] md:text-[clamp(44px,4.4vw,64px)]"
+                  : "text-[52px] leading-[0.95] md:text-[clamp(56px,6.4vw,96px)] md:leading-[0.94]"
+              }`}
+            >
               {headline}
             </h1>
             <p className="max-w-[420px] leading-[1.6] text-ink-2 md:text-[17px]">{body}</p>
             <div className="flex flex-wrap items-center gap-x-8 gap-y-4 pt-2">
-              <Link href="/collections/new-in" className="btn btn-ink w-full md:w-auto md:px-9">
-                Shop the edit
+              <Link href={ctaHref} className="btn btn-ink w-full md:w-auto md:px-9">
+                {ctaLabel}
               </Link>
               <div className="hidden gap-6 text-[14px] md:flex">
                 <Link href="/collections/women" className="py-3 underline-offset-[6px]">
@@ -72,16 +85,17 @@ export default async function HomePage() {
               </div>
             </div>
           </div>
-          <figure className="hidden items-end gap-5 md:flex">
-            <div className="flex aspect-[4/5] w-[200px] flex-none items-center justify-center bg-stone">
-              <div className="aspect-[3/4] w-[76%]">
-                <Garment garment="dress" cloth="adire" />
-              </div>
-            </div>
-            <figcaption className="max-w-[230px] text-[13px] leading-[1.55] text-ink-2">
-              The Adire Wrap Dress. Its pattern is painted on in cassava-starch paste before the cloth meets the indigo.
-            </figcaption>
-          </figure>
+          {featured && (
+            <Link href={`/products/${featured.handle}`} className="hidden items-end gap-5 text-ink no-underline hover:text-ink md:flex">
+              <span className="relative flex aspect-[4/5] w-[200px] flex-none items-center justify-center overflow-hidden bg-stone">
+                <ProductVisual product={featured} image={featured.featuredImage} sizes="200px" />
+              </span>
+              <span className="flex max-w-[230px] flex-col gap-1.5 text-[13px] leading-[1.55]">
+                <span>{featured.title}</span>
+                <span className="text-ink-2 underline underline-offset-4">Shop now</span>
+              </span>
+            </Link>
+          )}
         </div>
       </section>
 

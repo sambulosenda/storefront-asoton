@@ -8,7 +8,7 @@ import { MobileMenu } from "@/components/mobile-menu";
 import { SearchOverlay } from "@/components/search-overlay";
 import { SizeGuide } from "@/components/size-guide";
 import { StoreProvider } from "@/components/store-provider";
-import { clothLinks, deliveryThreshold, departmentMenu } from "@/lib/catalog";
+import { clothLinks, deliveryThreshold, departmentMenu, homeFeature } from "@/lib/catalog";
 import { accountUrl, getMarkets } from "@/lib/shopify";
 import { site, siteUrl } from "@/lib/site";
 import "./globals.css";
@@ -35,13 +35,26 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const [threshold, women, men, cloths, markets] = await Promise.all([
+  const [threshold, women, men, cloths, markets, feature] = await Promise.all([
     deliveryThreshold(),
     departmentMenu("women"),
     departmentMenu("men"),
     clothLinks(),
     getMarkets(),
+    homeFeature(),
   ]);
+  // The menu's promo tile follows the home hero: the campaign if there is one, else the newest piece.
+  const [newest] = feature.products;
+  const promo = feature.campaign?.headline
+    ? {
+        label: feature.campaign.label ?? "New in",
+        title: feature.campaign.headline,
+        href: "/collections/new-in",
+        image: feature.campaign.image ?? newest?.featuredImage ?? null,
+      }
+    : newest
+      ? { label: "New in", title: newest.title, href: `/products/${newest.handle}`, image: newest.featuredImage }
+      : null;
   const menuGroups = [
     { label: "Women", links: [{ title: "All women", href: "/collections/women" }, ...women] },
     { label: "Men", links: [{ title: "All men", href: "/collections/men" }, ...men] },
@@ -56,7 +69,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           {children}
           <CartDrawer threshold={threshold.amount} thresholdLabel={threshold.label} />
           <SearchOverlay />
-          <MobileMenu groups={menuGroups} accountUrl={accountUrl} />
+          <MobileMenu groups={menuGroups} accountUrl={accountUrl} promo={promo} />
           <SizeGuide />
           <MarketSheet />
         </StoreProvider>

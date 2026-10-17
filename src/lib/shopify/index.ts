@@ -5,6 +5,7 @@ import type {
   Collection,
   CollectionPage,
   Filter,
+  Image,
   MenuLink,
   PredictiveResults,
   Product,
@@ -284,7 +285,9 @@ export async function getProducts({
 export async function getCollectionOrAll(args: CollectionArgs): Promise<CollectionPage> {
   const page = await getCollection(args);
   if (page) return page;
-  const all = await getProducts({ first: args.first, sort: args.sort, after: args.after, country: args.country });
+  // Without a new-in collection, the newest products stand in for it (featured would be best-selling).
+  const sort = args.handle === "new-in" && (args.sort ?? "featured") === "featured" ? "newest" : args.sort;
+  const all = await getProducts({ first: args.first, sort, after: args.after, country: args.country });
   return { collection: null, products: all.products, filters: [], pageInfo: all.pageInfo };
 }
 
@@ -624,7 +627,10 @@ export async function getCloths(): Promise<ClothEntry[]> {
   }
 }
 
-/** The "campaign" metaobject that drives the home hero. */
+/**
+ * A "campaign" metaobject: the home hero (handle "home") and the editorial blocks on collection
+ * pages (handle = the collection's handle, such as "women").
+ */
 export async function getCampaign(handle: string) {
   "use cache";
   cacheTag("metaobjects");
@@ -668,11 +674,76 @@ export async function getCampaign(handle: string) {
       headline: field("headline")?.value ?? null,
       body: field("body")?.value ?? null,
       image: field("image")?.reference?.image ?? null,
+      /** Button text and where it goes (a path such as /collections/women, or a full URL). */
+      cta: field("cta")?.value ?? null,
+      link: field("link")?.value ?? null,
     };
   } catch (error) {
     console.error(error);
     cacheLife("minutes");
     return null;
+  }
+}
+
+export type Look = { handle: string; title: string; body: string | null; image: Image | null; products: Product[] };
+
+/** The "look" metaobjects for the lookbook: a title, an optional photo and note, and the pieces worn. */
+export async function getLooks(country?: string): Promise<Look[]> {
+  "use cache";
+  cacheTag("metaobjects", "products");
+
+  type Field = {
+    key: string;
+    value: string | null;
+    reference: { image?: Image } | null;
+    references: { nodes: Partial<Product>[] } | null;
+  };
+  try {
+    const data = await shopifyFetch<{ metaobjects: { nodes: { handle: string; fields: Field[] }[] } }>(
+      `${fragments}
+      query Looks {
+        metaobjects(type: "look", first: 12) {
+          nodes {
+            handle
+            fields {
+              key
+              value
+              reference {
+                ... on MediaImage {
+                  image {
+                    ...ImageFields
+                  }
+                }
+              }
+              references(first: 8) {
+                nodes {
+                  ... on Product {
+                    ...ProductCardFields
+                  }
+                }
+              }
+            }
+          }
+        }
+      }`,
+      { country },
+    );
+    cacheLife("hours");
+    return data.metaobjects.nodes.map((node) => {
+      const field = (key: string) => node.fields.find((f) => f.key === key);
+      return {
+        handle: node.handle,
+        title: field("title")?.value ?? node.handle,
+        body: field("body")?.value ?? null,
+        image: field("image")?.reference?.image ?? null,
+        // A products field can hold other references; keep only the products.
+        products: (field("products")?.references?.nodes ?? []).filter((p): p is Product => Boolean(p.handle)),
+      };
+    });
+  } catch (error) {
+    console.error(error);
+    cacheLife("minutes");
+    return [];
   }
 }
 
