@@ -15,6 +15,9 @@ let market = MARKETS[0];
 const marketOut = ({ rate, ...m }) => m;
 const WOMEN = ["6", "8", "10", "12", "14", "16", "18", "20"];
 const MEN = ["S", "M", "L", "XL", "XXL", "3XL"];
+// The agbada set's sizes are written the way many Shopify stores write them: UK, US and EU in one
+// value, and not in size order.
+const AGBADA = ["UK 4XL, USA 3XL, EUR 4XL", "UK L, USA M, EUR L", "UK S, USA XS, EUR S", "UK XXL, USA XL, EUR XXL", "UK M, USA S, EUR M", "UK XL, USA L, EUR XL"];
 // The bògòlan pieces carry no tag, so a search for "bogolan" finds nothing and the home page
 // leaves that cloth out, as it would for a store with no bògòlan.
 const CATALOG = [
@@ -39,7 +42,7 @@ const money = (n, m = market) => ({ amount: (n * m.rate).toFixed(1), currencyCod
 const gbp = (n) => ({ amount: n.toFixed(1), currencyCode: "GBP" });
 const products = CATALOG.map(([title, colour, type, dept, price, tags], i) => {
   const handle = handleOf(title);
-  const sizes = ["Headwrap", "Stole", "Cap"].includes(type) ? ["One size"] : dept === "men" ? MEN : WOMEN;
+  const sizes = ["Headwrap", "Stole", "Cap"].includes(type) ? ["One size"] : type === "Agbada" ? AGBADA : dept === "men" ? MEN : WOMEN;
   const colours = title === "Adire Wrap Dress" ? [colour, "Sky", "Charcoal"] : [colour];
   return {
     id: `gid://shopify/Product/${i + 1}`,

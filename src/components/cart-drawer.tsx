@@ -6,12 +6,13 @@ import { CloseIcon, MinusIcon, PlusIcon } from "@/components/icons";
 import { Sheet } from "@/components/sheet";
 import { useStore } from "@/components/store-provider";
 import { formatMoney, isSizeOption } from "@/lib/format";
+import { sizeName } from "@/lib/sizes";
 import type { CartLine } from "@/lib/shopify/types";
 
 export function variantLabel(options: { name: string; value: string }[]) {
   return options
     .filter((o) => o.value !== "Default Title")
-    .map((o) => (isSizeOption(o.name) && /^\d+$/.test(o.value) ? `UK ${o.value}` : o.value))
+    .map((o) => (isSizeOption(o.name) ? sizeName(o.value) : o.value))
     .join(" · ");
 }
 

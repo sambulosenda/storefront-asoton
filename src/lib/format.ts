@@ -14,7 +14,8 @@ export function formatMoney({ amount, currencyCode }: Money) {
 }
 
 const COLOUR_OPTION = /^colou?r$/i;
-const SIZE_OPTION = /^size$/i;
+// Stores name it "Size", "SIZE", "Choose size" and so on.
+const SIZE_OPTION = /\bsize\b/i;
 
 export const isColourOption = (name: string) => COLOUR_OPTION.test(name);
 export const isSizeOption = (name: string) => SIZE_OPTION.test(name);

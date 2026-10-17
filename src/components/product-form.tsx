@@ -8,11 +8,10 @@ import { useStore } from "@/components/store-provider";
 import { notifyAction } from "@/lib/actions";
 import { swatchColour } from "@/lib/filters";
 import { formatMoney, isColourOption, isSizeOption } from "@/lib/format";
+import { sizeName, sortedSizes } from "@/lib/sizes";
 import type { Image, ProductDetail } from "@/lib/shopify/types";
 
 type Option = ProductDetail["options"][number];
-
-const sizeName = (value: string) => (/^\d+$/.test(value) ? `UK ${value}` : value);
 
 /** Colour, size, add to bag, back-in-stock and wishlist. */
 export function ProductForm({ product, dept, model }: { product: ProductDetail; dept: "women" | "men"; model: string | null }) {
@@ -44,6 +43,11 @@ export function ProductForm({ product, dept, model }: { product: ProductDetail; 
   const price = variant?.price ?? product.priceRange.minVariantPrice;
   const size = sizeOption ? selection[sizeOption.name] : undefined;
   const soldOut = variant ? !variant.availableForSale : false;
+  // Buttons show the short UK size in size order; the value Shopify holds still picks the variant.
+  const sizes = sizeOption ? sortedSizes(sizeOption.optionValues.map((v) => v.name)) : [];
+  const chosen = sizes.find((s) => s.value === size);
+  const compact = sizes.every((s) => s.short.length <= 6);
+  const converts = sizes.some((s) => s.extra);
 
   const isAvailable = (option: Option, value: string) => {
     const v = matches({ ...selection, [option.name]: value });
@@ -143,7 +147,7 @@ export function ProductForm({ product, dept, model }: { product: ProductDetail; 
               id={`${id}-size`}
               className={`text-[11px] font-semibold tracking-[0.14em] uppercase md:text-[12px] ${status?.kind === "prompt" ? "text-error" : ""}`}
             >
-              {sizeOption.optionValues.some((v) => /^\d+$/.test(v.name)) ? "Size (UK)" : "Size"}
+              {sizes.some((s) => s.full.startsWith("UK ")) ? "Size (UK)" : "Size"}
             </span>
             <button
               type="button"
@@ -156,20 +160,20 @@ export function ProductForm({ product, dept, model }: { product: ProductDetail; 
           <div
             role="group"
             aria-labelledby={`${id}-size`}
-            style={{ "--cols": Math.min(sizeOption.optionValues.length, 8) } as CSSProperties}
-            className="grid grid-cols-4 gap-2 md:grid-cols-[repeat(var(--cols),minmax(0,1fr))]"
+            style={{ "--cols": Math.min(sizes.length, 8) } as CSSProperties}
+            className={compact ? "grid grid-cols-4 gap-2 md:grid-cols-[repeat(var(--cols),minmax(0,1fr))]" : "flex flex-wrap gap-2"}
           >
-            {sizeOption.optionValues.map((v) => {
-              const on = size === v.name;
-              const out = !isAvailable(sizeOption, v.name);
+            {sizes.map((s) => {
+              const on = size === s.value;
+              const out = !isAvailable(sizeOption, s.value);
               return (
                 <button
-                  key={v.name}
+                  key={s.value}
                   type="button"
                   aria-pressed={on}
-                  aria-label={`${sizeName(v.name)}${out ? ", sold out" : ""}`}
-                  onClick={() => pick(sizeOption.name, v.name)}
-                  className={`h-12 cursor-pointer border text-[14px] ${
+                  aria-label={`${s.full}${s.extra ? `, ${s.extra.replaceAll(" · ", ", ")}` : ""}${out ? ", sold out" : ""}`}
+                  onClick={() => pick(sizeOption.name, s.value)}
+                  className={`h-12 cursor-pointer border text-[14px] ${compact ? "" : "px-4"} ${
                     on && !out
                       ? "border-ink bg-ink text-paper"
                       : on
@@ -179,11 +183,16 @@ export function ProductForm({ product, dept, model }: { product: ProductDetail; 
                           : "border-line hover:border-ink"
                   }`}
                 >
-                  {v.name}
+                  {s.short}
                 </button>
               );
             })}
           </div>
+          {converts && (
+            <p className="text-[13px] text-ink-2">
+              {chosen?.extra ? `${chosen.full} is ${chosen.extra.replace(" · ", " and ")}.` : "Sizes are UK. Choose one to see its US and EU size."}
+            </p>
+          )}
           {model && <p className="text-[13px] text-ink-2">{model}</p>}
         </div>
       )}

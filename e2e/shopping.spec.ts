@@ -105,6 +105,19 @@ test("a sold-out size offers a back-in-stock email", async ({ page }) => {
   await expect(email).toHaveValue("not-an-email");
 });
 
+test("sizes written as UK, US and EU show the UK size, in size order", async ({ page }) => {
+  await page.goto("/products/aso-oke-agbada-set");
+  const sizes = page.getByRole("group", { name: "Size (UK)" }).getByRole("button");
+  await expect(sizes).toHaveText(["S", "M", "L", "XL", "XXL", "4XL"]);
+  await expect(page.getByText("Sizes are UK. Choose one to see its US and EU size.")).toBeVisible();
+
+  await page.getByRole("button", { name: "UK 4XL, US 3XL, EU 4XL" }).click();
+  await expect(page.getByText("UK 4XL is US 3XL and EU 4XL.")).toBeVisible();
+  await page.getByRole("button", { name: "Add to bag" }).click();
+  await page.getByRole("button", { name: /^Bag,? \(?1/ }).filter({ visible: true }).click();
+  await expect(page.getByRole("dialog").getByText("Wine and gold · UK 4XL")).toBeVisible();
+});
+
 test("search suggests as you type and opens full results", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Search" }).filter({ visible: true }).click();
