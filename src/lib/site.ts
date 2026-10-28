@@ -17,11 +17,12 @@ export const site = {
   freeDeliveryThreshold: "£[XX]",
   dispatchDays: "[X]",
   deliveryDays: "[X] to [X]",
-  returnDays: "[XX]",
+  /** Ready-to-ship pieces only: made-to-order pieces come back only when faulty. */
+  returnDays: "30",
   email: "[EMAIL]",
   hours: "[HOURS]",
   replyDays: "[X]",
-  refundDays: "[X]",
+  refundDays: "14",
   social: { instagram: "#", tiktok: "#" },
 };
 

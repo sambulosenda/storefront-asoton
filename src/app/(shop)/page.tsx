@@ -275,7 +275,7 @@ export default async function HomePage() {
             title: "Delivery",
             body: `Ready-to-ship pieces leave us within ${times.dispatch}. Made-to-order pieces are made to your size in 14 days.`,
           },
-          { title: "Returns", lead: "Changed your mind? ", body: `Send unworn pieces back within ${site.returnDays} days of delivery.` },
+          { title: "Returns", lead: "Changed your mind? ", body: `Send unworn ready-to-ship pieces back within ${site.returnDays} days of delivery. Made-to-order pieces come back only if faulty.` },
         ].map((item) => (
           <div key={item.title} className="flex flex-col gap-2 border-t border-ink pt-4 md:gap-2.5 md:pt-5">
             <h3 className="text-[12px] font-semibold tracking-[0.14em] uppercase md:text-[13px]">{item.title}</h3>

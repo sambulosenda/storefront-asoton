@@ -113,7 +113,8 @@ export default async function HelpPage() {
               ))}
             </ol>
             <ul className="flex list-disc flex-col gap-2 pl-5 text-[15px] leading-[1.6] text-ink-2">
-              <li>Return within {site.returnDays} days of delivery.</li>
+              <li>Return ready-to-ship pieces within {site.returnDays} days of delivery.</li>
+              <li>Made-to-order pieces are made to your size, so we can only take them back if they’re faulty.</li>
               <li>Cut-to-length fabric: [your policy].</li>
               <li>
                 Faulty or wrong item?{" "}
