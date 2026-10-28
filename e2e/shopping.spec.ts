@@ -3,14 +3,52 @@ import { acceptCookies } from "./helpers";
 
 test.beforeEach(async ({ page }) => acceptCookies(page));
 
-test("without a campaign, the home hero leads with the newest piece", async ({ page }) => {
+test("the home hero shows the store's campaign, with the pieces in the picture until it has a photo", async ({ page }) => {
   await page.goto("/");
-  // The fixture store has no "home" campaign metaobject, so none of the design's sample copy shows.
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Adire Wrap Dress");
-  await expect(page.getByText("The Indigo Edit")).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Shop now" }).first()).toHaveAttribute("href", "/products/adire-wrap-dress");
+  // The fixture's campaign entry isn't called "home", like the live store's.
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Made for theBig Day");
+  await expect(page.locator("h1 em")).toHaveText("Big Day");
+  await expect(page.getByText("African ready-to-wear")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Shop women" }).first()).toHaveAttribute("href", "/collections/women");
+  await expect(page.getByRole("link", { name: "Shop men" }).first()).toHaveAttribute("href", "/collections/men");
+  const pictured = page.getByRole("navigation", { name: "In the picture" });
+  await expect(pictured.getByRole("link", { name: /Adire Wrap Dress/ })).toHaveAttribute("href", "/products/adire-wrap-dress");
+  await expect(pictured.getByRole("link", { name: /Aso-oke Kaftan/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: "New in" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Adire Wrap Dress/ }).first()).toBeVisible();
+});
+
+test("the home page lists the store's occasions and uses its delivery rules", async ({ page }) => {
+  await page.goto("/");
+  const occasions = page.getByRole("region", { name: "Shop by occasion" });
+  await expect(occasions.getByRole("link")).toHaveCount(3);
+  await expect(occasions.getByRole("link", { name: /Wedding guest/ })).toHaveAttribute("href", "/collections/wedding-guest");
+  await expect(page.getByText("Ready-to-ship pieces leave us within 1 working day.")).toBeVisible();
+  // The shop metafield (£150) wins over the delivery rules' amount.
+  await expect(page.getByText(/Complimentary UK delivery (on orders )?over £150/).filter({ visible: true })).toBeVisible();
+  await expect(page.getByText(/\[X\]/)).toHaveCount(0);
+});
+
+test("ready to ship or made to order is a choice with its arrival date", async ({ page }) => {
+  await page.goto("/products/aso-oke-agbada-set");
+  const choice = page.getByRole("group", { name: "How would you like it?" });
+  const ready = choice.getByRole("button", { name: /Ready to ship/ });
+  const made = choice.getByRole("button", { name: /Made to order/ });
+  await expect(ready).toHaveAttribute("aria-pressed", "true");
+  await expect(ready).toContainText("Dispatched next working day");
+  await expect(ready).toContainText(/Arrives \w{3} \d{1,2} \w{3}/);
+  await expect(made).toContainText("Made to your size in 14 days");
+  await made.click();
+  await expect(made).toHaveAttribute("aria-pressed", "true");
+  await expect(made).toContainText(/Arrives about/);
+  await expect(page.getByText("PURCHASE TYPE")).toHaveCount(0);
+});
+
+test("the breadcrumb leaves out retired collections", async ({ page, isMobile }) => {
+  test.skip(isMobile, "The breadcrumb is desktop-only");
+  await page.goto("/products/adire-kaftan");
+  const crumbs = page.getByRole("navigation", { name: "Breadcrumb" });
+  await expect(crumbs.getByRole("link", { name: "Men", exact: true })).toBeVisible();
+  await expect(crumbs.getByText("old rules")).toHaveCount(0);
 });
 
 test("without campaigns or looks, nothing from the design's sample copy shows", async ({ page }) => {

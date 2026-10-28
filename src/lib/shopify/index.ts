@@ -579,7 +579,7 @@ function toPath(url: string | null) {
   }
 }
 
-/** Entries of the "cloth" metaobject (name, technique, origin, caption, collection). */
+/** Entries of the "cloth" metaobject (name, technique, origin, caption or short_description, collection). */
 export async function getCloths(): Promise<ClothEntry[]> {
   "use cache";
   cacheTag("metaobjects");
@@ -618,7 +618,7 @@ export async function getCloths(): Promise<ClothEntry[]> {
         name: field("name")?.value ?? node.handle,
         technique: field("technique")?.value ?? null,
         origin: field("origin")?.value ?? null,
-        caption: field("caption")?.value ?? null,
+        caption: field("caption")?.value ?? field("short_description")?.value ?? null,
         collectionHandle: field("collection")?.reference?.handle ?? null,
       };
     });
@@ -629,57 +629,135 @@ export async function getCloths(): Promise<ClothEntry[]> {
   }
 }
 
+export type Campaign = {
+  handle: string;
+  label: string | null;
+  headline: string | null;
+  /** The part of the headline set in italic, such as "Big Day" in "Made for the Big Day". */
+  italic: string | null;
+  body: string | null;
+  /** The wide photo (desktop_image, or image on older entries) and the phone crop (mobile_image). */
+  image: Image | null;
+  mobileImage: Image | null;
+  /** Where the people sit in the photo: "Left", "Centre" or "Right". The copy goes on the other side. */
+  position: string | null;
+  /** Button text and where it goes (a path such as /collections/women, or a full URL). */
+  cta: string | null;
+  link: string | null;
+  /** The collections the "Shop women" and "Shop men" buttons open. */
+  women: string | null;
+  men: string | null;
+  /** The pieces worn in the photo, listed under "In the picture". */
+  products: Product[];
+};
+
+type CampaignNode = {
+  handle: string;
+  fields: {
+    key: string;
+    value: string | null;
+    reference: { image?: Image; handle?: string } | null;
+    references: { nodes: Partial<Product>[] } | null;
+  }[];
+};
+
+const campaignFields = /* GraphQL */ `
+  handle
+  fields {
+    key
+    value
+    reference {
+      ... on MediaImage {
+        image {
+          ...ImageFields
+        }
+      }
+      ... on Collection {
+        handle
+      }
+    }
+    references(first: 6) {
+      nodes {
+        ... on Product {
+          ...ProductCardFields
+        }
+      }
+    }
+  }
+`;
+
+function toCampaign(node: CampaignNode): Campaign {
+  const field = (key: string) => node.fields.find((f) => f.key === key);
+  return {
+    handle: node.handle,
+    label: field("label")?.value ?? null,
+    headline: field("headline")?.value ?? null,
+    italic: field("italic_word")?.value ?? null,
+    body: field("body")?.value ?? null,
+    image: field("desktop_image")?.reference?.image ?? field("image")?.reference?.image ?? null,
+    mobileImage: field("mobile_image")?.reference?.image ?? null,
+    position: field("subject_position")?.value ?? null,
+    cta: field("cta")?.value ?? null,
+    link: field("link")?.value ?? null,
+    women: field("women_link")?.reference?.handle ?? null,
+    men: field("men_link")?.reference?.handle ?? null,
+    products: (field("in_the_picture")?.references?.nodes ?? []).filter((p): p is Product => Boolean(p.handle)),
+  };
+}
+
 /**
- * A "campaign" metaobject: the home hero (handle "home") and the editorial blocks on collection
- * pages (handle = the collection's handle, such as "women").
+ * A "campaign" metaobject entry by handle: the editorial blocks on collection pages (handle = the
+ * collection's handle, such as "women"), and the Our story photos ("story", "workshop").
  */
-export async function getCampaign(handle: string) {
+export async function getCampaign(handle: string): Promise<Campaign | null> {
   "use cache";
   cacheTag("metaobjects");
 
   try {
-    const data = await shopifyFetch<{
-      metaobject: {
-        fields: {
-          key: string;
-          value: string | null;
-          reference: { image?: { url: string; altText: string | null; width: number; height: number } } | null;
-        }[];
-      } | null;
-    }>(
-      `query Campaign($handle: MetaobjectHandleInput!) {
+    const data = await shopifyFetch<{ metaobject: CampaignNode | null }>(
+      `${fragments}
+      query Campaign($handle: MetaobjectHandleInput!) {
         metaobject(handle: $handle) {
-          fields {
-            key
-            value
-            reference {
-              ... on MediaImage {
-                image {
-                  url
-                  altText
-                  width
-                  height
-                }
-              }
-            }
-          }
+          ${campaignFields}
         }
       }`,
       { handle: { type: "campaign", handle } },
     );
     cacheLife("hours");
-    const fields = data.metaobject?.fields;
-    if (!fields) return null;
-    const field = (key: string) => fields.find((f) => f.key === key);
-    return {
-      label: field("label")?.value ?? null,
-      headline: field("headline")?.value ?? null,
-      body: field("body")?.value ?? null,
-      image: field("image")?.reference?.image ?? null,
-      /** Button text and where it goes (a path such as /collections/women, or a full URL). */
-      cta: field("cta")?.value ?? null,
-      link: field("link")?.value ?? null,
-    };
+    return data.metaobject ? toCampaign(data.metaobject) : null;
+  } catch (error) {
+    console.error(error);
+    cacheLife("minutes");
+    return null;
+  }
+}
+
+// Campaign entries that belong to other pages, so the home hero never picks them up.
+const PAGE_CAMPAIGNS = ["women", "men", "kids", "story", "workshop", "lookbook"];
+
+/**
+ * The campaign the home hero leads with: the entry with the handle "home" if there is one, else
+ * the first active entry that isn't kept for another page.
+ */
+export async function getHomeCampaign(): Promise<Campaign | null> {
+  "use cache";
+  cacheTag("metaobjects");
+
+  try {
+    const data = await shopifyFetch<{ metaobjects: { nodes: CampaignNode[] } }>(
+      `${fragments}
+      query HomeCampaign {
+        metaobjects(type: "campaign", first: 20) {
+          nodes {
+            ${campaignFields}
+          }
+        }
+      }`,
+    );
+    cacheLife("hours");
+    const nodes = data.metaobjects.nodes;
+    const node = nodes.find((n) => n.handle === "home") ?? nodes.find((n) => !PAGE_CAMPAIGNS.includes(n.handle));
+    return node ? toCampaign(node) : null;
   } catch (error) {
     console.error(error);
     cacheLife("minutes");
@@ -777,6 +855,126 @@ export async function getFreeDeliveryThreshold(): Promise<number | null> {
     console.error(error);
     cacheLife("minutes");
     return null;
+  }
+}
+
+export type DeliveryRules = {
+  /** Orders placed before this time (such as "14:00") leave the same working day. */
+  cutoff: string | null;
+  dispatchDays: number | null;
+  ukStandardDays: number | null;
+  ukExpressDays: number | null;
+  internationalDays: number | null;
+  freeOver: number | null;
+  /** Days nothing is dispatched, as YYYY-MM-DD. */
+  holidays: string[];
+};
+
+function parseList(raw: string | null): string[] {
+  try {
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list.filter((d): d is string => typeof d === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+/** The "delivery_rules" metaobject (its first entry): dispatch and delivery times, and free delivery. */
+export async function getDeliveryRules(): Promise<DeliveryRules | null> {
+  "use cache";
+  cacheTag("metaobjects");
+
+  try {
+    const data = await shopifyFetch<{ metaobjects: { nodes: { fields: { key: string; value: string | null }[] }[] } }>(
+      `query DeliveryRules {
+        metaobjects(type: "delivery_rules", first: 1) {
+          nodes {
+            fields {
+              key
+              value
+            }
+          }
+        }
+      }`,
+    );
+    cacheLife("hours");
+    const node = data.metaobjects.nodes[0];
+    if (!node) return null;
+    const text = (key: string) => node.fields.find((f) => f.key === key)?.value?.trim() || null;
+    const number = (key: string) => {
+      const value = Number(text(key));
+      return text(key) !== null && Number.isFinite(value) ? value : null;
+    };
+    return {
+      cutoff: text("order_cutoff"),
+      dispatchDays: number("ready_to_ship_dispatch_days"),
+      ukStandardDays: number("uk_standard_delivery_days"),
+      ukExpressDays: number("uk_express_delivery_days"),
+      internationalDays: number("international_delivery_days"),
+      freeOver: number("free_uk_delivery_over"),
+      holidays: parseList(text("bank_holidays")),
+    };
+  } catch (error) {
+    console.error(error);
+    cacheLife("minutes");
+    return null;
+  }
+}
+
+export type Occasion = { handle: string; name: string; intro: string | null; image: Image | null; collection: string | null };
+
+/** The "occasion" metaobjects for Shop by occasion: a name, a line, and the collection it opens. */
+export async function getOccasions(): Promise<Occasion[]> {
+  "use cache";
+  cacheTag("metaobjects");
+
+  try {
+    const data = await shopifyFetch<{
+      metaobjects: {
+        nodes: {
+          handle: string;
+          fields: { key: string; value: string | null; reference: { image?: Image; handle?: string } | null }[];
+        }[];
+      };
+    }>(
+      `${imageFields}
+      query Occasions {
+        metaobjects(type: "occasion", first: 8) {
+          nodes {
+            handle
+            fields {
+              key
+              value
+              reference {
+                ... on MediaImage {
+                  image {
+                    ...ImageFields
+                  }
+                }
+                ... on Collection {
+                  handle
+                }
+              }
+            }
+          }
+        }
+      }`,
+    );
+    cacheLife("hours");
+    return data.metaobjects.nodes.map((node) => {
+      const field = (key: string) => node.fields.find((f) => f.key === key);
+      return {
+        handle: node.handle,
+        name: field("name")?.value ?? node.handle,
+        intro: field("intro")?.value ?? null,
+        image: field("photo")?.reference?.image ?? null,
+        collection: field("collection")?.reference?.handle ?? null,
+      };
+    });
+  } catch (error) {
+    console.error(error);
+    cacheLife("minutes");
+    return [];
   }
 }
 

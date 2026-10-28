@@ -84,6 +84,9 @@ export function MobileMenu({
               </div>
             );
           })}
+          <Link href="/collections/kids" className={big}>
+            Kids
+          </Link>
           <Link href="/collections/accessories" className={big}>
             Accessories
           </Link>
