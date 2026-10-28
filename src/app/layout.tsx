@@ -4,11 +4,11 @@ import { CartDrawer } from "@/components/cart-drawer";
 import { ClothPatterns } from "@/components/cloth";
 import { CookieConsent } from "@/components/cookie-consent";
 import { MarketSheet } from "@/components/market-selector";
-import { MobileMenu } from "@/components/mobile-menu";
+import { MobileMenu, type MenuRow } from "@/components/mobile-menu";
 import { SearchOverlay } from "@/components/search-overlay";
 import { SizeGuide } from "@/components/size-guide";
 import { StoreProvider } from "@/components/store-provider";
-import { deliveryThreshold, departmentMenu, homeFeature, stockedCloths } from "@/lib/catalog";
+import { deliveryThreshold, departmentMenu, homeFeature, menuCloths, stockedOccasions } from "@/lib/catalog";
 import { accountUrl, getMarkets } from "@/lib/shopify";
 import { site, siteUrl } from "@/lib/site";
 import "./globals.css";
@@ -35,11 +35,12 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const [threshold, women, men, cloths, markets, feature] = await Promise.all([
+  const [threshold, women, men, cloths, occasions, markets, feature] = await Promise.all([
     deliveryThreshold(),
     departmentMenu("women"),
     departmentMenu("men"),
-    stockedCloths(),
+    menuCloths(),
+    stockedOccasions(),
     getMarkets(),
     homeFeature(),
   ]);
@@ -55,11 +56,20 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     : newest
       ? { label: "New in", title: newest.title, href: `/products/${newest.handle}`, image: newest.featuredImage }
       : null;
-  const menuGroups = [
+  // In the design's order: the departments, the single links, then occasions and cloths.
+  const menuRows: MenuRow[] = [
     { label: "Women", links: [{ title: "All women", href: "/collections/women" }, ...women] },
     { label: "Men", links: [{ title: "All men", href: "/collections/men" }, ...men] },
-    { label: "Shop by cloth", links: cloths.map((c) => ({ title: c.name, href: c.href })) },
-  ].filter((group) => group.links.length > 0);
+    { label: "Kids", href: "/collections/kids" },
+    { label: "New in", href: "/collections/new-in" },
+    { label: "Accessories", href: "/collections/accessories" },
+    {
+      label: "Occasions",
+      links: occasions.map((o) => ({ title: o.name, href: o.collection ? `/collections/${o.collection}` : `/search?q=${encodeURIComponent(o.name)}` })),
+    },
+    { label: "Shop by cloth", links: cloths },
+  ];
+  const rows = menuRows.filter((row) => !("links" in row) || row.links.length > 0);
 
   return (
     <html lang="en-GB" className={`${bodoni.variable} ${hanken.variable}`}>
@@ -69,7 +79,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           {children}
           <CartDrawer threshold={threshold.amount} thresholdLabel={threshold.label} />
           <SearchOverlay />
-          <MobileMenu groups={menuGroups} accountUrl={accountUrl} promo={promo} />
+          <MobileMenu rows={rows} accountUrl={accountUrl} promo={promo} />
           <SizeGuide />
           <MarketSheet />
         </StoreProvider>

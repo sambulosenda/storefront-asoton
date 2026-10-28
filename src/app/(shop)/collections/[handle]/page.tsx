@@ -5,6 +5,7 @@ import { CollectionBrowser } from "@/components/collection-browser";
 import { Editorial } from "@/components/editorial";
 import { breadcrumbs, JsonLd } from "@/components/json-ld";
 import { CollectionSkeleton } from "@/components/skeletons";
+import { departmentMenu } from "@/lib/catalog";
 import { parseFilters, parseSort } from "@/lib/filters";
 import { getCountry } from "@/lib/market";
 import { getCampaign, getCollection, getCollectionOrAll, getMenu } from "@/lib/shopify";
@@ -58,7 +59,8 @@ async function Collection({
   const filters = parseFilters(query.filter);
   const [page, menu, campaign] = await Promise.all([
     getCollectionOrAll({ handle, sort, filters, country }),
-    getMenu(handle),
+    // Women and Men fall back to the design's categories until their menus exist in Shopify.
+    handle === "women" || handle === "men" ? departmentMenu(handle) : getMenu(handle),
     getCampaign(handle),
   ]);
 

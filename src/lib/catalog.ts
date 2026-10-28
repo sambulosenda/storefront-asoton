@@ -11,6 +11,7 @@ import {
   getFreeDeliveryThreshold,
   getHomeCampaign,
   getMenu,
+  getOccasions,
   searchProducts,
   type Image,
   type MenuLink,
@@ -20,21 +21,22 @@ import { departments, site } from "@/lib/site";
 
 const search = (q: string) => `/search?q=${encodeURIComponent(q)}`;
 
-/** Fallback sub-categories, used until the "women" and "men" menus exist in Shopify. */
+/** Fallback sub-categories from the design, used until the "women" and "men" menus exist in Shopify. */
 const DEFAULT_MENUS: Record<"women" | "men", MenuLink[]> = {
   women: [
     { title: "Dresses", href: search("dress") },
     { title: "Two-piece sets", href: search("two-piece") },
-    { title: "Kaftans and boubous", href: search("boubou") },
-    { title: "Tops and skirts", href: search("skirt") },
-    { title: "Headwraps", href: search("headwrap") },
+    { title: "Jumpsuits", href: search("jumpsuit") },
+    { title: "Tops", href: search("top") },
+    { title: "Kimonos", href: search("kimono") },
+    { title: "Skirts", href: search("skirt") },
   ],
   men: [
-    { title: "Kaftans", href: search("kaftan") },
-    { title: "Agbada", href: search("agbada") },
+    { title: "Suits", href: search("suit") },
     { title: "Shirts", href: search("shirt") },
+    { title: "Jackets", href: search("jacket") },
     { title: "Trousers", href: search("trousers") },
-    { title: "Sets", href: search("set") },
+    { title: "Couples", href: "/collections/couples" },
   ],
 };
 
@@ -148,4 +150,23 @@ export async function deliveryTimes() {
     cutoff: rules?.cutoff ?? null,
     holidays: rules?.holidays ?? [],
   };
+}
+
+/** The store's occasions that have pieces in them, so an empty one (such as Church, for now) isn't offered. */
+export async function stockedOccasions() {
+  const occasions = await getOccasions();
+  const stocked = await Promise.all(
+    occasions.map(async (o) => !o.collection || ((await getCollection({ handle: o.collection, first: 1 }))?.products.length ?? 0) > 0),
+  );
+  return occasions.filter((_, i) => stocked[i]);
+}
+
+/**
+ * The cloths for the menu: every "cloth" entry in Shopify with a collection (Ankara, Kente, Dashiki,
+ * Embroidered), else the design cloths the store has pieces in.
+ */
+export async function menuCloths(): Promise<MenuLink[]> {
+  const entries = (await getCloths()).filter((e) => e.collectionHandle);
+  if (entries.length > 0) return entries.map((e) => ({ title: e.name, href: `/collections/${e.collectionHandle}` }));
+  return (await stockedCloths()).map((c) => ({ title: c.name, href: c.href }));
 }

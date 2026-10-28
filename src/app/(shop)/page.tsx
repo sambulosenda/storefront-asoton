@@ -9,10 +9,10 @@ import { JsonLd } from "@/components/json-ld";
 import { Newsletter } from "@/components/newsletter";
 import { ProductGrid, ProductRail } from "@/components/product-card";
 import { GridSkeleton } from "@/components/skeletons";
-import { deliveryTimes, departmentImage, homeFeature, stockedCloths } from "@/lib/catalog";
+import { deliveryTimes, departmentImage, homeFeature, stockedCloths, stockedOccasions } from "@/lib/catalog";
 import { formatMoney } from "@/lib/format";
 import { getCountry } from "@/lib/market";
-import { getCollectionOrAll, getOccasions } from "@/lib/shopify";
+import { getCollectionOrAll } from "@/lib/shopify";
 import { nav, site, siteUrl } from "@/lib/site";
 
 const DEPARTMENTS = [
@@ -45,7 +45,7 @@ export default async function HomePage() {
     homeFeature(),
     stockedCloths(),
     Promise.all(DEPARTMENTS.map((d) => departmentImage(d.handle))),
-    getOccasions(),
+    stockedOccasions(),
     deliveryTimes(),
   ]);
   const [newest] = products;
