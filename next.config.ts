@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [{ protocol: "https", hostname: "cdn.shopify.com" }],
   },
   cacheComponents: true,
+  // Lets a phone on the same Wi-Fi use `npm run dev` (e.g. http://192.168.0.68:3000). Without it Next blocks the
+  // page's dev scripts from other addresses, so nothing on the page responds to taps. Dev only.
+  allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "*.local"],
   // Crawlers on this list get the title, description and canonical in <head> before the page,
   // and a real 404 status for missing products. Next's default list (next/dist/shared/lib/router/utils/html-bots)
   // leaves out Googlebot itself, which then gets those tags late, in <body>, and a 200 with noindex.
