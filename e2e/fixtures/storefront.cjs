@@ -185,5 +185,9 @@ globalThis.fetch = async (input, init) => {
     const { query, variables } = JSON.parse(init.body);
     return new Response(JSON.stringify({ data: respond(query, variables ?? {}) }), { headers: { "content-type": "application/json" } });
   }
+  // Emails to the shop (contact form, back-in-stock requests) are accepted and not sent.
+  if (url.startsWith("https://api.resend.com/")) {
+    return new Response(JSON.stringify({ id: "test" }), { headers: { "content-type": "application/json" } });
+  }
   return realFetch(input, init);
 };

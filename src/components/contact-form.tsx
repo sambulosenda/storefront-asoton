@@ -15,7 +15,7 @@ export function ContactForm() {
       <div role="status" className="flex min-w-0 flex-[3_1_360px] flex-col gap-3 bg-stone p-6 md:p-8">
         <p className="font-display text-[28px] leading-[1.15]">Thank you. We’ve got your message.</p>
         <p className="text-[15px] leading-[1.6] text-ink-2">
-          We reply within {site.replyDays} working days. A copy is on its way to your inbox.
+          We reply within {site.replyDays} working days.
         </p>
       </div>
     );
@@ -23,6 +23,7 @@ export function ContactForm() {
 
   return (
     <form key={JSON.stringify(values)} action={formAction} noValidate className="flex min-w-0 flex-[3_1_360px] flex-col gap-5">
+      <input type="text" name="company" tabIndex={-1} autoComplete="off" className="hidden" />
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(200px,100%),1fr))] gap-5">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="c-name" className="text-[13px] font-medium">

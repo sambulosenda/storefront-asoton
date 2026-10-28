@@ -1251,3 +1251,43 @@ export const cartQueries = {
 };
 
 export type { Cart };
+
+export type SubscribeResult = "subscribed" | "already" | "failed";
+
+/**
+ * Adds an email to the shop's customers with email marketing on, so it can be sent Shopify
+ * Email campaigns. Needs the Headless channel's "customers write" Storefront permission.
+ * The Storefront API needs a password for a new customer, so a random one is used: the
+ * person can set their own later with "Forgot password".
+ */
+export async function subscribeEmail(email: string): Promise<SubscribeResult> {
+  if (!domain) return "failed";
+  try {
+    const data = await shopifyFetch<{
+      customerCreate: { customer: { id: string } | null; customerUserErrors: { code: string | null; message: string }[] };
+    }>(
+      /* GraphQL */ `
+        mutation Subscribe($input: CustomerCreateInput!) {
+          customerCreate(input: $input) {
+            customer {
+              id
+            }
+            customerUserErrors {
+              code
+              message
+            }
+          }
+        }
+      `,
+      { input: { email, password: crypto.randomUUID() + "Aa1!", acceptsMarketing: true } },
+    );
+    const errors = data.customerCreate.customerUserErrors;
+    if (data.customerCreate.customer) return "subscribed";
+    if (errors.some((e) => e.code === "TAKEN" || e.code === "CUSTOMER_DISABLED")) return "already";
+    console.error("customerCreate failed", errors);
+    return "failed";
+  } catch (error) {
+    console.error("customerCreate failed", error);
+    return "failed";
+  }
+}
