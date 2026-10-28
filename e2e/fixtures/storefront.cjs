@@ -44,6 +44,8 @@ const products = CATALOG.map(([title, colour, type, dept, price, tags], i) => {
   const handle = handleOf(title);
   const sizes = ["Headwrap", "Stole", "Cap"].includes(type) ? ["One size"] : type === "Agbada" ? AGBADA : dept === "men" ? MEN : WOMEN;
   const colours = title === "Adire Wrap Dress" ? [colour, "Sky", "Charcoal"] : [colour];
+  // The agbada set can be bought ready to ship or made to order, spelled the way the live store spells it.
+  const purchase = type === "Agbada" ? ["READY TO SHIP", "CUSTOM MADE IN 14 DAYS"] : [null];
   return {
     id: `gid://shopify/Product/${i + 1}`,
     handle,
@@ -56,18 +58,21 @@ const products = CATALOG.map(([title, colour, type, dept, price, tags], i) => {
     options: [
       { name: "Colour", optionValues: colours.map((c) => ({ name: c, swatch: c === "Indigo" ? { color: "#1E2A55" } : c === "Sky" ? { color: "#6F86B5" } : c === "Charcoal" ? { color: "#3A3A3A" } : null })) },
       { name: "Size", optionValues: sizes.map((s) => ({ name: s, swatch: null })) },
+      ...(purchase[0] ? [{ name: "PURCHASE TYPE", optionValues: purchase.map((p) => ({ name: p, swatch: null })) }] : []),
     ],
     _dept: dept,
     _variants: colours.flatMap((c) =>
-      sizes.map((s, j) => ({
-        id: `gid://shopify/ProductVariant/${i + 1}${colours.indexOf(c)}${j}`,
-        title: `${c} / ${s}`,
-        availableForSale: title !== "Bògòlan Shirt Dress" && !(title === "Adire Wrap Dress" && s === "18"),
-        quantityAvailable: 2,
-        price: gbp(price),
-        compareAtPrice: null,
-        selectedOptions: [{ name: "Colour", value: c }, { name: "Size", value: s }],
-      })),
+      sizes.flatMap((s, j) =>
+        purchase.map((p, k) => ({
+          id: `gid://shopify/ProductVariant/${i + 1}${colours.indexOf(c)}${j}${p ? k : ""}`,
+          title: [c, s, p].filter(Boolean).join(" / "),
+          availableForSale: title !== "Bògòlan Shirt Dress" && !(title === "Adire Wrap Dress" && s === "18"),
+          quantityAvailable: 2,
+          price: gbp(price),
+          compareAtPrice: null,
+          selectedOptions: [{ name: "Colour", value: c }, { name: "Size", value: s }, ...(p ? [{ name: "PURCHASE TYPE", value: p }] : [])],
+        })),
+      ),
     ),
   };
 });
@@ -124,7 +129,7 @@ function respond(query, vars) {
       const p = byHandle(vars.handle);
       if (!p) return { product: null };
       const { _dept, _variants, ...rest } = p;
-      return { product: { ...rest, priceRange: { minVariantPrice: convert(rest.priceRange.minVariantPrice) }, description: "A wrap dress cut from adire.", descriptionHtml: "<p>A wrap dress cut from adire, the indigo resist-dyed cloth of the Yorùbá. Because the pattern is made by hand, no two panels sit exactly alike. Self-tie waist, three-quarter sleeves and a midi hem with room to move.</p>", seo: { title: null, description: null }, variants: { nodes: _variants.map((v) => ({ ...v, price: convert(v.price) })) }, images: { nodes: [] }, collections: { nodes: _dept === "men" ? [{ handle: "men", title: "Men" }] : [{ handle: "women", title: "Women" }, { handle: "dresses", title: "Dresses" }] }, metafields: [{ namespace: "custom", key: "model", value: "Model is 5ft 9in and wears UK 10.", reference: null }, { namespace: "reviews", key: "rating", value: '{"value":"4.8"}', reference: null }, { namespace: "reviews", key: "rating_count", value: "24", reference: null }] } };
+      return { product: { ...rest, priceRange: { minVariantPrice: convert(rest.priceRange.minVariantPrice) }, description: "A wrap dress cut from adire.", descriptionHtml: "<p>A wrap dress cut from adire, the indigo resist-dyed cloth of the Yorùbá. Because the pattern is made by hand, no two panels sit exactly alike. Self-tie waist, three-quarter sleeves and a midi hem with room to move.</p>", seo: { title: null, description: null }, variants: { nodes: _variants.map((v) => ({ ...v, price: convert(v.price) })) }, images: { nodes: [] }, collections: { nodes: _dept === "men" ? [{ handle: "men-old-rules", title: "Men (old rules)" }, { handle: "men", title: "Men" }] : [{ handle: "women", title: "Women" }, { handle: "dresses", title: "Dresses" }] }, metafields: [{ namespace: "custom", key: "model", value: "Model is 5ft 9in and wears UK 10.", reference: null }, { namespace: "reviews", key: "rating", value: '{"value":"4.8"}', reference: null }, { namespace: "reviews", key: "rating_count", value: "24", reference: null }] } };
     }
     case "Recommendations": return { productRecommendations: [byHandle("adire-headwrap"), byHandle("kente-stole"), byHandle("aso-oke-fila-cap"), byHandle("adire-drawstring-trousers")].map(card) };
     case "Search": {
@@ -144,6 +149,20 @@ function respond(query, vars) {
     case "Cloths": return { metaobjects: { nodes: [] } };
     case "Looks": return { metaobjects: { nodes: [] } };
     case "Campaign": return { metaobject: null };
+    // Like the live store: a campaign entry that isn't called "home" and has no photos yet.
+    case "HomeCampaign": return { metaobjects: { nodes: [{ handle: "made-for-the-big-day", fields: [
+      { key: "label", value: "African ready-to-wear", reference: null, references: null },
+      { key: "headline", value: "Made for the Big Day", reference: null, references: null },
+      { key: "italic_word", value: "Big Day", reference: null, references: null },
+      { key: "body", value: "Occasion dresses, matching sets and embroidered suits for weddings, church and celebrations.", reference: null, references: null },
+      { key: "desktop_image", value: null, reference: null, references: null },
+      { key: "subject_position", value: "Right", reference: null, references: null },
+      { key: "women_link", value: "gid://shopify/Collection/1", reference: { handle: "women" }, references: null },
+      { key: "men_link", value: "gid://shopify/Collection/2", reference: { handle: "men" }, references: null },
+      { key: "in_the_picture", value: "[]", reference: null, references: { nodes: [byHandle("adire-wrap-dress"), byHandle("aso-oke-kaftan")].map(card) } },
+    ] }] } };
+    case "Occasions": return { metaobjects: { nodes: [["wedding-guest", "Wedding guest", "Statement pieces for weddings and traditional ceremonies."], ["church", "Church", "Polished, modest pieces for Sunday service."], ["couples", "Couples", "Matching outfits for him and her in the same cloth."]].map(([handle, name, intro]) => ({ handle, fields: [{ key: "name", value: name, reference: null }, { key: "intro", value: intro, reference: null }, { key: "collection", value: "gid", reference: { handle } }] })) } };
+    case "DeliveryRules": return { metaobjects: { nodes: [{ fields: [{ key: "order_cutoff", value: "14:00" }, { key: "ready_to_ship_dispatch_days", value: "1" }, { key: "uk_standard_delivery_days", value: "3" }, { key: "uk_express_delivery_days", value: "1" }, { key: "international_delivery_days", value: "10" }, { key: "free_uk_delivery_over", value: "100.0" }, { key: "bank_holidays", value: '["2026-12-25"]' }] }] } };
     case "Threshold": return { shop: { metafield: { value: '{"amount":"150.00","currency_code":"GBP"}' } } };
     case "Policies": return { shop: { privacyPolicy: { title: "Privacy policy", body: "<p>Policy text.</p>" }, termsOfService: null, refundPolicy: null, shippingPolicy: null } };
     case "Cart": return { cart: cartOut() };

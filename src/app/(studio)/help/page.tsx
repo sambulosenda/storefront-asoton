@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { ContactForm } from "@/components/contact-form";
 import { HelpNav } from "@/components/help-nav";
-import { deliveryRates, site } from "@/lib/site";
+import { deliveryThreshold, deliveryTimes } from "@/lib/catalog";
+import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Help",
@@ -11,15 +12,14 @@ export const metadata: Metadata = {
 
 const CARE = [
   {
-    cloth: "Adire",
-    text: "Hand wash cold, on its own, with a mild detergent. Dry in the shade. Natural indigo can mark pale fabrics for the first few washes.",
+    cloth: "Ankara and dashiki prints",
+    text: "Wash cold on a gentle cycle, inside out, with similar colours. Iron on the reverse while slightly damp.",
   },
-  { cloth: "Wax print", text: "Wash cold on a gentle cycle, inside out, with similar colours. Iron on the reverse while slightly damp." },
+  { cloth: "Kente prints", text: "Wash cold, inside out, and dry in the shade so the colours stay bright. Iron on the reverse." },
   {
-    cloth: "Kente and aso-oke",
-    text: "Dry clean. Store folded in a breathable bag, out of direct sunlight, so the woven strips keep their shape.",
+    cloth: "Embroidered pieces",
+    text: "Dry clean, or a brief cold hand wash. Iron on the reverse, never over the embroidery.",
   },
-  { cloth: "Bògòlanfini", text: "Dry clean, or a brief cold hand wash without bleach or strong detergent, which can fade the mud dye." },
 ];
 
 const RETURN_STEPS = [
@@ -31,7 +31,18 @@ const RETURN_STEPS = [
 const h2 = "font-display text-[36px] leading-[1.05] md:text-[44px]";
 const th = "label-caps border-b border-ink pb-2.5 text-left";
 
-export default function HelpPage() {
+export default async function HelpPage() {
+  const [times, threshold] = await Promise.all([deliveryTimes(), deliveryThreshold()]);
+  // Shopify's delivery rules fill in the times; costs stay placeholders until they're set here.
+  const deliveryRates = [
+    { service: "UK standard", arrives: times.uk, cost: `£[X.XX], free over ${threshold.label}` },
+    {
+      service: "UK next day",
+      arrives: times.cutoff ? `Order by ${times.cutoff}, Monday to Thursday` : "Order by [TIME], Monday to Thursday",
+      cost: "£[X.XX]",
+    },
+    { service: "International", arrives: times.international ?? "[X]–[X] working days", cost: "Shown at checkout" },
+  ];
   return (
     <div className="page-x pt-12 pb-20 md:pt-[72px] md:pb-[120px]">
       <div className="flex flex-col gap-5 border-b border-ink pb-10 md:pb-14">

@@ -4,11 +4,12 @@
 import { CLOTHS, clothByName, clothOf, type Cloth } from "@/lib/cloths";
 import { formatMoney } from "@/lib/format";
 import {
-  getCampaign,
   getCloths,
   getCollection,
   getCollectionOrAll,
+  getDeliveryRules,
   getFreeDeliveryThreshold,
+  getHomeCampaign,
   getMenu,
   searchProducts,
   type Image,
@@ -52,6 +53,9 @@ export async function clothLinks(): Promise<ClothLink[]> {
     const collection = entry?.collectionHandle ?? null;
     return {
       ...cloth,
+      // The store's own name for it, such as "Ankara" for wax print.
+      name: entry?.name ?? cloth.name,
+      shop: entry?.name ? `Shop ${entry.name}` : cloth.shop,
       technique: entry?.technique ?? cloth.technique,
       origin: entry?.origin ?? cloth.origin,
       caption: entry?.caption ?? cloth.caption,
@@ -86,12 +90,12 @@ export async function stockedCloths(): Promise<StockedCloth[]> {
 }
 
 /**
- * What the home hero and the menu's promo lead with: the "home" campaign metaobject when it
- * exists, and the first two pieces in New in (the new-in collection in its own order, or the
- * newest products when that collection doesn't exist).
+ * What the home hero and the menu's promo lead with: the home campaign (the "home" entry, else
+ * another campaign entry), and the first two pieces in New in (the new-in collection in its
+ * own order, or the newest products when that collection doesn't exist).
  */
 export async function homeFeature() {
-  const [campaign, newIn] = await Promise.all([getCampaign("home"), getCollectionOrAll({ handle: "new-in", first: 2 })]);
+  const [campaign, newIn] = await Promise.all([getHomeCampaign(), getCollectionOrAll({ handle: "new-in", first: 2 })]);
   return { campaign, collection: newIn.collection, products: newIn.products };
 }
 
@@ -108,10 +112,40 @@ export async function departmentImage(handle: string): Promise<Image | null> {
   return search ? firstPhoto((await searchProducts({ query: search, first: 4 })).products) : null;
 }
 
+/** The free UK delivery amount: the shop metafield, else the "delivery_rules" entry, else the placeholder. */
 export async function deliveryThreshold() {
-  const amount = await getFreeDeliveryThreshold();
+  const [metafield, rules] = await Promise.all([getFreeDeliveryThreshold(), getDeliveryRules()]);
+  const amount = metafield ?? rules?.freeOver ?? null;
   return {
     amount,
     label: amount ? formatMoney({ amount: String(amount), currencyCode: "GBP" }) : site.freeDeliveryThreshold,
+  };
+}
+
+const workingDays = (n: number) => `${n} working ${n === 1 ? "day" : "days"}`;
+
+/**
+ * Dispatch and delivery times for the copy, from the "delivery_rules" entry in Shopify, with the
+ * placeholders in site.ts until it exists.
+ */
+export async function deliveryTimes() {
+  const rules = await getDeliveryRules();
+  const dispatchDays = rules?.dispatchDays ?? null;
+  return {
+    /** "1 working day" */
+    dispatch: dispatchDays !== null ? workingDays(dispatchDays) : `${site.dispatchDays} working days`,
+    /** "Dispatched next working day" for one day, else "Dispatched within 3 working days". */
+    dispatchLine:
+      dispatchDays === 1
+        ? "Dispatched next working day"
+        : `Dispatched within ${dispatchDays !== null ? workingDays(dispatchDays) : `${site.dispatchDays} working days`}`,
+    dispatchDays,
+    /** UK standard delivery, such as "3 working days". */
+    uk: rules?.ukStandardDays != null ? workingDays(rules.ukStandardDays) : `${site.deliveryDays} working days`,
+    ukDays: rules?.ukStandardDays ?? null,
+    express: rules?.ukExpressDays != null ? workingDays(rules.ukExpressDays) : null,
+    international: rules?.internationalDays != null ? workingDays(rules.internationalDays) : null,
+    cutoff: rules?.cutoff ?? null,
+    holidays: rules?.holidays ?? [],
   };
 }

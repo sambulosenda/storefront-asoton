@@ -10,7 +10,7 @@ import { ProductGrid, ProductRail } from "@/components/product-card";
 import { ProductForm } from "@/components/product-form";
 import { ProductGallery } from "@/components/product-gallery";
 import { ProductSkeleton } from "@/components/skeletons";
-import { clothLinks, deliveryThreshold } from "@/lib/catalog";
+import { clothLinks, deliveryThreshold, deliveryTimes } from "@/lib/catalog";
 import { clothByName, clothOf } from "@/lib/cloths";
 import { getCountry } from "@/lib/market";
 import { getProduct, getRecommendations } from "@/lib/shopify";
@@ -64,24 +64,32 @@ export default function ProductPage({ params }: PageProps<"/products/[handle]">)
   );
 }
 
+const DEPARTMENTS = ["women", "men", "kids", "unisex"];
+// Collections that aren't a place to browse: the home page's, New in, and old ones kept while rules change.
+const HIDDEN_CRUMB = /^(new-in|all|frontpage|review)$|old-rules/;
+
 async function Product({ params }: { params: Promise<{ handle: string }> }) {
   const [{ handle }, country] = await Promise.all([params, getCountry()]);
   const product = await getProduct(handle, country);
   if (!product) notFound();
 
-  const [recommendations, cloths, threshold] = await Promise.all([
+  const [recommendations, cloths, threshold, times] = await Promise.all([
     getRecommendations(product.id, country),
     clothLinks(),
     deliveryThreshold(),
+    deliveryTimes(),
   ]);
 
   const clothKey = (clothByName(product.clothFields?.name) ?? clothOf(product))?.key;
   const cloth = cloths.find((c) => c.key === clothKey);
   const dept = product.collections.some((c) => c.handle === "men") ? "men" : "women";
-  const department = product.collections.find((c) => c.handle === "women" || c.handle === "men");
+  const department = DEPARTMENTS.map((d) => product.collections.find((c) => c.handle === d)).find(Boolean);
+  // After the department, one more collection (such as the cloth), but never a stand-in or retired one.
   const crumbs = [
     ...(department ? [department] : []),
-    ...product.collections.filter((c) => c !== department && !["new-in", "all", "frontpage"].includes(c.handle)).slice(0, 1),
+    ...product.collections
+      .filter((c) => c !== department && !DEPARTMENTS.includes(c.handle) && !HIDDEN_CRUMB.test(c.handle))
+      .slice(0, 1),
   ];
 
   const care = product.care ?? cloth?.care;
@@ -94,7 +102,7 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
     (product.fit || product.model) && { title: "Size and fit", body: [product.fit, product.model].filter(Boolean).join(" ") },
     {
       title: "Delivery and returns",
-      body: `UK delivery in ${site.deliveryDays} working days, complimentary over ${threshold.label}. International rates are shown at checkout. Unworn pieces can be returned within ${site.returnDays} days.`,
+      body: `UK delivery in ${times.uk}, complimentary over ${threshold.label}. International rates are shown at checkout. Unworn pieces can be returned within ${site.returnDays} days.`,
     },
   ];
 
@@ -180,7 +188,12 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
             </h1>
           </div>
 
-          <ProductForm product={product} dept={dept} model={product.model} />
+          <ProductForm
+            product={product}
+            dept={dept}
+            model={product.model}
+            delivery={{ dispatchLine: times.dispatchLine, dispatchDays: times.dispatchDays, ukDays: times.ukDays, cutoff: times.cutoff, holidays: times.holidays }}
+          />
 
           <ul className="flex flex-col gap-1.5 border-t border-line pt-4 text-[13px] text-ink-2 md:gap-2">
             <li>Complimentary UK delivery on orders over {threshold.label}</li>

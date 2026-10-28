@@ -12,6 +12,8 @@
   --color-ink-2: #57534c;
   --color-muted: #8a857c;
   --color-indigo: #1e2a55;
+  /* The home hero's ground, behind the campaign photo. */
+  --color-clay: #6e4430;
   --color-error: #8c2f23;
   --color-night-text: #b5b0a6;
   --color-night-line: #3a3732;
@@ -121,6 +123,11 @@
   :focus-visible {
     outline: 2px solid var(--color-indigo);
     outline-offset: 3px;
+  }
+
+  /* Over photos and dark grounds the focus ring is light. */
+  .on-dark :focus-visible {
+    outline-color: var(--color-paper);
   }
 
   em {

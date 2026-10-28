@@ -8,19 +8,31 @@ import { useStore } from "@/components/store-provider";
 import { notifyAction } from "@/lib/actions";
 import { swatchColour } from "@/lib/filters";
 import { formatMoney, isColourOption, isSizeOption } from "@/lib/format";
+import { arrivalDate, isPurchaseOption, makeDays, purchaseKind, sentenceCase, type DeliveryPlan } from "@/lib/purchase";
 import { sizeName, sortedSizes } from "@/lib/sizes";
 import type { Image, ProductDetail } from "@/lib/shopify/types";
 
 type Option = ProductDetail["options"][number];
 
 /** Colour, size, add to bag, back-in-stock and wishlist. */
-export function ProductForm({ product, dept, model }: { product: ProductDetail; dept: "women" | "men"; model: string | null }) {
+export function ProductForm({
+  product,
+  dept,
+  model,
+  delivery,
+}: {
+  product: ProductDetail;
+  dept: "women" | "men";
+  model: string | null;
+  delivery: DeliveryPlan;
+}) {
   const { add, open, openSizeGuide } = useStore();
   const id = useId();
   const options = product.options.filter((o) => !(o.optionValues.length === 1 && o.optionValues[0].name === "Default Title"));
   const colourOption = options.find((o) => isColourOption(o.name));
   const sizeOption = options.find((o) => isSizeOption(o.name));
-  const otherOptions = options.filter((o) => o !== colourOption && o !== sizeOption);
+  const purchaseOption = options.find((o) => isPurchaseOption(o.name));
+  const otherOptions = options.filter((o) => o !== colourOption && o !== sizeOption && o !== purchaseOption);
 
   const firstAvailable = product.variants.find((v) => v.availableForSale) ?? product.variants[0];
   const initial: Record<string, string> = {};
@@ -140,6 +152,15 @@ export function ProductForm({ product, dept, model }: { product: ProductDetail; 
         </div>
       )}
 
+      {purchaseOption && (
+        <PurchaseChoice
+          option={purchaseOption}
+          selected={selection[purchaseOption.name]}
+          onPick={(value) => pick(purchaseOption.name, value)}
+          delivery={delivery}
+        />
+      )}
+
       {sizeOption && (
         <div className="flex flex-col gap-2.5 md:gap-3">
           <div className="flex items-center justify-between gap-4 md:items-baseline">
@@ -200,7 +221,7 @@ export function ProductForm({ product, dept, model }: { product: ProductDetail; 
       {otherOptions.map((o, i) => (
         <div key={o.name} className="flex flex-col gap-2.5 md:gap-3">
           <span id={`${id}-opt-${i}`} className="text-[11px] font-semibold tracking-[0.14em] uppercase md:text-[12px]">
-            {o.name}
+            {sentenceCase(o.name)}
           </span>
           <div role="group" aria-labelledby={`${id}-opt-${i}`} className="flex flex-wrap gap-2">
             {o.optionValues.map((v) => {
@@ -213,7 +234,7 @@ export function ProductForm({ product, dept, model }: { product: ProductDetail; 
                   onClick={() => pick(o.name, v.name)}
                   className={`h-12 cursor-pointer border px-4 text-[14px] ${on ? "border-ink bg-ink text-paper" : "border-line"}`}
                 >
-                  {v.name}
+                  {sentenceCase(v.name)}
                 </button>
               );
             })}
@@ -265,6 +286,73 @@ export function ProductForm({ product, dept, model }: { product: ProductDetail; 
           >
             View bag
           </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const noSubscribe = () => () => {};
+const currentMinute = () => Math.floor(Date.now() / 60_000);
+const noMinute = () => null;
+
+/** "How would you like it?": ready to ship or made to order, each with when it should arrive. */
+function PurchaseChoice({
+  option,
+  selected,
+  onPick,
+  delivery,
+}: {
+  option: Option;
+  selected: string | undefined;
+  onPick: (value: string) => void;
+  delivery: DeliveryPlan;
+}) {
+  const id = useId();
+  // Arrival dates depend on today, so they're worked out in the browser.
+  const minute = useSyncExternalStore(noSubscribe, currentMinute, noMinute);
+  const now = minute === null ? null : new Date(minute * 60_000);
+
+  const cards = option.optionValues.map((v) => {
+    const kind = purchaseKind(v.name);
+    const title = kind === "ready" ? "Ready to ship" : kind === "made" ? "Made to order" : sentenceCase(v.name);
+    const line = kind === "ready" ? delivery.dispatchLine : kind === "made" ? `Made to your size in ${makeDays(v.name)} days` : null;
+    const arrives = now && kind !== "other" ? arrivalDate(kind, v.name, delivery, now) : null;
+    return { value: v.name, title, line, arrives: arrives && (kind === "made" ? `Arrives about ${arrives}` : `Arrives ${arrives}`) };
+  });
+  const body = (c: (typeof cards)[number]) => (
+    <>
+      <span className="text-[15px] font-medium">{c.title}</span>
+      {c.line && <span className="text-[13px] text-ink-2">{c.line}</span>}
+      {/* Kept as a line so the card doesn't grow once the date arrives. */}
+      <span className="min-h-5 text-[13px] text-ink-2">{c.arrives}</span>
+    </>
+  );
+
+  return (
+    <div className="flex flex-col gap-2.5 md:gap-3">
+      <span id={id} className="text-[11px] font-semibold tracking-[0.14em] uppercase md:text-[12px]">
+        How would you like it?
+      </span>
+      {cards.length === 1 ? (
+        // One way to buy it: shown as information, not a choice.
+        <div className="flex flex-col gap-0.5 border border-ink p-4">{body(cards[0])}</div>
+      ) : (
+        <div role="group" aria-labelledby={id} className="grid grid-cols-[repeat(auto-fit,minmax(min(200px,100%),1fr))] gap-2">
+          {cards.map((c) => {
+            const on = selected === c.value;
+            return (
+              <button
+                key={c.value}
+                type="button"
+                aria-pressed={on}
+                onClick={() => onPick(c.value)}
+                className={`flex cursor-pointer flex-col gap-0.5 border p-4 text-left ${on ? "border-ink outline-1 outline-ink -outline-offset-2" : "border-line hover:border-ink"}`}
+              >
+                {body(c)}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

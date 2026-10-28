@@ -37,17 +37,20 @@ The pages fall back gracefully when these are missing, but they look like the de
   - The Women and Men tiles on the home page show the collection's image (set it under **Collection image** in the admin). Without one, they show the collection's first product photo, and until the collection exists, the first photo a search for the word in `departments` in `src/lib/site.ts` finds (`dress` and `kaftan`).
 - **Menus** with the handles `women` and `men` (the category tabs and the mobile menu).
 - **Metaobjects**:
-  - `campaign`, with fields `label` (single line text, the small line above the headline), `headline` (single line text), `body` (multi-line text), `image` (file), and optionally `cta` (button text) and `link` (where the button goes, such as `/collections/women`). Its entries, by handle:
-    - `home`: the home hero and the phone menu's promo tile. Without it, the hero leads with the first product in the `new-in` collection (or the newest product, if that collection doesn't exist): its photo, its name and a link to it.
+  - `campaign`, with fields `label` (single line text, the small line above the headline), `headline` (single line text), `italic_word` (the part of the headline set in italic), `body` (multi-line text), `desktop_image` and `mobile_image` (files: the wide photo and the phone crop; older entries can use `image`), `subject_position` (Left, Centre or Right: where the people are in the photo), `women_link` and `men_link` (collections for the two buttons) and `in_the_picture` (list of products). Its entries, by handle:
+    - `home`, or else the first entry not named below: the home hero and the phone menu's promo tile. The photo fills the hero with the copy over it and the pieces listed under "In the picture". Until the entry has a photo, the pieces show side by side next to the copy. Without any entry, the hero leads with the newest product.
     - `women`, `men` (any collection handle): the editorial block between the product grids on that collection page. Its photo is the entry's image, else the collection's image. Without an entry, the block isn't shown.
     - `story`: the portrait on the Our story page. Without it, the portrait is the newest product's photo.
     - `workshop`: the wide photo on the Our story page. Without it, that photo isn't shown.
     - `lookbook`: the lookbook's opening photo, title and intro. Without it, the page is titled Lookbook and uses the first look's photo.
   - `look`, with fields `title` (single line text), `body` (multi-line text, optional), `image` (file) and `products` (list of products). Each entry is a look on the lookbook page, with the pieces listed under it. Until there are looks, the page shows the newest products one at a time.
-  - `cloth` (name, technique, origin, caption, collection) entries. They change a cloth's words and point it at a collection.
+  - `cloth` (name, technique, origin, caption, collection) entries. They change a cloth's words and point it at a collection The cloth's `short_description` works as its caption.
+  - `occasion` (name, intro, photo, collection): the home page's Shop by occasion list.
+  - `delivery_rules` (one entry): order cutoff, dispatch days, UK standard, express and international delivery days, the free UK delivery amount and bank holidays. These fill in the delivery copy and the arrival dates on product pages.
 - **Shop by cloth** (home page, menu and Our story page) lists only the cloths the store has pieces in, and previews each with one of those pieces. A cloth's pieces are its `cloth` entry's collection, or else the products a search for its name finds (`ankara` for wax print) whose title, type or tags name the cloth. The section is hidden if no cloth has any.
 - **Product metafields**: `custom.care`, `custom.fit`, `custom.model`, `custom.cloth`, plus `reviews.rating` and `reviews.rating_count` from a reviews app.
-- **Shop metafield** `custom.free_delivery_threshold` (the free delivery amount in the announcement bar).
+- **Shop metafield** `custom.free_delivery_threshold` (the free delivery amount in the announcement bar). Without it, the `delivery_rules` amount is used.
+- **Purchase type** product option (values like "Ready to ship" and "Made to order" or "Custom made in 14 days"): shown as the "How would you like it?" choice with arrival dates.
 - **Search & Discovery** filters for cloth, colour, size, price and availability.
 - **Markets** for each country you sell to. The country and currency selector in the header and footer lists them and only appears once there are two or more; prices, the bag and checkout then follow the shopper's choice. The free delivery amount and delivery copy stay in pounds.
 - Storefront API permissions for products, collections, metaobjects, navigation menus, policies and checkouts (cart).

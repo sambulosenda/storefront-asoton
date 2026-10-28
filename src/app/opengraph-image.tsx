@@ -28,7 +28,7 @@ export default function OpengraphImage() {
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <div style={{ fontSize: 128, letterSpacing: -4, lineHeight: 1 }}>{site.brand}</div>
-          <div style={{ fontSize: 36, opacity: 0.8 }}>Adire, kente, aso-oke, bògòlan and wax print, cut into modern shapes.</div>
+          <div style={{ fontSize: 36, opacity: 0.8 }}>Ankara, kente, dashiki and embroidered cloth, cut into modern shapes.</div>
         </div>
       </div>
     ),

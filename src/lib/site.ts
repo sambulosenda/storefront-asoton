@@ -9,9 +9,9 @@ export const siteUrl = (
 
 export const site = {
   brand: "AsoTone",
-  tagline: "Contemporary African clothing for women and men.",
+  tagline: "Contemporary African clothing for women, men and kids.",
   description:
-    "Contemporary African clothing for women and men, cut from adire, kente, aso-oke, bògòlan and wax-print cloth.",
+    "Contemporary African clothing for women, men and kids, in Ankara, kente and dashiki prints and embroidered cloth.",
   market: "United Kingdom · GBP £",
   /** Used when the shop metafield custom.free_delivery_threshold isn't set. */
   freeDeliveryThreshold: "£[XX]",
@@ -30,6 +30,7 @@ export const nav = [
   { label: "New in", href: "/collections/new-in" },
   { label: "Women", href: "/collections/women" },
   { label: "Men", href: "/collections/men" },
+  { label: "Kids", href: "/collections/kids" },
   { label: "Accessories", href: "/collections/accessories" },
 ];
 
@@ -69,33 +70,26 @@ export const footerNav = [
  */
 export const departments: Record<string, { intro: string; tone: string; imageFirst: boolean; imageSearch: string }> = {
   women: {
-    intro: "Dresses, sets, boubous and headwraps in adire, kente, aso-oke, bògòlan and wax-print cloth.",
+    intro: "Dresses, sets, jumpsuits and kimonos in Ankara, kente and dashiki prints and embroidered cloth.",
     tone: "#2B3049",
     imageFirst: true,
     // Until the collection exists, the home page's tile shows the first product this search finds.
     imageSearch: "dress",
   },
   men: {
-    intro: "Kaftans, agbada, shirts and trousers in aso-oke, kente, bògòlan, adire and wax-print cloth.",
+    intro: "Suits, shirts, jackets and trousers in Ankara, kente and dashiki prints and embroidered cloth.",
     tone: "#2F3438",
     imageFirst: false,
     imageSearch: "kaftan",
   },
 };
 
-export const popularSearches = ["Adire", "Kaftan", "Headwrap", "Kente", "Agbada", "Wax print"];
+export const popularSearches = ["Ankara", "Dashiki", "Kente", "Maxi dress", "Embroidered suit", "Headwrap"];
 
 /** Founder copy for the Our story page. Replace the bracketed text. */
 export const story = {
-  opening: `${site.brand} began in [YEAR] in [CITY], when [FOUNDER NAME] [what started it, in a sentence]. Today we make contemporary clothing for women and men from adire, kente, aso-oke, bògòlan and wax-print cloth.`,
+  opening: `${site.brand} began in [YEAR] in [CITY], when [FOUNDER NAME] [what started it, in a sentence]. Today we make contemporary clothing for women, men and kids in Ankara, kente and dashiki prints and embroidered cloth.`,
   makers: "[Who makes the pieces and how you work with them: the tailors, dyers and weavers. Name them where you can.]",
   quote: "[A sentence from the founder, in their own words, on why this matters.]",
   founder: "[FOUNDER NAME]",
 };
-
-/** Delivery services shown on the Help page. Match these to Shopify's shipping settings. */
-export const deliveryRates = [
-  { service: "UK standard", arrives: "[X]–[X] working days", cost: `£[X.XX], free over ${site.freeDeliveryThreshold}` },
-  { service: "UK next day", arrives: "Order by [TIME], Monday to Thursday", cost: "£[X.XX]" },
-  { service: "International", arrives: "[X]–[X] working days", cost: "Shown at checkout" },
-];
