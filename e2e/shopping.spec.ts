@@ -191,3 +191,12 @@ test("the phone menu follows the design's order, with occasions and the store's 
   await expect(menu.getByRole("link", { name: "Wedding guest" })).toHaveAttribute("href", "/collections/wedding-guest");
   await expect(menu.getByRole("link", { name: "Church" })).toHaveCount(0);
 });
+
+test("a sub-category sits under its department, with its chip selected", async ({ page }) => {
+  await page.goto("/collections/women-dresses");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dresses");
+  await expect(page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Women" })).toHaveAttribute("href", "/collections/women");
+  const chips = page.getByRole("navigation", { name: "Dresses categories" }).filter({ visible: true });
+  await expect(chips.getByRole("link", { name: "Dresses" })).toHaveAttribute("aria-current", "page");
+  await expect(chips.getByRole("link", { name: "All" })).toHaveAttribute("href", "/collections/women");
+});
