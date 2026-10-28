@@ -102,7 +102,7 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
     (product.fit || product.model) && { title: "Size and fit", body: [product.fit, product.model].filter(Boolean).join(" ") },
     {
       title: "Delivery and returns",
-      body: `UK delivery in ${times.uk}, complimentary over ${threshold.label}. International rates are shown at checkout. Unworn pieces can be returned within ${site.returnDays} days.`,
+      body: `UK delivery in ${times.uk}, complimentary over ${threshold.label}. International rates are shown at checkout. Unworn ready-to-ship pieces can be returned within ${site.returnDays} days. Made-to-order pieces are made to your size, so they can only be returned if faulty.`,
     },
   ];
 
@@ -197,7 +197,7 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
 
           <ul className="flex flex-col gap-1.5 border-t border-line pt-4 text-[13px] text-ink-2 md:gap-2">
             <li>Complimentary UK delivery on orders over {threshold.label}</li>
-            <li>Returns within {site.returnDays} days of delivery</li>
+            <li>Returns within {site.returnDays} days on ready-to-ship pieces</li>
           </ul>
 
           <Accordion panels={panels.filter((p) => !!p)} />
