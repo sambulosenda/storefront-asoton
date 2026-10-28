@@ -30,6 +30,9 @@ export default defineConfig({
       // Empty values win over .env.local, so a local run never reaches the real store.
       SHOPIFY_STORE_DOMAIN: "",
       SHOPIFY_STOREFRONT_ACCESS_TOKEN: "",
+      // Emails to the shop go to the fixture, which accepts them without sending.
+      RESEND_API_KEY: "test",
+      SHOP_EMAIL: "shop@example.com",
     },
   },
 });

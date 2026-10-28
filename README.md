@@ -17,7 +17,7 @@ The store is **My Store 2** (`iwsv0v-te.myshopify.com`). With no env vars at all
 1. In Shopify admin, go to **Sales channels**, add the **Headless** channel from the Shopify App Store, and open it.
 2. Click **Create storefront**.
 3. Under **Storefront API**, copy the **public access token** into `SHOPIFY_STOREFRONT_ACCESS_TOKEN` in `.env.local` (and in your hosting provider's env vars when you deploy).
-4. In **Storefront API permissions**, make sure product and collection read access is enabled.
+4. In **Storefront API permissions**, make sure product and collection read access is enabled, and turn on **customers write** (`unauthenticated_write_customers`) so newsletter sign-ups can be added as customers.
 
 `.env.local` is gitignored; never commit the token.
 
@@ -55,7 +55,19 @@ The pages fall back gracefully when these are missing, but they look like the de
 - **Markets** for each country you sell to. The country and currency selector in the header and footer lists them and only appears once there are two or more; prices, the bag and checkout then follow the shopper's choice. The free delivery amount and delivery copy stay in pounds.
 - Storefront API permissions for products, collections, metaobjects, navigation menus, policies and checkouts (cart).
 
-The newsletter, back-in-stock and contact forms validate input but don't send anything yet; they need a backend (for example a Shopify Flow or email provider).
+## Forms
+
+- **Newsletter**: adds the email to Shopify **Customers** with email marketing on, through the Storefront API, so Shopify Email campaigns reach them. People who are already customers can't be opted in from the site, so the shop gets an email asking to tick it for them.
+- **Back in stock** and **contact**: emailed to the shop through [Resend](https://resend.com), with Reply-To set to the customer, so answering is just replying.
+
+To switch on the emails, make a free Resend account with the shop's inbox, create an API key, and set `RESEND_API_KEY` and `SHOP_EMAIL` (that same inbox). Until a domain is verified in Resend, mail comes from `onboarding@resend.dev` and can only go to that inbox, which is all these forms need. Without these, the forms say plainly that they aren't connected, and nothing pretends to send. A hidden field drops form spam from bots.
+
+## Deploying to Vercel
+
+1. Sign in at [vercel.com](https://vercel.com) with GitHub and **Add New > Project**, then import `storefront-asoton`. Vercel finds Next.js on its own; keep the default build settings.
+2. Under **Environment Variables**, add `SHOPIFY_STORE_DOMAIN`, `SHOPIFY_STOREFRONT_ACCESS_TOKEN`, `SHOPIFY_STOREFRONT_API_VERSION`, `SITE_URL` (the address the site will live at, such as `https://asotone.com`), and `RESEND_API_KEY` and `SHOP_EMAIL` if the forms should send.
+3. Click **Deploy**. Every push to `main` deploys again, and every pull request gets its own preview link.
+4. To use your own domain, add it under **Settings > Domains** and follow the DNS steps there, then change `SITE_URL` to it and redeploy (the sitemap and robots file are built with it).
 
 ## Search engines and sharing
 

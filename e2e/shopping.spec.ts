@@ -143,6 +143,19 @@ test("a sold-out size offers a back-in-stock email", async ({ page }) => {
   await expect(page.getByText("Enter an email address, like name@example.com.")).toBeVisible();
   // What was typed survives the error.
   await expect(email).toHaveValue("not-an-email");
+
+  await email.fill("ada@example.com");
+  await page.getByRole("button", { name: "Notify me" }).click();
+  await expect(page.getByText("Done. We’ll email you when UK 18 is back.")).toBeVisible();
+});
+
+test("the contact form sends a message to the shop", async ({ page }) => {
+  await page.goto("/help");
+  await page.getByLabel("Name").fill("Ada");
+  await page.getByLabel("Email").fill("ada@example.com");
+  await page.getByLabel("Message").fill("Does the wrap dress come in a longer length?");
+  await page.getByRole("button", { name: "Send message" }).click();
+  await expect(page.getByText("Thank you. We’ve got your message.")).toBeVisible();
 });
 
 test("sizes written as UK, US and EU show the UK size, in size order", async ({ page }) => {

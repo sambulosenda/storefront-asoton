@@ -244,7 +244,7 @@ export function ProductForm({
 
       <div className="flex flex-col gap-2 md:gap-2.5">
         {soldOut && variant ? (
-          <NotifyPanel key={variant.id} label={size ? sizeName(size) : product.title} />
+          <NotifyPanel key={variant.id} label={size ? sizeName(size) : product.title} piece={product.title} handle={product.handle} option={variant.title} />
         ) : (
           <div className="flex gap-2">
             <button
@@ -359,11 +359,15 @@ function PurchaseChoice({
   );
 }
 
-function NotifyPanel({ label }: { label: string }) {
+function NotifyPanel({ label, piece, handle, option }: { label: string; piece: string; handle: string; option: string }) {
   const [state, formAction, pending] = useActionState(notifyAction, null);
   const id = useId();
   return (
     <form key={state?.values?.email} action={formAction} noValidate className="flex flex-col gap-3 bg-stone p-4 md:p-5">
+      <input type="text" name="company" tabIndex={-1} autoComplete="off" className="hidden" />
+      <input type="hidden" name="piece" value={piece} />
+      <input type="hidden" name="option" value={option === "Default Title" ? "" : option} />
+      <input type="hidden" name="handle" value={handle} />
       <p className="text-[14px] leading-[1.5] md:text-[15px]">
         <strong className="font-medium">{label} is sold out.</strong> <span className="text-ink-2">We’ll email you once, when it’s back.</span>
       </p>

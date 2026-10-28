@@ -22,6 +22,7 @@ export function Newsletter() {
           </p>
         </div>
         <form key={state?.values?.email} action={formAction} noValidate className="flex max-w-[560px] flex-col gap-3 md:flex-[1_1_420px]">
+          <input type="text" name="company" tabIndex={-1} autoComplete="off" className="hidden" />
           <label htmlFor={`${id}-email`} className="text-[11px] tracking-[0.14em] text-ink-2 uppercase md:text-[12px]">
             Email address
           </label>
