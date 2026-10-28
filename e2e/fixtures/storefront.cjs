@@ -111,13 +111,17 @@ function respond(query, vars) {
     case "Markets": return { localization: { country: marketOut(MARKETS[0]), availableCountries: MARKETS.map(marketOut) } };
     case "Collection": {
       const map = { women: "women", men: "men" };
-      if (!["women", "men", "new-in"].includes(vars.handle)) return { collection: null };
-      let list = vars.handle === "new-in" ? products.slice(0, 12) : products.filter((p) => p._dept === map[vars.handle]);
+      // The occasion collections: Church exists but is empty, as in the live store.
+      const occasions = { "wedding-guest": products.slice(0, 4), couples: products.slice(4, 6), church: [] };
+      // One sub-category collection, like the live store's women-dresses.
+      occasions["women-dresses"] = products.filter((p) => p._dept === "women" && /dress/i.test(p.title));
+      if (!["women", "men", "new-in", ...Object.keys(occasions)].includes(vars.handle)) return { collection: null };
+      let list = vars.handle === "new-in" ? products.slice(0, 12) : occasions[vars.handle] ?? products.filter((p) => p._dept === map[vars.handle]);
       // Size 6 has no stock (its filter is disabled); size 20 matches nothing once applied.
       if (vars.filters?.some((f) => f.variantOption?.value === "20")) list = [];
       const start = vars.after ? Number(vars.after) : 0;
       const page = list.slice(start, start + vars.first);
-      const titles = { women: "Women", men: "Men", "new-in": "New in" };
+      const titles = { women: "Women", men: "Men", "new-in": "New in", "wedding-guest": "Wedding guest", couples: "Couples", church: "Church", "women-dresses": "Dresses" };
       // Only Women has a collection image, so the home page shows one tile with a photo and one without.
       const image = vars.handle === "women" ? { url: "https://cdn.shopify.com/s/files/fixture/women.jpg", altText: null, width: 1200, height: 1500 } : null;
       return { collection: { id: "c", handle: vars.handle, title: titles[vars.handle], description: "", image, products: { filters: filtersFor(list), pageInfo: { hasNextPage: start + vars.first < list.length, endCursor: String(start + vars.first) }, nodes: page.map(card) } } };

@@ -11,15 +11,17 @@ import type { Image as ShopifyImage, MenuLink } from "@/lib/shopify/types";
 import { site } from "@/lib/site";
 
 export type MenuGroup = { label: string; links: MenuLink[] };
+/** A row in the menu: a group that opens to its links, or a single link. */
+export type MenuRow = MenuGroup | { label: string; href: string };
 export type MenuPromo = { label: string; title: string; href: string; image: ShopifyImage | null };
 
 /** The full-screen menu on phones, and a left drawer on tablets where the nav doesn't fit. */
 export function MobileMenu({
-  groups,
+  rows,
   accountUrl,
   promo,
 }: {
-  groups: MenuGroup[];
+  rows: MenuRow[];
   accountUrl: string | null;
   promo: MenuPromo | null;
 }) {
@@ -54,10 +56,13 @@ export function MobileMenu({
         </div>
 
         <nav aria-label="Main" className="min-h-0 flex-auto overflow-y-auto px-4 pt-2 pb-6" onClick={(e) => (e.target as HTMLElement).closest("a") && close()}>
-          <Link href="/collections/new-in" className={big}>
-            New in
-          </Link>
-          {groups.map((group) => {
+          {rows.map((group) => {
+            if (!("links" in group))
+              return (
+                <Link key={group.href} href={group.href} className={big}>
+                  {group.label}
+                </Link>
+              );
             const isOpen = expanded === group.label;
             return (
               <div key={group.label} className="border-b border-line">
@@ -84,12 +89,6 @@ export function MobileMenu({
               </div>
             );
           })}
-          <Link href="/collections/kids" className={big}>
-            Kids
-          </Link>
-          <Link href="/collections/accessories" className={big}>
-            Accessories
-          </Link>
 
           <ul className="flex flex-col py-5 text-[15px]">
             <li>

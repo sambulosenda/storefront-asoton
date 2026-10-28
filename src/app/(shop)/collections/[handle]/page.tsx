@@ -5,6 +5,7 @@ import { CollectionBrowser } from "@/components/collection-browser";
 import { Editorial } from "@/components/editorial";
 import { breadcrumbs, JsonLd } from "@/components/json-ld";
 import { CollectionSkeleton } from "@/components/skeletons";
+import { departmentMenu } from "@/lib/catalog";
 import { parseFilters, parseSort } from "@/lib/filters";
 import { getCountry } from "@/lib/market";
 import { getCampaign, getCollection, getCollectionOrAll, getMenu } from "@/lib/shopify";
@@ -56,9 +57,13 @@ async function Collection({
   const [{ handle }, query, country] = await Promise.all([params, searchParams, getCountry()]);
   const sort = parseSort(query.sort);
   const filters = parseFilters(query.filter);
+  // Sub-categories like women-dresses show their department's chips, with themselves selected.
+  const parent = handle.match(/^(women|men)-/)?.[1] as "women" | "men" | undefined;
+  const dept = handle === "women" || handle === "men" ? handle : parent;
   const [page, menu, campaign] = await Promise.all([
     getCollectionOrAll({ handle, sort, filters, country }),
-    getMenu(handle),
+    // Women and Men fall back to the design's categories until their menus exist in Shopify.
+    dept ? departmentMenu(dept) : getMenu(handle),
     getCampaign(handle),
   ]);
 
@@ -79,9 +84,10 @@ async function Collection({
         imageFirst: department?.imageFirst ?? true,
       }
     : null;
+  const allPath = parent ? `/collections/${parent}` : path;
   const categories = [
-    { title: "All", href: path, current: true },
-    ...menu.filter((link) => link.href !== path).map((link) => ({ ...link, current: false })),
+    { title: "All", href: allPath, current: allPath === path },
+    ...menu.filter((link) => link.href !== allPath).map((link) => ({ ...link, current: link.href === path })),
   ];
 
   return (
@@ -90,6 +96,7 @@ async function Collection({
         <JsonLd
           data={breadcrumbs(siteUrl, [
             { name: "Home", path: "/" },
+            ...(parent ? [{ name: titleFromHandle(parent), path: allPath }] : []),
             { name: title, path },
           ])}
         />
@@ -103,6 +110,16 @@ async function Collection({
               </Link>
             </li>
             <li aria-hidden="true">/</li>
+            {parent && (
+              <>
+                <li>
+                  <Link href={allPath} className="text-ink-2 underline-offset-4">
+                    {titleFromHandle(parent)}
+                  </Link>
+                </li>
+                <li aria-hidden="true">/</li>
+              </>
+            )}
             <li aria-current="page">{title}</li>
           </ol>
         </nav>

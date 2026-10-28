@@ -20,7 +20,9 @@ test("the home hero shows the store's campaign, with the pieces in the picture u
 test("the home page lists the store's occasions and uses its delivery rules", async ({ page }) => {
   await page.goto("/");
   const occasions = page.getByRole("region", { name: "Shop by occasion" });
-  await expect(occasions.getByRole("link")).toHaveCount(3);
+  // Church has no pieces yet, so it isn't offered.
+  await expect(occasions.getByRole("link")).toHaveCount(2);
+  await expect(occasions.getByRole("link", { name: /Church/ })).toHaveCount(0);
   await expect(occasions.getByRole("link", { name: /Wedding guest/ })).toHaveAttribute("href", "/collections/wedding-guest");
   await expect(page.getByText("Ready-to-ship pieces leave us within 1 working day.")).toBeVisible();
   // The shop metafield (£150) wins over the delivery rules' amount.
@@ -176,4 +178,25 @@ test("choosing another country switches prices and keeps the bag", async ({ page
 
   await expect(page.getByText("$240.50").first()).toBeVisible();
   await expect(page.getByRole("button", { name: /United States · USD/ }).first()).toBeAttached();
+});
+
+test("the phone menu follows the design's order, with occasions and the store's cloths", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "The menu is phone-only");
+  await page.goto("/");
+  await page.getByRole("button", { name: "Open menu" }).filter({ visible: true }).click();
+  const menu = page.getByRole("navigation", { name: "Main" });
+  const rows = menu.locator(":scope > a:not(:has(span)), :scope > div > button");
+  await expect(rows).toHaveText(["Women", "Men", "Kids", "New in", "Accessories", "Occasions", "Shop by cloth"]);
+  await menu.getByRole("button", { name: "Occasions" }).click();
+  await expect(menu.getByRole("link", { name: "Wedding guest" })).toHaveAttribute("href", "/collections/wedding-guest");
+  await expect(menu.getByRole("link", { name: "Church" })).toHaveCount(0);
+});
+
+test("a sub-category sits under its department, with its chip selected", async ({ page }) => {
+  await page.goto("/collections/women-dresses");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dresses");
+  await expect(page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Women" })).toHaveAttribute("href", "/collections/women");
+  const chips = page.getByRole("navigation", { name: "Dresses categories" }).filter({ visible: true });
+  await expect(chips.getByRole("link", { name: "Dresses" })).toHaveAttribute("aria-current", "page");
+  await expect(chips.getByRole("link", { name: "All" })).toHaveAttribute("href", "/collections/women");
 });
