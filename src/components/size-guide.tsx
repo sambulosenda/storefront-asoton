@@ -6,7 +6,7 @@ import { CloseIcon } from "@/components/icons";
 import { Sheet } from "@/components/sheet";
 import { useStore } from "@/components/store-provider";
 
-// Body measurements in centimetres, from the AsoTone size guide.
+// Body measurements in centimetres, from the shop size guide.
 const CHARTS = {
   women: {
     sizeHead: "UK size",

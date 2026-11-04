@@ -82,12 +82,14 @@ export default async function StoryPage() {
         </section>
       )}
 
-      <section aria-label="From the founder" className="bg-ink text-paper">
-        <figure className="mx-auto flex max-w-[1100px] flex-col gap-8 px-[clamp(16px,4vw,48px)] py-20 md:py-[120px]">
-          <blockquote className="font-display text-[clamp(28px,3.6vw,52px)] leading-[1.2] italic">“{story.quote}”</blockquote>
-          <figcaption className="text-[13px] tracking-[0.14em] text-night-text uppercase">{story.founder}, founder</figcaption>
-        </figure>
-      </section>
+      {story.quote && story.founder && (
+        <section aria-label="From the founder" className="bg-ink text-paper">
+          <figure className="mx-auto flex max-w-[1100px] flex-col gap-8 px-[clamp(16px,4vw,48px)] py-20 md:py-[120px]">
+            <blockquote className="font-display text-[clamp(28px,3.6vw,52px)] leading-[1.2] italic">“{story.quote}”</blockquote>
+            <figcaption className="text-[13px] tracking-[0.14em] text-night-text uppercase">{story.founder}, founder</figcaption>
+          </figure>
+        </section>
+      )}
 
       {cloths.length > 0 && (
         <section aria-labelledby="start" className="page-x flex flex-wrap items-end justify-between gap-x-16 gap-y-8 py-20 md:py-[120px]">

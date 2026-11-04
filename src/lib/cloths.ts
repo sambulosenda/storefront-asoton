@@ -1,5 +1,5 @@
 // The five cloths the shop is built around, and the garment drawings that stand in
-// for product photography until it is shot. Copy comes from the AsoTone design.
+// for product photography until it is shot. Copy comes from the site design.
 
 export type ClothKey = "adire" | "kente" | "bogolan" | "asooke" | "wax";
 

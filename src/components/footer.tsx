@@ -91,7 +91,7 @@ export function Footer() {
         <div className="flex flex-col gap-3 text-[12px] text-night-text">
           <LegalLinks className="gap-x-5 gap-y-2" />
           <span>
-            © {year} {site.brand}
+            © {year} {site.brand} ({site.company})
           </span>
         </div>
       </div>
@@ -120,7 +120,7 @@ export function Footer() {
         </div>
         <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3 border-t border-night-line pt-6 text-[12px] text-night-text">
           <span>
-            © {year} {site.brand}
+            © {year} {site.brand} ({site.company})
           </span>
           <LegalLinks className="gap-x-6 gap-y-2" />
           <MarketButton className="text-night-text" />
@@ -148,7 +148,7 @@ export function CompactFooter() {
           </button>
         </div>
         <span>
-          © {year} {site.brand} · <MarketLabel />
+          © {year} {site.brand} ({site.company}) · <MarketLabel />
         </span>
       </div>
     </footer>
@@ -161,7 +161,7 @@ export function MinimalFooter() {
     <footer className="bg-ink text-night-text">
       <div className="page-x flex flex-wrap justify-between gap-x-8 gap-y-3 py-6 text-[12px]">
         <span>
-          © {year} {site.brand}
+          © {year} {site.brand} ({site.company})
         </span>
         <span>
           <MarketLabel />

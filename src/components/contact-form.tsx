@@ -2,7 +2,6 @@
 
 import { useActionState } from "react";
 import { contactAction } from "@/lib/actions";
-import { site } from "@/lib/site";
 
 const field = "h-[52px] border border-line bg-white px-3.5";
 
@@ -15,7 +14,7 @@ export function ContactForm() {
       <div role="status" className="flex min-w-0 flex-[3_1_360px] flex-col gap-3 bg-stone p-6 md:p-8">
         <p className="font-display text-[28px] leading-[1.15]">Thank you. We’ve got your message.</p>
         <p className="text-[15px] leading-[1.6] text-ink-2">
-          We reply within {site.replyDays} working days.
+          We’ll reply to the email address you gave us.
         </p>
       </div>
     );
