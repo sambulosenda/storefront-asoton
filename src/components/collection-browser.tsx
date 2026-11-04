@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { collectionPath } from "@/lib/site";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { FilterChip, FilterDrawer } from "@/components/filter-drawer";
@@ -211,7 +212,7 @@ export function CollectionBrowser({
                 <>
                   <p className="font-display text-[30px] leading-[1.1] md:text-[36px]">Nothing here yet</p>
                   <p className="max-w-[420px] text-[15px] leading-[1.6] text-ink-2">New pieces are on their way. Start with the cloth instead.</p>
-                  <Link href="/collections/new-in" className="btn btn-outline mt-2">
+                  <Link href={collectionPath("newIn")} className="btn btn-outline mt-2">
                     Shop new in
                   </Link>
                 </>

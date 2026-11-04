@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { colourLine, formatMoney } from "@/lib/format";
 import { getCountry } from "@/lib/market";
 import { getCampaign, getCollectionOrAll, getLooks, type Look, type Product } from "@/lib/shopify";
-import { site } from "@/lib/site";
+import { collectionPath, collections, site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Lookbook",
@@ -42,7 +42,7 @@ export default function LookbookPage() {
       <section className="border-t border-line">
         <div className="page-x flex flex-col items-center gap-6 py-20 text-center md:py-24">
           <p className="font-display text-[clamp(32px,3.4vw,48px)] leading-[1.05]">Every piece, in one place</p>
-          <Link href="/collections/new-in" className="btn btn-ink md:px-9">
+          <Link href={collectionPath("newIn")} className="btn btn-ink md:px-9">
             Shop new in
           </Link>
         </div>
@@ -59,7 +59,7 @@ async function Hero() {
   const [campaign, looks, newIn] = await Promise.all([
     getCampaign("lookbook"),
     getLooks(),
-    getCollectionOrAll({ handle: "new-in", first: 1 }),
+    getCollectionOrAll({ handle: collections.newIn, first: 1 }),
   ]);
   const image =
     campaign?.image ?? looks[0]?.image ?? looks[0]?.products[0]?.featuredImage ?? newIn.products[0]?.featuredImage ?? null;
@@ -97,7 +97,7 @@ async function Looks() {
   const looks = await getLooks(country);
   const fromProducts = looks.length === 0;
   const shown: Look[] = fromProducts
-    ? (await getCollectionOrAll({ handle: "new-in", first: 4, country })).products.map((p) => ({
+    ? (await getCollectionOrAll({ handle: collections.newIn, first: 4, country })).products.map((p) => ({
         handle: p.handle,
         title: p.title,
         body: null,

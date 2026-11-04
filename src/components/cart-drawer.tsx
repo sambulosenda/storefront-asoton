@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { collectionPath } from "@/lib/site";
 import { ProductVisual } from "@/components/cloth";
 import { CloseIcon, MinusIcon, PlusIcon } from "@/components/icons";
 import { Sheet } from "@/components/sheet";
@@ -82,7 +83,7 @@ export function CartDrawer({ threshold, thresholdLabel }: { threshold: number | 
                 Checkout
               </a>
               <Link
-                href="/collections/new-in"
+                href={collectionPath("newIn")}
                 onClick={close}
                 className="hidden min-h-11 items-center self-center text-[13px] underline-offset-4 md:inline-flex"
               >
@@ -96,7 +97,7 @@ export function CartDrawer({ threshold, thresholdLabel }: { threshold: number | 
             <p className="max-w-[300px] text-[15px] leading-[1.6] text-ink-2">
               Start with the cloth: adire, kente, aso-oke, bògòlan and wax print.
             </p>
-            <Link href="/collections/new-in" onClick={close} className="btn btn-outline mt-2 self-stretch md:self-auto">
+            <Link href={collectionPath("newIn")} onClick={close} className="btn btn-outline mt-2 self-stretch md:self-auto">
               Shop new in
             </Link>
           </div>

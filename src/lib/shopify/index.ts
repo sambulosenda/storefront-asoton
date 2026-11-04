@@ -1,4 +1,5 @@
 import { cacheLife, cacheTag } from "next/cache";
+import { collections } from "@/lib/site";
 import type {
   Cart,
   ClothEntry,
@@ -285,8 +286,8 @@ export async function getProducts({
 export async function getCollectionOrAll(args: CollectionArgs): Promise<CollectionPage> {
   const page = await getCollection(args);
   if (page) return page;
-  // Without a new-in collection, the newest products stand in for it (featured would be best-selling).
-  const sort = args.handle === "new-in" && (args.sort ?? "featured") === "featured" ? "newest" : args.sort;
+  // Without a New in collection, the newest products stand in for it (featured would be best-selling).
+  const sort = args.handle === collections.newIn && (args.sort ?? "featured") === "featured" ? "newest" : args.sort;
   const all = await getProducts({ first: args.first, sort, after: args.after, country: args.country });
   return { collection: null, products: all.products, filters: [], pageInfo: all.pageInfo };
 }

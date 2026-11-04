@@ -13,7 +13,7 @@ import { deliveryTimes, departmentImage, homeFeature, stockedCloths, stockedOcca
 import { formatMoney } from "@/lib/format";
 import { getCountry } from "@/lib/market";
 import { getCollectionOrAll } from "@/lib/shopify";
-import { nav, site, siteUrl } from "@/lib/site";
+import { collectionPath, collections, nav, site, siteUrl } from "@/lib/site";
 
 const DEPARTMENTS = [
   { handle: "women", title: "Women", href: "/collections/women", blurb: "Dresses, sets, jumpsuits and kimonos", cta: "Shop women", tone: "#4A3F3A", soft: "#DCD5CC" },
@@ -300,7 +300,7 @@ export default async function HomePage() {
 }
 
 async function NewIn() {
-  const newIn = await getCollectionOrAll({ handle: "new-in", first: 4, country: await getCountry() });
+  const newIn = await getCollectionOrAll({ handle: collections.newIn, first: 4, country: await getCountry() });
   if (newIn.products.length === 0) return null;
   return (
     <section aria-labelledby="new-in" className="pb-16 md:page-x md:pt-[120px] md:pb-[120px]">
@@ -309,7 +309,7 @@ async function NewIn() {
           New in
         </h2>
         <Link
-          href="/collections/new-in"
+          href={collectionPath("newIn")}
           className="inline-flex min-h-11 items-center gap-2.5 text-[12px] tracking-[0.12em] uppercase underline-offset-[6px] md:arrow-link md:py-3"
         >
           View all

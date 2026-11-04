@@ -10,7 +10,7 @@ import { SizeGuide } from "@/components/size-guide";
 import { StoreProvider } from "@/components/store-provider";
 import { deliveryThreshold, departmentMenu, homeFeature, menuCloths, stockedOccasions } from "@/lib/catalog";
 import { accountUrl, getMarkets } from "@/lib/shopify";
-import { site, siteUrl } from "@/lib/site";
+import { collectionPath, site, siteUrl } from "@/lib/site";
 import "./globals.css";
 
 const bodoni = Bodoni_Moda({
@@ -50,7 +50,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     ? {
         label: feature.campaign.label ?? "New in",
         title: feature.campaign.headline,
-        href: "/collections/new-in",
+        href: collectionPath("newIn"),
         image: feature.campaign.image ?? newest?.featuredImage ?? null,
       }
     : newest
@@ -58,11 +58,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       : null;
   // In the design's order: the departments, the single links, then occasions and cloths.
   const menuRows: MenuRow[] = [
-    { label: "Women", links: [{ title: "All women", href: "/collections/women" }, ...women] },
-    { label: "Men", links: [{ title: "All men", href: "/collections/men" }, ...men] },
-    { label: "Kids", href: "/collections/kids" },
-    { label: "New in", href: "/collections/new-in" },
-    { label: "Accessories", href: "/collections/accessories" },
+    { label: "Women", links: [{ title: "All women", href: collectionPath("women") }, ...women] },
+    { label: "Men", links: [{ title: "All men", href: collectionPath("men") }, ...men] },
+    { label: "Kids", href: collectionPath("kids") },
+    { label: "New in", href: collectionPath("newIn") },
+    { label: "Accessories", href: collectionPath("accessories") },
     {
       label: "Occasions",
       links: occasions.map((o) => ({ title: o.name, href: o.collection ? `/collections/${o.collection}` : `/search?q=${encodeURIComponent(o.name)}` })),
