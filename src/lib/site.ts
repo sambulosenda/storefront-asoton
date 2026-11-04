@@ -26,22 +26,32 @@ export const site = {
   social: { instagram: "#", tiktok: "#" },
 };
 
-/** Collection handles the navigation points at. Create these collections in Shopify admin. */
+/**
+ * The Shopify collection handles behind the shop's fixed links. Change a handle here when the
+ * store names the collection differently: every menu, button and page that links to it follows.
+ */
+export const collections = {
+  newIn: "new-arrivals",
+  women: "women",
+  men: "men",
+  kids: "kids",
+  accessories: "african-accessories",
+};
+
+export const collectionPath = (key: keyof typeof collections) => `/collections/${collections[key]}`;
+
 export const nav = [
-  { label: "New in", href: "/collections/new-in" },
-  { label: "Women", href: "/collections/women" },
-  { label: "Men", href: "/collections/men" },
-  { label: "Kids", href: "/collections/kids" },
-  { label: "Accessories", href: "/collections/accessories" },
+  { label: "New in", href: collectionPath("newIn") },
+  { label: "Women", href: collectionPath("women") },
+  { label: "Men", href: collectionPath("men") },
+  { label: "Kids", href: collectionPath("kids") },
+  { label: "Accessories", href: collectionPath("accessories") },
 ];
 
 export const footerNav = [
   {
     title: "Shop",
-    links: [
-      ...nav,
-      { label: "Gift cards", href: "/collections/gift-cards" },
-    ],
+    links: nav,
   },
   {
     title: "Help",

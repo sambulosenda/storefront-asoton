@@ -3,6 +3,7 @@ import { ClothSwatch } from "@/components/cloth";
 import { MinimalFooter } from "@/components/footer";
 import { Header } from "@/components/header";
 import { ArrowRight } from "@/components/icons";
+import { collectionPath } from "@/lib/site";
 
 export default function NotFound() {
   return (
@@ -34,9 +35,9 @@ export default function NotFound() {
           </form>
           <nav aria-label="Popular pages" className="flex flex-wrap gap-x-6 gap-y-2 pt-2 text-[15px]">
             {[
-              { label: "New in", href: "/collections/new-in" },
-              { label: "Women", href: "/collections/women" },
-              { label: "Men", href: "/collections/men" },
+              { label: "New in", href: collectionPath("newIn") },
+              { label: "Women", href: collectionPath("women") },
+              { label: "Men", href: collectionPath("men") },
               { label: "Help", href: "/help" },
             ].map((link) => (
               <Link key={link.href} href={link.href} className="py-2.5 underline-offset-[6px]">

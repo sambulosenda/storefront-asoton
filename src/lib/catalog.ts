@@ -17,26 +17,29 @@ import {
   type MenuLink,
   type Product,
 } from "@/lib/shopify";
-import { departments, site } from "@/lib/site";
+import { collections, departments, site } from "@/lib/site";
 
 const search = (q: string) => `/search?q=${encodeURIComponent(q)}`;
 
-/** Fallback sub-categories from the design, used until the "women" and "men" menus exist in Shopify. */
+/**
+ * Fallback sub-categories, used until the "women" and "men" menus exist in Shopify (Content →
+ * Menus). Each links to the store's own collection; a search stands in where it has none.
+ */
 const DEFAULT_MENUS: Record<"women" | "men", MenuLink[]> = {
   women: [
-    { title: "Dresses", href: search("dress") },
-    { title: "Two-piece sets", href: search("two-piece") },
-    { title: "Jumpsuits", href: search("jumpsuit") },
-    { title: "Tops", href: search("top") },
-    { title: "Kimonos", href: search("kimono") },
-    { title: "Skirts", href: search("skirt") },
+    { title: "Dresses", href: "/collections/dresses" },
+    { title: "Two-piece sets", href: "/collections/suits-2-piece-sets" },
+    { title: "Co-ords & jumpsuits", href: "/collections/co-ords-jumpsuits" },
+    { title: "Tops", href: "/collections/tops-womens-clothing" },
+    { title: "Kimonos & capes", href: "/collections/weaved-kimono-and-cape" },
+    { title: "Skirts", href: "/collections/skirts" },
   ],
   men: [
-    { title: "Suits", href: search("suit") },
-    { title: "Shirts", href: search("shirt") },
-    { title: "Jackets", href: search("jacket") },
-    { title: "Trousers", href: search("trousers") },
-    { title: "Couples", href: "/collections/couples" },
+    { title: "Shirts", href: "/collections/shirts-mens-clothing" },
+    { title: "Dashiki", href: "/collections/dashiki" },
+    { title: "Suits", href: search("men suit") },
+    { title: "Jackets", href: search("men jacket") },
+    { title: "Trousers", href: search("men trousers") },
   ],
 };
 
@@ -97,7 +100,7 @@ export async function stockedCloths(): Promise<StockedCloth[]> {
  * own order, or the newest products when that collection doesn't exist).
  */
 export async function homeFeature() {
-  const [campaign, newIn] = await Promise.all([getHomeCampaign(), getCollectionOrAll({ handle: "new-in", first: 2 })]);
+  const [campaign, newIn] = await Promise.all([getHomeCampaign(), getCollectionOrAll({ handle: collections.newIn, first: 2 })]);
   return { campaign, collection: newIn.collection, products: newIn.products };
 }
 
