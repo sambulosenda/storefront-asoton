@@ -5,7 +5,7 @@
 
 const apiKey = process.env.RESEND_API_KEY;
 const to = process.env.SHOP_EMAIL;
-const from = process.env.MAIL_FROM || "AsoTone website <onboarding@resend.dev>";
+const from = process.env.MAIL_FROM || "African Clothing Store website <onboarding@resend.dev>";
 
 export const canEmailShop = Boolean(apiKey && to);
 

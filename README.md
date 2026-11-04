@@ -65,13 +65,13 @@ To switch on the emails, make a free Resend account with the shop's inbox, creat
 ## Deploying to Vercel
 
 1. Sign in at [vercel.com](https://vercel.com) with GitHub and **Add New > Project**, then import `storefront-asoton`. Vercel finds Next.js on its own; keep the default build settings.
-2. Under **Environment Variables**, add `SHOPIFY_STORE_DOMAIN`, `SHOPIFY_STOREFRONT_ACCESS_TOKEN`, `SHOPIFY_STOREFRONT_API_VERSION`, `SITE_URL` (the address the site will live at, such as `https://asotone.com`), and `RESEND_API_KEY` and `SHOP_EMAIL` if the forms should send.
+2. Under **Environment Variables**, add `SHOPIFY_STORE_DOMAIN`, `SHOPIFY_STOREFRONT_ACCESS_TOKEN`, `SHOPIFY_STOREFRONT_API_VERSION`, `SITE_URL` (the address the site will live at, such as `https://africanclothingstore.co.uk`), and `RESEND_API_KEY` and `SHOP_EMAIL` if the forms should send.
 3. Click **Deploy**. Every push to `main` deploys again, and every pull request gets its own preview link.
 4. To use your own domain, add it under **Settings > Domains** and follow the DNS steps there, then change `SITE_URL` to it and redeploy (the sitemap and robots file are built with it).
 
 ## Search engines and sharing
 
-`/sitemap.xml` lists every product (with its photos), collection and policy, and `/robots.txt` keeps filtered and sorted listings out of the index. Search results and collections that don't exist in Shopify yet carry a noindex tag. Product pages carry Google product and breadcrumb data, collections carry breadcrumb data, and the home page names the shop for Google's brand panel. Set `SITE_URL` (for example `https://asotone.com`) before building, since the sitemap and robots file are built once and use it for every link. Shopify fields that feed search results: each product's SEO title and description (else the first 160 characters of its description), image alt text, SKU and barcode (sent as the GTIN).
+`/sitemap.xml` lists every product (with its photos), collection and policy, and `/robots.txt` keeps filtered and sorted listings out of the index. Search results and collections that don't exist in Shopify yet carry a noindex tag. Product pages carry Google product and breadcrumb data, collections carry breadcrumb data, and the home page names the shop for Google's brand panel. Set `SITE_URL` (for example `https://africanclothingstore.co.uk`) before building, since the sitemap and robots file are built once and use it for every link. Shopify fields that feed search results: each product's SEO title and description (else the first 160 characters of its description), image alt text, SKU and barcode (sent as the GTIN).
 
 ## Tests
 

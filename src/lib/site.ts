@@ -1,5 +1,5 @@
-// Shop-wide copy and settings. Values in [BRACKETS] are placeholders from the design:
-// replace them here once the real numbers are decided.
+// Shop-wide copy and settings. Contact details, delivery times and the returns policy follow
+// the shop's current site, africanclothingstore.co.uk, which this storefront replaces.
 
 /** The public address of the shop, for the sitemap and links shared elsewhere. Set SITE_URL in production. */
 export const siteUrl = (
@@ -8,22 +8,33 @@ export const siteUrl = (
 ).replace(/\/$/, "");
 
 export const site = {
-  brand: "AsoTone",
+  brand: "African Clothing Store",
+  /** The company behind the shop, for the footer and the Our story page. */
+  company: "JT Aphrique Ltd.",
   tagline: "Contemporary African clothing for women, men and kids.",
   description:
     "Contemporary African clothing for women, men and kids, in Ankara, kente and dashiki prints and embroidered cloth.",
   market: "United Kingdom · GBP £",
   /** Used when the shop metafield custom.free_delivery_threshold isn't set. */
-  freeDeliveryThreshold: "£[XX]",
-  dispatchDays: "[X]",
-  deliveryDays: "[X] to [X]",
+  freeDeliveryThreshold: "£100",
+  /** Ready-to-ship pieces. Made-to-order pieces take 7 to 10 working days before they're sent. */
+  dispatchDays: "2 to 4",
+  /** UK delivery once dispatched, by priority courier. */
+  deliveryDays: "2 to 4",
+  internationalDays: "5 to 8",
   /** Ready-to-ship pieces only: made-to-order pieces come back only when faulty. */
   returnDays: "30",
-  email: "[EMAIL]",
-  hours: "[HOURS]",
-  replyDays: "[X]",
-  refundDays: "14",
-  social: { instagram: "#", tiktok: "#" },
+  email: "sales@africanclothingstore.co.uk",
+  phone: "+44 1438 211744",
+  address: "Unit 41, The Mall, Luton LU1 2TD",
+  /** Working days to refund once a return arrives and passes its checks. */
+  refundDays: "5 to 10",
+  social: {
+    instagram: "https://www.instagram.com/jtaphrique/",
+    facebook: "https://www.facebook.com/jtaphrique",
+    youtube: "https://www.youtube.com/@JTAPHRIQUEOFFICIAL",
+    x: "https://x.com/jtaphrique",
+  },
 };
 
 /**
@@ -69,7 +80,8 @@ export const footerNav = [
       { label: "Our story", href: "/story" },
       { label: "Lookbook", href: "/lookbook" },
       { label: "Instagram", href: site.social.instagram },
-      { label: "TikTok", href: site.social.tiktok },
+      { label: "Facebook", href: site.social.facebook },
+      { label: "YouTube", href: site.social.youtube },
     ],
   },
 ];
@@ -97,10 +109,11 @@ export const departments: Record<string, { intro: string; tone: string; imageFir
 
 export const popularSearches = ["Ankara", "Dashiki", "Kente", "Maxi dress", "Embroidered suit", "Headwrap"];
 
-/** Founder copy for the Our story page. Replace the bracketed text. */
+/** Copy for the Our story page. The founder quote shows only once both fields are filled in. */
 export const story = {
-  opening: `${site.brand} began in [YEAR] in [CITY], when [FOUNDER NAME] [what started it, in a sentence]. Today we make contemporary clothing for women, men and kids in Ankara, kente and dashiki prints and embroidered cloth.`,
-  makers: "[Who makes the pieces and how you work with them: the tailors, dyers and weavers. Name them where you can.]",
-  quote: "[A sentence from the founder, in their own words, on why this matters.]",
-  founder: "[FOUNDER NAME]",
+  opening: `${site.brand} (${site.company}) began in the UK in 2010, with a simple aim: to show the heritage, beauty and diversity of African design through African-inspired clothing. Today we make contemporary clothing for women, men and kids in Ankara, kente and dashiki prints and embroidered cloth.`,
+  makers:
+    "Every collection is made with skilled artisans, textile weavers and master tailors. We source good cottons, rich brocades and wax prints, and check every garment before it leaves us.",
+  quote: "",
+  founder: "",
 };

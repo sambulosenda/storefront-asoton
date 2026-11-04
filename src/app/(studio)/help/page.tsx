@@ -25,7 +25,7 @@ const CARE = [
 const RETURN_STEPS = [
   { title: "Start your return", text: "Use your order number and email to choose what you’re sending back." },
   { title: "Pack it up", text: "Unworn, with tags attached, in the original packaging if you still have it." },
-  { title: "Drop it off", text: `We refund to your original payment within ${site.refundDays} days of receiving it.` },
+  { title: "Send it back", text: `Once it arrives and passes our checks, we refund your original payment within ${site.refundDays} working days.` },
 ];
 
 const h2 = "font-display text-[36px] leading-[1.05] md:text-[44px]";
@@ -33,15 +33,10 @@ const th = "label-caps border-b border-ink pb-2.5 text-left";
 
 export default async function HelpPage() {
   const [times, threshold] = await Promise.all([deliveryTimes(), deliveryThreshold()]);
-  // Shopify's delivery rules fill in the times; costs stay placeholders until they're set here.
+  // Shopify's delivery rules fill in the times, else the ones in site.ts. Rates are worked out at checkout.
   const deliveryRates = [
-    { service: "UK standard", arrives: times.uk, cost: `£[X.XX], free over ${threshold.label}` },
-    {
-      service: "UK next day",
-      arrives: times.cutoff ? `Order by ${times.cutoff}, Monday to Thursday` : "Order by [TIME], Monday to Thursday",
-      cost: "£[X.XX]",
-    },
-    { service: "International", arrives: times.international ?? "[X]–[X] working days", cost: "Shown at checkout" },
+    { service: "UK", arrives: times.uk, cost: `Shown at checkout, free over ${threshold.label}` },
+    { service: "International", arrives: times.international ?? `${site.internationalDays} working days`, cost: "Shown at checkout" },
   ];
   return (
     <div className="page-x pt-12 pb-20 md:pt-[72px] md:pb-[120px]">
@@ -94,7 +89,8 @@ export default async function HelpPage() {
               </table>
             </div>
             <p className="text-[15px] leading-[1.6] text-ink-2">
-              You’ll get a tracking link by email as soon as your order leaves us. International orders may pay import duties in the destination
+              Ready-to-ship pieces leave us within {times.dispatch}. Made-to-order pieces take 7 to 10 working days to make first. You’ll get a
+              tracking link by email as soon as your order leaves us. International orders may pay import duties in the destination
               country.
             </p>
           </section>
@@ -115,13 +111,13 @@ export default async function HelpPage() {
             <ul className="flex list-disc flex-col gap-2 pl-5 text-[15px] leading-[1.6] text-ink-2">
               <li>Return ready-to-ship pieces within {site.returnDays} days of delivery.</li>
               <li>Made-to-order pieces are made to your size, so we can only take them back if they’re faulty.</li>
-              <li>Cut-to-length fabric: [your policy].</li>
+              <li>Sale pieces can be exchanged or returned for store credit.</li>
               <li>
                 Faulty or wrong item?{" "}
                 <a href="#contact" className="underline-offset-4">
                   Contact us
                 </a>{" "}
-                first and we’ll sort it.
+                within 48 hours of delivery, with photos, and we’ll sort it.
               </li>
             </ul>
             <a href="#contact" className="btn btn-ink self-start">
@@ -157,12 +153,14 @@ export default async function HelpPage() {
                   </a>
                 </div>
                 <div>
-                  <span className="label-caps block">Hours</span>
-                  <span className="text-ink-2">Monday to Friday, {site.hours}</span>
+                  <span className="label-caps block">Phone</span>
+                  <a href={`tel:${site.phone.replace(/\s/g, "")}`} className="underline-offset-4">
+                    {site.phone}
+                  </a>
                 </div>
                 <div>
-                  <span className="label-caps block">Reply time</span>
-                  <span className="text-ink-2">Within {site.replyDays} working days</span>
+                  <span className="label-caps block">Address</span>
+                  <span className="text-ink-2">{site.address}</span>
                 </div>
               </div>
             </div>
