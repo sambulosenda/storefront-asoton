@@ -97,12 +97,15 @@ export async function stockedCloths(): Promise<StockedCloth[]> {
 
 /**
  * What the home hero and the menu's promo lead with: the home campaign (the "home" entry, else
- * another campaign entry), and the first two pieces in New in (the new-in collection in its
- * own order, or the newest products when that collection doesn't exist).
+ * another campaign entry), and the first pieces in New in (the new-in collection in its own
+ * order, or the newest products when that collection doesn't exist). African pieces with a photo
+ * come first, so the hero never leads with a plain knit jumper that happens to be newest.
  */
 export async function homeFeature() {
-  const [campaign, newIn] = await Promise.all([getHomeCampaign(), getCollectionOrAll({ handle: collections.newIn, first: 2 })]);
-  return { campaign, collection: newIn.collection, products: newIn.products };
+  const [campaign, newIn] = await Promise.all([getHomeCampaign(), getCollectionOrAll({ handle: collections.newIn, first: 24 })]);
+  const showcase = (p: Product) => Boolean(p.featuredImage) && isAfricanPiece(p);
+  const products = [...newIn.products.filter(showcase), ...newIn.products.filter((p) => !showcase(p))].slice(0, 4);
+  return { campaign, collection: newIn.collection, products };
 }
 
 const firstPhoto = (products: Product[]) => products.find((p) => p.featuredImage)?.featuredImage ?? null;

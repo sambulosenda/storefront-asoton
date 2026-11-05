@@ -61,6 +61,8 @@ export default async function HomePage() {
   const focus = FOCUS[campaign?.position?.trim().toLowerCase() ?? ""] ?? FOCUS.right;
   // The pieces worn in the photo; the newest pieces stand in until the campaign lists them.
   const pictured = campaign?.products.length ? campaign.products : products;
+  // Until the campaign has a photo, the hero shows a big photo of the first piece that has one.
+  const piece = image ? null : (pictured.find((p) => p.featuredImage) ?? null);
   // The design sets a short headline at display size; product names get a smaller one.
   const long = headline.length > 24;
 
@@ -70,106 +72,140 @@ export default async function HomePage() {
   ];
   // An older campaign entry with its own button keeps it, in place of "Shop women".
   if (campaign?.cta) ctas[0] = { label: campaign.cta, href: campaign.link ?? ctas[0].href, light: true };
-  if (lead) ctas.unshift({ label: "Shop now", href: `/products/${lead.handle}`, light: true });
+  if (lead) ctas.splice(0, 2, { label: "Shop now", href: `/products/${lead.handle}`, light: true }, { label: "All new in", href: collectionPath("newIn"), light: false });
+
+  const copy = (
+    <div className="flex max-w-[720px] flex-col gap-3.5 md:gap-6">
+      <span className="text-[11px] tracking-[0.18em] uppercase md:text-[12px]">{label}</span>
+      <h1
+        id="hero-title"
+        className={`font-display leading-[0.92] tracking-[-0.025em] ${
+          long ? "text-[44px] md:text-[clamp(48px,5vw,72px)]" : "text-[60px] md:text-[clamp(52px,7.2vw,104px)]"
+        }`}
+      >
+        <Headline text={headline} italic={campaign?.italic ?? null} />
+      </h1>
+      <p className="max-w-[520px] text-[15px] leading-[1.55] text-paper/90 md:text-[18px]">{body}</p>
+      <div className="grid grid-cols-2 gap-2 pt-1.5 md:flex md:flex-wrap md:gap-3 md:pt-2">
+        {ctas.slice(0, 2).map((cta) => (
+          <Link
+            key={cta.label}
+            href={cta.href}
+            className={`inline-flex h-[52px] items-center justify-center px-3 text-[13px] font-semibold tracking-[0.14em] uppercase no-underline md:min-w-[184px] md:px-7 ${
+              cta.light ? "bg-paper text-ink hover:text-ink" : "border border-paper text-paper hover:text-paper"
+            }`}
+          >
+            {cta.label}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <>
       <JsonLd data={organization} />
       <JsonLd data={website} />
-      {/* Hero: the campaign photo full width with the copy over it, or the pieces side by side until there's a photo. */}
-      <section
-        aria-labelledby="hero-title"
-        className={`relative overflow-hidden bg-clay text-paper ${image ? "h-[min(808px,calc(100svh-97px))] min-h-[600px] md:h-[clamp(600px,56vw,860px)] md:max-h-none" : ""}`}
-      >
-        {image && (
-          <>
-            <Image
-              src={mobileImage!.url}
-              alt={mobileImage!.altText ?? ""}
-              fill
-              preload
-              sizes="100vw"
-              className="object-cover md:hidden"
-              style={{ objectPosition: focus }}
-            />
-            <Image
-              src={image.url}
-              alt={image.altText ?? ""}
-              fill
-              preload
-              sizes="100vw"
-              className="hidden object-cover md:block"
-              style={{ objectPosition: focus }}
-            />
-            {/* Scrims keep the type readable on any photo. */}
-            <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[190px] bg-linear-to-b from-ink/55 via-ink/12 via-70% to-transparent md:h-[260px]" />
-            <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[66%] bg-linear-to-t from-ink/66 via-ink/18 via-55% to-transparent md:h-[64%]" />
-            <div aria-hidden="true" className="absolute inset-y-0 left-0 hidden w-[58%] bg-linear-to-r from-ink/30 to-transparent md:block" />
-          </>
-        )}
-        <div
-          className={`on-dark flex flex-col gap-8 px-4 pb-6 md:page-x md:flex-row md:flex-wrap md:items-end md:justify-between md:pb-16 ${
-            image ? "absolute inset-x-0 bottom-0" : "relative pt-14 md:pt-[120px]"
-          }`}
+      {/* Hero: the campaign photo full width with the copy over it. Until there's one, a piece's own photo beside the copy. */}
+      {piece ? (
+        <section
+          aria-labelledby="hero-title"
+          className="bg-clay text-paper md:grid md:min-h-[min(808px,calc(100svh-97px))] md:grid-cols-[minmax(0,1fr)_minmax(0,44%)]"
         >
-          <div className="flex max-w-[720px] flex-col gap-3.5 md:gap-6">
-            <span className="text-[11px] tracking-[0.18em] uppercase md:text-[12px]">{label}</span>
-            <h1
-              id="hero-title"
-              className={`font-display leading-[0.92] tracking-[-0.025em] ${
-                long ? "text-[44px] md:text-[clamp(48px,5vw,72px)]" : "text-[60px] md:text-[clamp(52px,7.2vw,104px)]"
-              }`}
-            >
-              <Headline text={headline} italic={campaign?.italic ?? null} />
-            </h1>
-            <p className="max-w-[520px] text-[15px] leading-[1.55] text-paper/90 md:text-[18px]">{body}</p>
-            <div className="grid grid-cols-2 gap-2 pt-1.5 md:flex md:flex-wrap md:gap-3 md:pt-2">
-              {ctas.slice(0, lead ? 1 : 2).map((cta) => (
-                <Link
-                  key={cta.label}
-                  href={cta.href}
-                  className={`inline-flex h-[52px] items-center justify-center px-3 text-[13px] font-semibold tracking-[0.14em] uppercase no-underline md:min-w-[184px] md:px-7 ${
-                    cta.light ? "bg-paper text-ink hover:text-ink" : "border border-paper text-paper hover:text-paper"
-                  }`}
-                >
-                  {cta.label}
-                </Link>
+          <figure className="relative aspect-[4/5] max-h-[62svh] w-full overflow-hidden bg-stone md:order-2 md:aspect-auto md:max-h-none">
+            <Image
+              src={piece.featuredImage!.url}
+              alt={piece.featuredImage!.altText ?? piece.title}
+              fill
+              preload
+              sizes="(min-width: 768px) 44vw, 100vw"
+              className="object-cover"
+              style={{ objectPosition: "50% 22%" }}
+            />
+            <figcaption className="absolute inset-x-3 bottom-3 md:inset-x-6 md:bottom-6">
+              <Link
+                href={`/products/${piece.handle}`}
+                className="flex min-h-11 items-center gap-3 bg-ink/78 px-4 text-[14px] text-paper no-underline backdrop-blur-sm hover:text-paper md:text-[15px]"
+              >
+                <span className="min-w-0 flex-auto truncate">{piece.title}</span>
+                <span className="whitespace-nowrap text-paper/85">{formatMoney(piece.priceRange.minVariantPrice)}</span>
+                <ArrowRight size={16} />
+              </Link>
+            </figcaption>
+          </figure>
+          <div className="on-dark flex flex-col justify-end px-4 pt-8 pb-10 md:page-x md:pt-[120px] md:pb-16">{copy}</div>
+        </section>
+      ) : (
+        <section
+          aria-labelledby="hero-title"
+          className={`relative overflow-hidden bg-clay text-paper ${image ? "h-[min(808px,calc(100svh-97px))] min-h-[600px] md:h-[clamp(600px,56vw,860px)] md:max-h-none" : ""}`}
+        >
+          {image && (
+            <>
+              <Image
+                src={mobileImage!.url}
+                alt={mobileImage!.altText ?? ""}
+                fill
+                preload
+                sizes="100vw"
+                className="object-cover md:hidden"
+                style={{ objectPosition: focus }}
+              />
+              <Image
+                src={image.url}
+                alt={image.altText ?? ""}
+                fill
+                preload
+                sizes="100vw"
+                className="hidden object-cover md:block"
+                style={{ objectPosition: focus }}
+              />
+              {/* Scrims keep the type readable on any photo. */}
+              <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[190px] bg-linear-to-b from-ink/55 via-ink/12 via-70% to-transparent md:h-[260px]" />
+              <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[66%] bg-linear-to-t from-ink/66 via-ink/18 via-55% to-transparent md:h-[64%]" />
+              <div aria-hidden="true" className="absolute inset-y-0 left-0 hidden w-[58%] bg-linear-to-r from-ink/30 to-transparent md:block" />
+            </>
+          )}
+          <div
+            className={`on-dark flex flex-col gap-8 px-4 pb-6 md:page-x md:flex-row md:flex-wrap md:items-end md:justify-between md:pb-16 ${
+              image ? "absolute inset-x-0 bottom-0" : "relative pt-14 md:pt-[120px]"
+            }`}
+          >
+            {copy}
+            {pictured.length > 0 &&
+              (image ? (
+                <nav aria-label="In the picture" className="hidden w-[380px] max-w-full flex-col gap-0.5 md:flex">
+                  <span className="pb-1.5 text-[11px] tracking-[0.16em] uppercase">In the picture</span>
+                  {pictured.slice(0, 3).map((p) => (
+                    <Link
+                      key={p.handle}
+                      href={`/products/${p.handle}`}
+                      className="flex min-h-11 items-center gap-3 border-t border-paper/32 text-[15px] text-paper no-underline hover:text-paper"
+                    >
+                      <span className="min-w-0 flex-auto">{p.title}</span>
+                      <span className="text-[14px] whitespace-nowrap text-paper/85">{formatMoney(p.priceRange.minVariantPrice)}</span>
+                      <ArrowRight size={16} />
+                    </Link>
+                  ))}
+                </nav>
+              ) : (
+                <nav aria-label="In the picture" className="grid grid-cols-2 gap-3 md:w-[min(560px,46%)] md:gap-6">
+                  {pictured.slice(0, 2).map((p) => (
+                    <Link key={p.handle} href={`/products/${p.handle}`} className="flex flex-col gap-3 text-[13px] text-paper no-underline hover:text-paper md:text-[14px]">
+                      <span className="relative flex aspect-[3/4] items-center justify-center overflow-hidden bg-stone">
+                        <ProductVisual product={p} image={p.featuredImage} sizes="(min-width: 768px) 280px, 50vw" />
+                      </span>
+                      <span className="flex justify-between gap-3">
+                        <span className="min-w-0">{p.title}</span>
+                        <span className="whitespace-nowrap text-paper/85">{formatMoney(p.priceRange.minVariantPrice)}</span>
+                      </span>
+                    </Link>
+                  ))}
+                </nav>
               ))}
-            </div>
           </div>
-          {pictured.length > 0 &&
-            (image ? (
-              <nav aria-label="In the picture" className="hidden w-[380px] max-w-full flex-col gap-0.5 md:flex">
-                <span className="pb-1.5 text-[11px] tracking-[0.16em] uppercase">In the picture</span>
-                {pictured.slice(0, 3).map((p) => (
-                  <Link
-                    key={p.handle}
-                    href={`/products/${p.handle}`}
-                    className="flex min-h-11 items-center gap-3 border-t border-paper/32 text-[15px] text-paper no-underline hover:text-paper"
-                  >
-                    <span className="min-w-0 flex-auto">{p.title}</span>
-                    <span className="text-[14px] whitespace-nowrap text-paper/85">{formatMoney(p.priceRange.minVariantPrice)}</span>
-                    <ArrowRight size={16} />
-                  </Link>
-                ))}
-              </nav>
-            ) : (
-              <nav aria-label="In the picture" className="grid grid-cols-2 gap-3 md:w-[min(560px,46%)] md:gap-6">
-                {pictured.slice(0, 2).map((p) => (
-                  <Link key={p.handle} href={`/products/${p.handle}`} className="flex flex-col gap-3 text-[13px] text-paper no-underline hover:text-paper md:text-[14px]">
-                    <span className="relative flex aspect-[3/4] items-center justify-center overflow-hidden bg-stone">
-                      <ProductVisual product={p} image={p.featuredImage} sizes="(min-width: 768px) 280px, 50vw" />
-                    </span>
-                    <span className="flex justify-between gap-3">
-                      <span className="min-w-0">{p.title}</span>
-                      <span className="whitespace-nowrap text-paper/85">{formatMoney(p.priceRange.minVariantPrice)}</span>
-                    </span>
-                  </Link>
-                ))}
-              </nav>
-            ))}
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Category chips (phones) */}
       <nav aria-label="Shop categories" className="no-scrollbar flex gap-2 overflow-x-auto px-4 pt-6 pb-10 md:hidden">
