@@ -5,20 +5,26 @@ import { CollectionBrowser } from "@/components/collection-browser";
 import { Editorial } from "@/components/editorial";
 import { breadcrumbs, JsonLd } from "@/components/json-ld";
 import { CollectionSkeleton } from "@/components/skeletons";
-import { departmentMenu } from "@/lib/catalog";
+import { notFound } from "next/navigation";
+import { departmentMenu, parentDepartment } from "@/lib/catalog";
 import { parseFilters, parseSort } from "@/lib/filters";
 import { getCountry } from "@/lib/market";
 import { getCampaign, getCollection, getCollectionOrAll, getMenu } from "@/lib/shopify";
-import { departments, site, siteUrl } from "@/lib/site";
+import { collectionName, collectionPath, collections, departmentNames, departmentOf, departments, site, siteUrl } from "@/lib/site";
 
 const titleFromHandle = (handle: string) =>
   handle.replace(/-/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+
+/** Pages that show the newest or all products when the store has no collection for them. */
+const standIns: Record<string, string> = { all: "All products", [collections.newIn]: "New in" };
 
 export async function generateMetadata({ params }: PageProps<"/collections/[handle]">): Promise<Metadata> {
   const { handle } = await params;
   const page = await getCollection({ handle, first: 1 });
   const collection = page?.collection;
-  const title = collection?.title ?? titleFromHandle(handle);
+  // Throwing here, before the page streams, sends search engines a real 404 status.
+  if (!collection && !standIns[handle]) notFound();
+  const title = collection ? (departmentOf(handle) ? collectionName(handle, collection.title) : collection.title) : standIns[handle];
   const description = collection?.description || departments[handle]?.intro;
   return {
     title,
@@ -33,9 +39,8 @@ export async function generateMetadata({ params }: PageProps<"/collections/[hand
       locale: "en_GB",
       images: [collection?.image ? { url: collection.image.url, alt: collection.image.altText ?? title } : "/opengraph-image"],
     },
-    // Until the collection exists in Shopify the page shows the whole catalog, which
-    // search engines would see as a copy of every other stand-in page.
-    ...(collection ? {} : { robots: { index: false, follow: true } }),
+    // New in without its collection is the newest products, a copy of the catalogue.
+    ...(collection || handle === "all" ? {} : { robots: { index: false, follow: true } }),
   };
 }
 
@@ -57,18 +62,20 @@ async function Collection({
   const [{ handle }, query, country] = await Promise.all([params, searchParams, getCountry()]);
   const sort = parseSort(query.sort);
   const filters = parseFilters(query.filter);
-  // Sub-categories like women-dresses show their department's chips, with themselves selected.
-  const parent = handle.match(/^(women|men)-/)?.[1] as "women" | "men" | undefined;
-  const dept = handle === "women" || handle === "men" ? handle : parent;
+  // Sub-categories like Dresses show their department's chips and breadcrumb, with themselves selected.
+  const parent = await parentDepartment(handle);
+  const dept = departmentOf(handle) ?? parent;
   const [page, menu, campaign] = await Promise.all([
-    getCollectionOrAll({ handle, sort, filters, country }),
-    // Women and Men fall back to the design's categories until their menus exist in Shopify.
+    standIns[handle] ? getCollectionOrAll({ handle, sort, filters, country }) : getCollection({ handle, sort, filters, country }),
+    // Departments fall back to the design's categories until their menus exist in Shopify.
     dept ? departmentMenu(dept) : getMenu(handle),
-    getCampaign(handle),
+    // Department campaigns go by the department ("women"), others by the collection's handle.
+    getCampaign(departmentOf(handle) ?? handle),
   ]);
+  if (!page) notFound();
 
   const department = departments[handle];
-  const title = page.collection?.title ?? titleFromHandle(handle);
+  const title = page.collection ? collectionName(handle, page.collection.title) : (standIns[handle] ?? titleFromHandle(handle));
   const intro = page.collection?.description || department?.intro;
   const path = `/collections/${handle}`;
   // The editorial block only shows once its campaign metaobject exists in Shopify.
@@ -84,7 +91,7 @@ async function Collection({
         imageFirst: department?.imageFirst ?? true,
       }
     : null;
-  const allPath = parent ? `/collections/${parent}` : path;
+  const allPath = parent ? collectionPath(parent) : path;
   const categories = [
     { title: "All", href: allPath, current: allPath === path },
     ...menu.filter((link) => link.href !== allPath).map((link) => ({ ...link, current: link.href === path })),
@@ -96,7 +103,7 @@ async function Collection({
         <JsonLd
           data={breadcrumbs(siteUrl, [
             { name: "Home", path: "/" },
-            ...(parent ? [{ name: titleFromHandle(parent), path: allPath }] : []),
+            ...(parent ? [{ name: departmentNames[parent], path: allPath }] : []),
             { name: title, path },
           ])}
         />
@@ -114,7 +121,7 @@ async function Collection({
               <>
                 <li>
                   <Link href={allPath} className="text-ink-2 underline-offset-4">
-                    {titleFromHandle(parent)}
+                    {departmentNames[parent]}
                   </Link>
                 </li>
                 <li aria-hidden="true">/</li>

@@ -328,7 +328,7 @@ const productDetailQuery = /* GraphQL */ `
           ...ImageFields
         }
       }
-      collections(first: 3) {
+      collections(first: 20) {
         nodes {
           handle
           title
@@ -1068,22 +1068,39 @@ export async function getSitemapEntries(): Promise<{
       if (!data.products.pageInfo.hasNextPage) break;
       after = data.products.pageInfo.endCursor;
     }
-    const data = await shopifyFetch<{ collections: Page }>(
-      `query SitemapCollections {
-        collections(first: 250) {
-          nodes {
-            handle
-            updatedAt
+    // Empty collections are left out: a page with nothing to buy only thins out the site for search engines.
+    type CollectionNode = { handle: string; updatedAt: string; products: { nodes: { id: string }[] } };
+    const collections: { handle: string; updatedAt: string }[] = [];
+    after = null;
+    for (let i = 0; i < 10; i++) {
+      const data: { collections: Page<CollectionNode> } = await shopifyFetch<{ collections: Page<CollectionNode> }>(
+        `query SitemapCollections($after: String) {
+          collections(first: 100, after: $after) {
+            nodes {
+              handle
+              updatedAt
+              products(first: 1) {
+                nodes {
+                  id
+                }
+              }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
           }
-          pageInfo {
-            hasNextPage
-            endCursor
-          }
-        }
-      }`,
-    );
+        }`,
+        { after },
+      );
+      for (const c of data.collections.nodes) {
+        if (c.products.nodes.length > 0) collections.push({ handle: c.handle, updatedAt: c.updatedAt });
+      }
+      if (!data.collections.pageInfo.hasNextPage) break;
+      after = data.collections.pageInfo.endCursor;
+    }
     cacheLife("hours");
-    return { products, collections: data.collections.nodes };
+    return { products, collections };
   } catch (error) {
     console.error(error);
     cacheLife("minutes");

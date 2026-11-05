@@ -10,7 +10,7 @@ import { SizeGuide } from "@/components/size-guide";
 import { StoreProvider } from "@/components/store-provider";
 import { deliveryThreshold, departmentMenu, homeFeature, menuCloths, stockedOccasions } from "@/lib/catalog";
 import { accountUrl, getMarkets } from "@/lib/shopify";
-import { collectionPath, site, siteUrl } from "@/lib/site";
+import { collectionPath, moreNav, site, siteUrl } from "@/lib/site";
 import "./globals.css";
 
 const bodoni = Bodoni_Moda({
@@ -35,10 +35,11 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const [threshold, women, men, cloths, occasions, markets, feature] = await Promise.all([
+  const [threshold, women, men, kids, cloths, occasions, markets, feature] = await Promise.all([
     deliveryThreshold(),
     departmentMenu("women"),
     departmentMenu("men"),
+    departmentMenu("kids"),
     menuCloths(),
     stockedOccasions(),
     getMarkets(),
@@ -60,9 +61,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const menuRows: MenuRow[] = [
     { label: "Women", links: [{ title: "All women", href: collectionPath("women") }, ...women] },
     { label: "Men", links: [{ title: "All men", href: collectionPath("men") }, ...men] },
-    { label: "Kids", href: collectionPath("kids") },
+    { label: "Kids", links: [{ title: "All kids", href: collectionPath("kids") }, ...kids] },
     { label: "New in", href: collectionPath("newIn") },
+    { label: "Unisex", href: collectionPath("unisex") },
     { label: "Accessories", href: collectionPath("accessories") },
+    { label: "Gifts", href: collectionPath("gifts") },
+    ...moreNav.map(({ label, href }) => ({ label, href })),
     {
       label: "Occasions",
       links: occasions.map((o) => ({ title: o.name, href: o.collection ? `/collections/${o.collection}` : `/search?q=${encodeURIComponent(o.name)}` })),

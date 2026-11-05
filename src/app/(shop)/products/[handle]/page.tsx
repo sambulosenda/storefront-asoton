@@ -14,7 +14,7 @@ import { clothLinks, deliveryThreshold, deliveryTimes } from "@/lib/catalog";
 import { clothByName, clothOf } from "@/lib/cloths";
 import { getCountry } from "@/lib/market";
 import { getProduct, getRecommendations } from "@/lib/shopify";
-import { site, siteUrl } from "@/lib/site";
+import { collectionName, collections, site, siteUrl, unlistedCollections } from "@/lib/site";
 
 export async function generateMetadata({ params }: PageProps<"/products/[handle]">): Promise<Metadata> {
   const [{ handle }, country] = await Promise.all([params, getCountry()]);
@@ -64,9 +64,10 @@ export default function ProductPage({ params }: PageProps<"/products/[handle]">)
   );
 }
 
-const DEPARTMENTS = ["women", "men", "kids", "unisex"];
+const DEPARTMENTS: string[] = [collections.women, collections.men, collections.kids, collections.unisex];
 // Collections that aren't a place to browse: the home page's, New in, and old ones kept while rules change.
-const HIDDEN_CRUMB = /^(new-in|all|frontpage|review)$|old-rules/;
+const HIDDEN_CRUMB = /^(new-in|new-arrivals|all|review)$|old-rules/;
+const hiddenCrumb = (handle: string) => HIDDEN_CRUMB.test(handle) || unlistedCollections.includes(handle);
 
 async function Product({ params }: { params: Promise<{ handle: string }> }) {
   const [{ handle }, country] = await Promise.all([params, getCountry()]);
@@ -82,15 +83,15 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
 
   const clothKey = (clothByName(product.clothFields?.name) ?? clothOf(product))?.key;
   const cloth = cloths.find((c) => c.key === clothKey);
-  const dept = product.collections.some((c) => c.handle === "men") ? "men" : "women";
+  const dept = product.collections.some((c) => c.handle === collections.men || c.handle === "men") ? "men" : "women";
   const department = DEPARTMENTS.map((d) => product.collections.find((c) => c.handle === d)).find(Boolean);
   // After the department, one more collection (such as the cloth), but never a stand-in or retired one.
   const crumbs = [
     ...(department ? [department] : []),
     ...product.collections
-      .filter((c) => c !== department && !DEPARTMENTS.includes(c.handle) && !HIDDEN_CRUMB.test(c.handle))
+      .filter((c) => c !== department && !DEPARTMENTS.includes(c.handle) && !hiddenCrumb(c.handle))
       .slice(0, 1),
-  ];
+  ].map((c) => ({ handle: c.handle, title: collectionName(c.handle, c.title) }));
 
   const care = product.care ?? cloth?.care;
   const panels: ({ title: string; body: ReactNode } | false | null | undefined | "")[] = [
