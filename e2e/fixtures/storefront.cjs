@@ -152,7 +152,10 @@ function respond(query, vars) {
     }
     case "Cloths": return { metaobjects: { nodes: [] } };
     case "Looks": return { metaobjects: { nodes: [] } };
-    case "Campaign": return { metaobject: null };
+    // A "women" entry with only a photo: it sets the home page's Women tile.
+    case "Campaign": return { metaobject: vars.handle?.handle === "women" ? { handle: "women", fields: [
+      { key: "desktop_image", value: "gid", reference: { image: { url: "https://cdn.shopify.com/s/files/fixture/women-tile.jpg", altText: null, width: 1200, height: 1500 } }, references: null },
+    ] } : null };
     // Like the live store: a campaign entry that isn't called "home" and has no photos yet.
     case "HomeCampaign": return { metaobjects: { nodes: [{ handle: "made-for-the-big-day", fields: [
       { key: "label", value: "African ready-to-wear", reference: null, references: null },

@@ -4,6 +4,7 @@
 import { CLOTHS, clothByName, clothOf, type Cloth } from "@/lib/cloths";
 import { formatMoney } from "@/lib/format";
 import {
+  getCampaign,
   getCloths,
   getCollection,
   getCollectionOrAll,
@@ -106,13 +107,31 @@ export async function homeFeature() {
 
 const firstPhoto = (products: Product[]) => products.find((p) => p.featuredImage)?.featuredImage ?? null;
 
+// Words that mark a piece as African clothing, beyond the cloth names clothOf() knows.
+const AFRICAN = /\b(african|afro|ankara|kente|dashiki|adire|bogolan|bògòlan|aso[- ]?oke|wax print|kitenge|chitenge|fugu|batakari|smock|agbada|kaftan|boubou|buba|gele|heritage)\b/i;
+
 /**
- * The picture on a department tile: the collection's own image, else its first product photo.
+ * Whether a product's name says it's African clothing. Tags aren't used: the store tags plain
+ * knit tops with shop-wide words like "African clothing London" too.
+ */
+export function isAfricanPiece(product: Product): boolean {
+  return clothOf({ title: product.title }) !== null || AFRICAN.test(`${product.title} ${product.productType}`);
+}
+
+/**
+ * The picture on a department tile. A "campaign" entry with the department's handle ("women",
+ * "men") sets it when it has a photo; otherwise it's the first African piece in the collection
+ * with a photo, else its first photo of any kind. The collection's own image is skipped: on this
+ * store it's a theme demo photo (a fur coat, a puffer) rather than the shop's clothes.
  * Until the collection exists, the first photo the department's search word finds.
  */
 export async function departmentImage(handle: string): Promise<Image | null> {
-  const page = await getCollection({ handle, first: 4 });
-  if (page) return page.collection?.image ?? firstPhoto(page.products);
+  const [campaign, page] = await Promise.all([getCampaign(handle), getCollection({ handle, first: 24 })]);
+  if (campaign?.image) return campaign.image;
+  if (page) {
+    const african = page.products.find((p) => p.featuredImage && isAfricanPiece(p));
+    return african?.featuredImage ?? firstPhoto(page.products);
+  }
   const search = departments[handle]?.imageSearch;
   return search ? firstPhoto((await searchProducts({ query: search, first: 4 })).products) : null;
 }
