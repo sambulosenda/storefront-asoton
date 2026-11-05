@@ -34,6 +34,11 @@ export function ProductCard({
 
   const second = product.cardImages?.nodes?.[1] ?? null;
   const swatches = colourSwatches(product);
+  const photo = (
+    <div className="absolute inset-0 flex items-center justify-center transition-transform duration-(--duration-slow) ease-(--ease-out-soft) group-hover:scale-[1.03]">
+      <ProductVisual product={product} image={product.featuredImage} sizes={sizes} priority={priority} />
+    </div>
+  );
 
   return (
     <div className="group/card relative">
@@ -43,11 +48,14 @@ export function ProductCard({
       >
         <div className="reveal relative flex aspect-[3/4] items-center justify-center overflow-hidden bg-stone">
           {/* The photo moves into the product page's gallery when the card is opened. */}
-          <ViewTransition name={`product-${product.handle}`} share="morph" default="none">
-            <div className="absolute inset-0 flex items-center justify-center transition-transform duration-(--duration-slow) ease-(--ease-out-soft) group-hover:scale-[1.03]">
-              <ProductVisual product={product} image={product.featuredImage} sizes={sizes} priority={priority} />
-            </div>
-          </ViewTransition>
+          {/* Only grid cards carry the name: pages that also show a phone carousel would name the same piece twice. */}
+          {variant === "grid" ? (
+            <ViewTransition name={`product-${product.handle}`} share="morph" default="none">
+              {photo}
+            </ViewTransition>
+          ) : (
+            photo
+          )}
           {/* A second look on hover, where there is one. */}
           {second && product.featuredImage && (
             <div className="absolute inset-0 opacity-0 transition-opacity duration-(--duration-medium) ease-(--ease-out-soft) group-hover:opacity-100">

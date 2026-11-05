@@ -53,7 +53,7 @@ export function ProductGallery({
           {slides.length === 0 && <div className="h-full w-full flex-none">{placeholder}</div>}
           {slides.map((image, i) => (
             <div key={image.url} className="relative h-full w-full flex-none snap-start bg-stone-2">
-              <Shared handle={handle} first={i === 0}>
+              <Shared handle={handle} first={false}>
                 <ZoomButton label={`Open photo ${i + 1} of ${slides.length} full screen`} onClick={() => setViewing(i)}>
                   <Image
                     src={image.url}
@@ -115,7 +115,7 @@ export function ProductGallery({
   );
 }
 
-/** The first photo carries the product's name, so the card's photo can move into it. */
+/** The first desktop photo carries the product's name, so the card's photo can move into it. Only one copy may carry it. */
 function Shared({ handle, first, children }: { handle: string; first: boolean; children: ReactNode }) {
   if (!first) return children;
   return (

@@ -191,7 +191,7 @@ export default async function HomePage() {
                 >
                   <span className="relative flex aspect-[3/4] items-center justify-center overflow-hidden bg-stone">
                     <span className="absolute inset-0 transition-transform duration-(--duration-slow) ease-(--ease-out-soft) group-hover:scale-[1.03]">
-                      <ProductVisual product={p} image={p.featuredImage} priority={i === 0} sizes="(min-width: 768px) 28vw, 76vw" />
+                      <ProductVisual product={p} image={p.featuredImage} priority sizes="(min-width: 768px) 28vw, 76vw" />
                     </span>
                   </span>
                   <span className="flex justify-between gap-3">
