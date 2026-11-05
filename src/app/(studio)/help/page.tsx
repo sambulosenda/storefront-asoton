@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ContactForm } from "@/components/contact-form";
 import { HelpNav } from "@/components/help-nav";
 import { deliveryThreshold, deliveryTimes } from "@/lib/catalog";
@@ -44,7 +45,11 @@ export default async function HelpPage() {
         <span className="eyebrow">Help</span>
         <h1 className="font-display text-[clamp(48px,6vw,88px)] leading-[0.95] tracking-[-0.02em]">How can we help?</h1>
         <p className="max-w-[560px] text-[17px] leading-[1.6] text-ink-2">
-          Delivery, returns, care and how to reach us. If you can’t find an answer, write to{" "}
+          Delivery, returns, care and how to reach us. For quick answers, see our{" "}
+          <Link href="/faqs" className="underline-offset-4">
+            FAQs
+          </Link>
+          . If you can’t find an answer, write to{" "}
           <a href={`mailto:${site.email}`} className="underline-offset-4">
             {site.email}
           </a>

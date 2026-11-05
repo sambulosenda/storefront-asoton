@@ -5,6 +5,7 @@ import { useSyncExternalStore } from "react";
 import { collectionPath } from "@/lib/site";
 import { ProductVisual } from "@/components/cloth";
 import { CloseIcon, MinusIcon, PlusIcon } from "@/components/icons";
+import { PaymentMarks } from "@/components/payment-marks";
 import { Sheet } from "@/components/sheet";
 import { useStore } from "@/components/store-provider";
 import { formatMoney, isSizeOption } from "@/lib/format";
@@ -113,6 +114,7 @@ export function CartDrawer({
               <a href={cart?.checkoutUrl} className="btn btn-ink mt-1 h-14 md:mt-2">
                 Checkout
               </a>
+              <PaymentMarks size={20} className="justify-center" />
               <Link
                 href={collectionPath("newIn")}
                 onClick={close}

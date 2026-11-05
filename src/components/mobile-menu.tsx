@@ -106,6 +106,11 @@ export function MobileMenu({
                 Help
               </Link>
             </li>
+            <li>
+              <Link href="/faqs" className="flex min-h-11 items-center no-underline">
+                FAQs
+              </Link>
+            </li>
             {accountUrl && (
               <li>
                 <a href={accountUrl} className="flex min-h-11 items-center no-underline">
