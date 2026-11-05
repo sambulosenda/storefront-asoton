@@ -98,7 +98,6 @@ export type CartLine = {
   merchandise: {
     id: string;
     title: string;
-    quantityAvailable: number | null;
     selectedOptions: { name: string; value: string }[];
     image: Image | null;
     product: { handle: string; title: string; tags: string[]; productType: string };
