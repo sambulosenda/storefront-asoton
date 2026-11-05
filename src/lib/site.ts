@@ -17,7 +17,7 @@ export const site = {
   market: "United Kingdom · GBP £",
   /** Used when the shop metafield custom.free_delivery_threshold isn't set. */
   freeDeliveryThreshold: "£100",
-  /** Ready-to-ship pieces. Made-to-order pieces take 7 to 10 working days before they're sent. */
+  /** Ready-to-ship pieces. Made-to-order pieces are made first: the days in their option, else 14. */
   dispatchDays: "2 to 4",
   /** UK delivery once dispatched, by priority courier. */
   deliveryDays: "2 to 4",

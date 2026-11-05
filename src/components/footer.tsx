@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Logo } from "@/components/logo";
 import { MarketButton, MarketLabel } from "@/components/market-selector";
 import { MinusIcon, PlusIcon } from "@/components/icons";
+import { PaymentMarks } from "@/components/payment-marks";
 import { useStore } from "@/components/store-provider";
 import { footerNav, site } from "@/lib/site";
 
@@ -89,6 +90,7 @@ export function Footer() {
           })}
         </div>
         <MarketButton className="min-h-11 self-start text-[13px]" />
+        <PaymentMarks />
         <div className="flex flex-col gap-3 text-[12px] text-night-text">
           <LegalLinks className="gap-x-5 gap-y-2" />
           <span>
@@ -124,6 +126,7 @@ export function Footer() {
             © {year} {site.brand} ({site.company})
           </span>
           <LegalLinks className="gap-x-6 gap-y-2" />
+          <PaymentMarks />
           <MarketButton className="text-night-text" />
         </div>
       </div>

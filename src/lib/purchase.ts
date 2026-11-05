@@ -23,15 +23,26 @@ export function sentenceCase(text: string) {
   return /[A-Z]{3}/.test(t) && t === t.toUpperCase() ? t.charAt(0) + t.slice(1).toLowerCase() : t;
 }
 
+/** A number of working days, or a range such as [2, 4]. */
+export type DayRange = [number, number];
+
 export type DeliveryPlan = {
   /** "Dispatched next working day" */
   dispatchLine: string;
-  dispatchDays: number | null;
-  ukDays: number | null;
+  /** Working days before a ready-to-ship piece leaves us. */
+  dispatch: DayRange;
+  /** Working days from dispatch to a UK door, by standard delivery. */
+  uk: DayRange;
   /** "14:00": orders after this leave a working day later. */
   cutoff: string | null;
   holidays: string[];
 };
+
+/** "2 to 4" → [2, 4]; "3" → [3, 3]. */
+export function dayRange(text: string): DayRange {
+  const [min, max = min] = (text.match(/\d+/g) ?? ["0"]).map(Number);
+  return [min, max];
+}
 
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
@@ -47,9 +58,18 @@ function addWorkingDays(from: Date, days: number, holidays: string[]) {
 
 const shortDate = (d: Date) => d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }).replace(",", "");
 
-/** When an order placed now should arrive in the UK, as "Wed 22 Oct"; null without delivery rules. */
+/** "Wed 22 Oct", or "Mon 20 – Thu 23 Oct" / "Fri 31 Oct – Tue 4 Nov" for a range. */
+function dateSpan(from: Date, to: Date) {
+  if (ymd(from) === ymd(to)) return shortDate(from);
+  const day = (d: Date) => d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric" }).replace(",", "");
+  return from.getMonth() === to.getMonth() ? `${day(from)} – ${shortDate(to)}` : `${shortDate(from)} – ${shortDate(to)}`;
+}
+
+/**
+ * When an order placed now should arrive in the UK, as "Wed 22 Oct" or a range of dates.
+ * Made-to-order pieces are made first (the days in the option's value, else 14), then sent.
+ */
 export function arrivalDate(kind: PurchaseKind, value: string, plan: DeliveryPlan, now = new Date()) {
-  if (plan.dispatchDays === null || plan.ukDays === null) return null;
   const [h, m] = (plan.cutoff ?? "").split(":").map(Number);
   const late = Number.isFinite(h) && now.getHours() * 60 + now.getMinutes() >= h * 60 + (m || 0);
   let start = now;
@@ -57,6 +77,13 @@ export function arrivalDate(kind: PurchaseKind, value: string, plan: DeliveryPla
     start = new Date(now);
     start.setDate(start.getDate() + makeDays(value));
   }
-  const dispatched = addWorkingDays(start, plan.dispatchDays + (late && kind !== "made" ? 1 : 0), plan.holidays);
-  return shortDate(addWorkingDays(dispatched, plan.ukDays, plan.holidays));
+  const extra = late && kind !== "made" ? 1 : 0;
+  const arrive = (i: 0 | 1) => addWorkingDays(addWorkingDays(start, plan.dispatch[i] + extra, plan.holidays), plan.uk[i], plan.holidays);
+  return dateSpan(arrive(0), arrive(1));
+}
+
+/** The purchase type picked in a bag line's options: ready to ship, made to order, or neither. */
+export function lineDelivery(options: { name: string; value: string }[]) {
+  const option = options.find((o) => isPurchaseOption(o.name));
+  return option ? { kind: purchaseKind(option.value), value: option.value, name: option.name } : null;
 }
