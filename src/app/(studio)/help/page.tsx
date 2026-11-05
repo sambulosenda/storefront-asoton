@@ -89,7 +89,7 @@ export default async function HelpPage() {
               </table>
             </div>
             <p className="text-[15px] leading-[1.6] text-ink-2">
-              Ready-to-ship pieces leave us within {times.dispatch}. Made-to-order pieces take 7 to 10 working days to make first. You’ll get a
+              Ready-to-ship pieces leave us within {times.dispatch}. Made-to-order pieces are made to your size first, which takes about 14 days (each piece shows its making time). You’ll get a
               tracking link by email as soon as your order leaves us. International orders may pay import duties in the destination
               country.
             </p>

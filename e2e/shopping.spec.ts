@@ -132,6 +132,23 @@ test("adding to the bag, changing quantity and removing", async ({ page }) => {
   await expect(bag.getByText("Your bag is empty")).toBeVisible();
 });
 
+test("a made-to-order piece in the bag shows its making time and later arrival", async ({ page }) => {
+  await page.goto("/products/aso-oke-agbada-set");
+  await page.getByRole("group", { name: "How would you like it?" }).getByRole("button", { name: /Made to order/ }).click();
+  const sizes = page.getByRole("group", { name: /size/i }).first();
+  await sizes.getByRole("button").first().click();
+  await page.getByRole("button", { name: "Add to bag" }).click();
+  await page.getByRole("button", { name: /^Bag,? \(?1/ }).filter({ visible: true }).click();
+
+  const bag = page.getByRole("dialog");
+  await expect(bag.getByText(/Made to order in 14 days, arrives about \w{3} \d{1,2}/)).toBeVisible();
+  await expect(bag.getByText(/this piece is made to your size first, which takes about 14 days/)).toBeVisible();
+  await expect(bag.getByText("CUSTOM MADE IN 14 DAYS")).toHaveCount(0);
+
+  await bag.getByRole("button", { name: "Remove" }).click();
+  await expect(bag.getByText("Your bag is empty")).toBeVisible();
+});
+
 test("a sold-out size offers a back-in-stock email", async ({ page }) => {
   await page.goto("/products/adire-wrap-dress");
   await page.getByRole("button", { name: "UK 18, sold out" }).click();

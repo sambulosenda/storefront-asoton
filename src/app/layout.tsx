@@ -9,7 +9,7 @@ import { MobileMenu, type MenuRow } from "@/components/mobile-menu";
 import { SearchOverlay } from "@/components/search-overlay";
 import { SizeGuide } from "@/components/size-guide";
 import { StoreProvider } from "@/components/store-provider";
-import { deliveryThreshold, departmentMenu, homeFeature, menuCloths, stockedOccasions } from "@/lib/catalog";
+import { deliveryPlan, deliveryThreshold, departmentMenu, homeFeature, menuCloths, stockedOccasions } from "@/lib/catalog";
 import { accountUrl, getMarkets } from "@/lib/shopify";
 import { collectionPath, moreNav, site, siteUrl } from "@/lib/site";
 import "./globals.css";
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const [threshold, women, men, kids, cloths, occasions, markets, feature] = await Promise.all([
+  const [threshold, women, men, kids, cloths, occasions, markets, feature, plan] = await Promise.all([
     deliveryThreshold(),
     departmentMenu("women"),
     departmentMenu("men"),
@@ -45,6 +45,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     stockedOccasions(),
     getMarkets(),
     homeFeature(),
+    deliveryPlan(),
   ]);
   // The menu's promo tile follows the home hero: the campaign if there is one, else the newest piece.
   const [newest] = feature.products;
@@ -82,7 +83,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <ClothPatterns />
         <StoreProvider markets={markets.countries} defaultMarket={markets.fallback}>
           {children}
-          <CartDrawer threshold={threshold.amount} thresholdLabel={threshold.label} />
+          <CartDrawer threshold={threshold.amount} thresholdLabel={threshold.label} delivery={plan} />
           <SearchOverlay />
           <MobileMenu rows={rows} accountUrl={accountUrl} promo={promo} />
           <SizeGuide />

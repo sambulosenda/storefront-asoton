@@ -10,7 +10,7 @@ import { ProductGrid, ProductRail } from "@/components/product-card";
 import { ProductForm } from "@/components/product-form";
 import { ProductGallery } from "@/components/product-gallery";
 import { ProductSkeleton } from "@/components/skeletons";
-import { clothLinks, deliveryThreshold, deliveryTimes } from "@/lib/catalog";
+import { clothLinks, deliveryPlan, deliveryThreshold, deliveryTimes } from "@/lib/catalog";
 import { clothByName, clothOf } from "@/lib/cloths";
 import { getCountry } from "@/lib/market";
 import { getProduct, getRecommendations } from "@/lib/shopify";
@@ -74,11 +74,12 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
   const product = await getProduct(handle, country);
   if (!product) notFound();
 
-  const [recommendations, cloths, threshold, times] = await Promise.all([
+  const [recommendations, cloths, threshold, times, plan] = await Promise.all([
     getRecommendations(product.id, country),
     clothLinks(),
     deliveryThreshold(),
     deliveryTimes(),
+    deliveryPlan(),
   ]);
 
   const clothKey = (clothByName(product.clothFields?.name) ?? clothOf(product))?.key;
@@ -103,7 +104,7 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
     (product.fit || product.model) && { title: "Size and fit", body: [product.fit, product.model].filter(Boolean).join(" ") },
     {
       title: "Delivery and returns",
-      body: `UK delivery in ${times.uk}, complimentary over ${threshold.label}. International rates are shown at checkout. Unworn ready-to-ship pieces can be returned within ${site.returnDays} days. Made-to-order pieces are made to your size, so they can only be returned if faulty.`,
+      body: `UK delivery in ${times.uk}, complimentary over ${threshold.label}. International rates are shown at checkout. Unworn ready-to-ship pieces can be returned within ${site.returnDays} days. Made-to-order pieces are made to your size before they’re sent, so allow for the making time as well, and they can only be returned if faulty.`,
     },
   ];
 
@@ -193,7 +194,7 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
             product={product}
             dept={dept}
             model={product.model}
-            delivery={{ dispatchLine: times.dispatchLine, dispatchDays: times.dispatchDays, ukDays: times.ukDays, cutoff: times.cutoff, holidays: times.holidays }}
+            delivery={plan}
           />
 
           <ul className="flex flex-col gap-1.5 border-t border-line pt-4 text-[13px] text-ink-2 md:gap-2">
