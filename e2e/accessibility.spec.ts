@@ -4,7 +4,7 @@ import { acceptCookies } from "./helpers";
 
 const PAGES = [
   "/",
-  "/collections/women",
+  "/collections/womens-clothing",
   "/products/adire-wrap-dress",
   "/search?q=adire",
   "/story",

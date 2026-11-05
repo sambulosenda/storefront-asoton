@@ -18,15 +18,15 @@ import {
   type MenuLink,
   type Product,
 } from "@/lib/shopify";
-import { collections, departments, site } from "@/lib/site";
+import { collections, departmentNames, departmentOf, departments, site, type Department } from "@/lib/site";
 
 const search = (q: string) => `/search?q=${encodeURIComponent(q)}`;
 
 /**
- * Fallback sub-categories, used until the "women" and "men" menus exist in Shopify (Content →
- * Menus). Each links to the store's own collection; a search stands in where it has none.
+ * Fallback sub-categories, used until "women", "men" and "kids" menus exist in Shopify (Content →
+ * Menus). Each links to one of the store's own collections.
  */
-const DEFAULT_MENUS: Record<"women" | "men", MenuLink[]> = {
+const DEFAULT_MENUS: Record<Department, MenuLink[]> = {
   women: [
     { title: "Dresses", href: "/collections/dresses" },
     { title: "Two-piece sets", href: "/collections/suits-2-piece-sets" },
@@ -34,19 +34,39 @@ const DEFAULT_MENUS: Record<"women" | "men", MenuLink[]> = {
     { title: "Tops", href: "/collections/tops-womens-clothing" },
     { title: "Kimonos & capes", href: "/collections/weaved-kimono-and-cape" },
     { title: "Skirts", href: "/collections/skirts" },
+    { title: "Trousers", href: "/collections/ladies-trousers-pants" },
+    { title: "Jackets & coats", href: "/collections/jackets-coats" },
+    { title: "Dashiki", href: "/collections/women-dashiki" },
   ],
   men: [
+    { title: "Suits", href: "/collections/embroidery" },
     { title: "Shirts", href: "/collections/shirts-mens-clothing" },
     { title: "Dashiki", href: "/collections/dashiki" },
-    { title: "Suits", href: search("men suit") },
-    { title: "Jackets", href: search("men jacket") },
-    { title: "Trousers", href: search("men trousers") },
+    { title: "Blazers", href: "/collections/african-print-blazers" },
+    { title: "Jackets", href: "/collections/jackets" },
+    { title: "Trousers", href: "/collections/trousers-pants" },
+  ],
+  kids: [
+    { title: "Girls", href: "/collections/girls" },
+    { title: "Boys", href: "/collections/boys" },
   ],
 };
 
-export async function departmentMenu(dept: "women" | "men"): Promise<MenuLink[]> {
+export async function departmentMenu(dept: Department): Promise<MenuLink[]> {
   const links = await getMenu(dept);
   return links.length > 0 ? links : DEFAULT_MENUS[dept];
+}
+
+/**
+ * The department a sub-category sits under: the one whose menu links to it, else the one its
+ * handle starts with (women-…, men-…). Undefined for the department collections themselves.
+ */
+export async function parentDepartment(handle: string): Promise<Department | undefined> {
+  if (departmentOf(handle)) return undefined;
+  const depts = Object.keys(departmentNames) as Department[];
+  const menus = await Promise.all(depts.map((d) => departmentMenu(d)));
+  const path = `/collections/${handle}`;
+  return depts.find((_, i) => menus[i].some((link) => link.href === path)) ?? handle.match(/^(women|men)-/)?.[1] as Department | undefined;
 }
 
 export type ClothLink = Cloth & { collection: string | null; href: string };
@@ -129,8 +149,9 @@ export function isAfricanPiece(product: Product): boolean {
  * store it's a theme demo photo (a fur coat, a puffer) rather than the shop's clothes.
  * Until the collection exists, the first photo the department's search word finds.
  */
-export async function departmentImage(handle: string): Promise<Image | null> {
-  const [campaign, page] = await Promise.all([getCampaign(handle), getCollection({ handle, first: 24 })]);
+export async function departmentImage(dept: Department): Promise<Image | null> {
+  const handle = collections[dept];
+  const [campaign, page] = await Promise.all([getCampaign(dept), getCollection({ handle, first: 24 })]);
   if (campaign?.image) return campaign.image;
   if (page) {
     const african = page.products.find((p) => p.featuredImage && isAfricanPiece(p));

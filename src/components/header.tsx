@@ -98,7 +98,7 @@ function PrimaryNav() {
 
 function NavLinks({ current }: { current: string | null }) {
   return (
-    <nav aria-label="Primary" className="hidden gap-5 text-[12px] tracking-[0.08em] uppercase nav:flex xl:gap-7 xl:text-[13px] xl:tracking-[0.1em]">
+    <nav aria-label="Primary" className="hidden gap-5 text-[12px] tracking-[0.08em] uppercase nav:flex min-[90rem]:gap-7 min-[90rem]:text-[13px] min-[90rem]:tracking-[0.1em]">
       {nav.map((item) => {
         const isCurrent = current === item.href;
         return (

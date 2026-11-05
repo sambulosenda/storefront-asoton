@@ -9,8 +9,8 @@ test("the home hero shows the store's campaign, with the pieces in the picture u
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Made for theBig Day");
   await expect(page.locator("h1 em")).toHaveText("Big Day");
   await expect(page.getByText("African ready-to-wear")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Shop women" }).first()).toHaveAttribute("href", "/collections/women");
-  await expect(page.getByRole("link", { name: "Shop men" }).first()).toHaveAttribute("href", "/collections/men");
+  await expect(page.getByRole("link", { name: "Shop women" }).first()).toHaveAttribute("href", "/collections/womens-clothing");
+  await expect(page.getByRole("link", { name: "Shop men" }).first()).toHaveAttribute("href", "/collections/mens-all");
   const pictured = page.getByRole("navigation", { name: "In the picture" });
   await expect(pictured.getByRole("link", { name: /Adire Wrap Dress/ })).toHaveAttribute("href", "/products/adire-wrap-dress");
   await expect(pictured.getByRole("link", { name: /Aso-oke Kaftan/ })).toBeVisible();
@@ -54,7 +54,7 @@ test("the breadcrumb leaves out retired collections", async ({ page, isMobile })
 });
 
 test("without campaigns or looks, nothing from the design's sample copy shows", async ({ page }) => {
-  await page.goto("/collections/women");
+  await page.goto("/collections/womens-clothing");
   await expect(page.getByRole("heading", { level: 1, name: "Women" })).toBeVisible();
   await expect(page.getByText("Wear it head to toe")).toHaveCount(0);
 
@@ -89,7 +89,7 @@ test("the cloth band only offers cloths the store has pieces in, shown with one 
 });
 
 test("a collection filters and sorts through the URL", async ({ page, isMobile }) => {
-  await page.goto("/collections/women");
+  await page.goto("/collections/womens-clothing");
   await expect(page.getByRole("heading", { level: 1, name: "Women" })).toBeVisible();
 
   await page.getByRole("button", { name: /^Sort:/ }).first().click();
@@ -182,7 +182,7 @@ test("search suggests as you type and opens full results", async ({ page }) => {
 });
 
 test("choosing another country switches prices and keeps the bag", async ({ page }) => {
-  await page.goto("/collections/women");
+  await page.goto("/collections/womens-clothing");
   await expect(page.getByText("£185").first()).toBeVisible();
 
   await page.getByRole("button", { name: /^Country and currency/ }).filter({ visible: true }).first().click();
@@ -198,7 +198,7 @@ test("the phone menu follows the design's order, with occasions and the store's 
   await page.getByRole("button", { name: "Open menu" }).filter({ visible: true }).click();
   const menu = page.getByRole("navigation", { name: "Main" });
   const rows = menu.locator(":scope > a:not(:has(span)), :scope > div > button");
-  await expect(rows).toHaveText(["Women", "Men", "Kids", "New in", "Accessories", "Occasions", "Shop by cloth"]);
+  await expect(rows).toHaveText(["Women", "Men", "Kids", "New in", "Unisex", "Accessories", "Gifts", "Fabric & lace", "Custom made", "Occasions", "Shop by cloth"]);
   await menu.getByRole("button", { name: "Occasions" }).click();
   await expect(menu.getByRole("link", { name: "Wedding guest" })).toHaveAttribute("href", "/collections/wedding-guest");
   await expect(menu.getByRole("link", { name: "Church" })).toHaveCount(0);
@@ -207,8 +207,18 @@ test("the phone menu follows the design's order, with occasions and the store's 
 test("a sub-category sits under its department, with its chip selected", async ({ page }) => {
   await page.goto("/collections/women-dresses");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dresses");
-  await expect(page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Women" })).toHaveAttribute("href", "/collections/women");
+  await expect(page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Women" })).toHaveAttribute("href", "/collections/womens-clothing");
   const chips = page.getByRole("navigation", { name: "Dresses categories" }).filter({ visible: true });
   await expect(chips.getByRole("link", { name: "Dresses" })).toHaveAttribute("aria-current", "page");
-  await expect(chips.getByRole("link", { name: "All" })).toHaveAttribute("href", "/collections/women");
+  await expect(chips.getByRole("link", { name: "All" })).toHaveAttribute("href", "/collections/womens-clothing");
+});
+
+test("a collection the store doesn't have is a not-found page, not the whole catalogue", async ({ page }) => {
+  await page.goto("/collections/no-such-collection");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("We can’t find that page");
+});
+
+test("a department's heading is its plain name, not the store's SEO title", async ({ page }) => {
+  await page.goto("/collections/mens-all");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Men");
 });

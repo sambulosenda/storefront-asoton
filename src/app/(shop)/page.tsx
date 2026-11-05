@@ -16,9 +16,9 @@ import { getCollectionOrAll } from "@/lib/shopify";
 import { collectionPath, collections, nav, site, siteUrl } from "@/lib/site";
 
 const DEPARTMENTS = [
-  { handle: "women", title: "Women", href: "/collections/women", blurb: "Dresses, sets, jumpsuits and kimonos", cta: "Shop women", tone: "#4A3F3A", soft: "#DCD5CC" },
-  { handle: "men", title: "Men", href: "/collections/men", blurb: "Suits, shirts, jackets and trousers", cta: "Shop men", tone: "#2F3438", soft: "#D2D5D8" },
-];
+  { dept: "women", title: "Women", href: collectionPath("women"), blurb: "Dresses, sets, jumpsuits and kimonos", cta: "Shop women", tone: "#4A3F3A", soft: "#DCD5CC" },
+  { dept: "men", title: "Men", href: collectionPath("men"), blurb: "Suits, shirts, jackets and trousers", cta: "Shop men", tone: "#2F3438", soft: "#D2D5D8" },
+] as const;
 
 export const metadata: Metadata = {
   title: { absolute: `${site.brand} · ${site.tagline.replace(/\.$/, "")}` },
@@ -45,7 +45,7 @@ export default async function HomePage() {
   const [{ campaign, collection, products }, cloths, departmentImages, occasions, times] = await Promise.all([
     homeFeature(),
     stockedCloths(),
-    Promise.all(DEPARTMENTS.map((d) => departmentImage(d.handle))),
+    Promise.all(DEPARTMENTS.map((d) => departmentImage(d.dept))),
     stockedOccasions(),
     deliveryTimes(),
   ]);
@@ -67,8 +67,8 @@ export default async function HomePage() {
   const long = headline.length > 24;
 
   const ctas = [
-    { label: "Shop women", href: `/collections/${campaign?.women ?? "women"}`, light: true },
-    { label: "Shop men", href: `/collections/${campaign?.men ?? "men"}`, light: false },
+    { label: "Shop women", href: campaign?.women ? `/collections/${campaign.women}` : collectionPath("women"), light: true },
+    { label: "Shop men", href: campaign?.men ? `/collections/${campaign.men}` : collectionPath("men"), light: false },
   ];
   // An older campaign entry with its own button keeps it, in place of "Shop women".
   if (campaign?.cta) ctas[0] = { label: campaign.cta, href: campaign.link ?? ctas[0].href, light: true };
@@ -209,7 +209,7 @@ export default async function HomePage() {
 
       {/* Category chips (phones) */}
       <nav aria-label="Shop categories" className="no-scrollbar flex gap-2 overflow-x-auto px-4 pt-6 pb-10 md:hidden">
-        {[nav[1], nav[2], nav[3], nav[0], nav[4]].map((item) => (
+        {[nav[1], nav[2], nav[3], nav[0], ...nav.slice(4)].map((item) => (
           <Link key={item.href} href={item.href} className="inline-flex h-11 flex-none items-center border border-line px-[18px] text-[14px] no-underline">
             {item.label}
           </Link>
