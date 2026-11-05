@@ -23,7 +23,8 @@
   --font-sans: var(--font-hanken), "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-display: var(--font-bodoni), "Bodoni 72", Didot, Georgia, serif;
 
-  --breakpoint-nav: 53.75rem;
+  /* The full menu shows once it fits beside the centred logo. Below this, the menu button. */
+  --breakpoint-nav: 64rem;
 }
 
 @utility page-x {

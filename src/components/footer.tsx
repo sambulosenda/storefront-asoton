@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Logo } from "@/components/logo";
 import { MarketButton, MarketLabel } from "@/components/market-selector";
 import { MinusIcon, PlusIcon } from "@/components/icons";
 import { useStore } from "@/components/store-provider";
@@ -57,7 +58,7 @@ export function Footer() {
       {/* Phones */}
       <div className="flex flex-col gap-8 px-4 pt-12 pb-10 md:hidden">
         <div className="flex flex-col gap-2.5">
-          <span className="font-display text-[24px] font-medium tracking-[0.01em]">{site.brand}</span>
+          <Logo dark className="h-[51px] w-auto self-start" />
           <p className="text-[14px] text-night-text">{site.tagline}</p>
         </div>
         <div className="border-t border-night-line">
@@ -100,7 +101,7 @@ export function Footer() {
       <div className="page-x hidden flex-col gap-20 pt-20 pb-10 md:flex">
         <div className="flex flex-wrap justify-between gap-12">
           <div className="flex max-w-[340px] flex-[1_1_260px] flex-col gap-4">
-            <span className="font-display text-[26px] font-medium tracking-[0.01em]">{site.brand}</span>
+            <Logo dark className="h-[56px] w-auto self-start" />
             <p className="text-[14px] leading-[1.6] text-night-text">{site.tagline}</p>
           </div>
           <div className="grid flex-[2_1_520px] grid-cols-[repeat(auto-fit,minmax(min(150px,100%),1fr))] gap-10">
@@ -135,7 +136,7 @@ export function CompactFooter() {
   return (
     <footer className="bg-ink text-night-text">
       <div className="page-x flex flex-wrap items-center justify-between gap-x-8 gap-y-4 py-10 text-[12px]">
-        <span className="font-display text-[24px] font-medium tracking-[0.01em] text-paper">{site.brand}</span>
+        <Logo dark tagline={false} className="h-7 w-auto text-paper" />
         <div className="flex flex-wrap gap-x-6 gap-y-2">
           <Link href="/story" className="text-night-text no-underline">
             Our story

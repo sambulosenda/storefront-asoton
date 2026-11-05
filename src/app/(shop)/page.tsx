@@ -32,6 +32,7 @@ const organization = {
   "@type": "Organization",
   name: site.brand,
   url: siteUrl,
+  logo: `${siteUrl}/logo.png`,
   description: site.description,
   ...(profiles.length ? { sameAs: profiles } : {}),
 };
