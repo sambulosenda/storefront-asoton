@@ -14,6 +14,13 @@ const nextConfig: NextConfig = {
   htmlLimitedBots:
     /Googlebot|[\w-]+-Google|Google-[\w-]+|Chrome-Lighthouse|Slurp|DuckDuckBot|baiduspider|yandex|sogou|bitlybot|tumblr|vkShare|quora link preview|redditbot|ia_archiver|Bingbot|BingPreview|applebot|facebookexternalhit|facebookcatalog|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|SkypeUriPreview|Yeti|googleweblight/i,
   partialPrefetching: true,
+  // The shop's old Shopify theme kept its FAQs here. Send old links and search results to the new page.
+  async redirects() {
+    return [
+      { source: "/pages/faqs", destination: "/faqs", permanent: true },
+      { source: "/pages/african-clothing-faqs-support", destination: "/faqs", permanent: true },
+    ];
+  },
   turbopack: {
     rules: {
       "*.css": {

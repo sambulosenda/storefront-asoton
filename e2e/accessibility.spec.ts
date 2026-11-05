@@ -10,6 +10,7 @@ const PAGES = [
   "/story",
   "/lookbook",
   "/help",
+  "/faqs",
   "/policies/privacy-policy",
   "/this-page-does-not-exist",
 ];

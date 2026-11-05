@@ -8,6 +8,7 @@ const TOPICS = [
   { label: "Care", href: "#care" },
   { label: "Size guide", href: "#size-guide" },
   { label: "Contact", href: "#contact" },
+  { label: "FAQs", href: "/faqs" },
 ];
 
 export function HelpNav() {

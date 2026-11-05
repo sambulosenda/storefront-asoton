@@ -147,6 +147,9 @@ export function CompactFooter() {
           <Link href="/help" className="text-night-text no-underline">
             Help
           </Link>
+          <Link href="/faqs" className="text-night-text no-underline">
+            FAQs
+          </Link>
           <button type="button" onClick={openCookieSettings} className="cursor-pointer text-night-text">
             Cookie settings
           </button>

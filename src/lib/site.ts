@@ -108,6 +108,7 @@ export const footerNav = [
   {
     title: "Help",
     links: [
+      { label: "FAQs", href: "/faqs" },
       { label: "Size guide", href: "/help#size-guide" },
       { label: "Delivery", href: "/help#delivery" },
       { label: "Returns", href: "/help#returns" },
