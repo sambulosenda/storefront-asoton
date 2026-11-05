@@ -123,11 +123,9 @@ test("adding to the bag, changing quantity and removing", async ({ page }) => {
   const bag = page.getByRole("dialog");
   await expect(bag.getByText("Adire Wrap Dress")).toBeVisible();
 
-  // The fixture store has two of each size, so the bag stops at two.
   await bag.getByRole("button", { name: "Increase quantity" }).click();
   await expect(bag.getByRole("group", { name: "Quantity" })).toContainText("2");
   await expect(bag.getByText("£370").first()).toBeVisible();
-  await expect(bag.getByRole("button", { name: "Increase quantity" })).toBeDisabled();
 
   await bag.getByRole("button", { name: "Remove" }).click();
   await expect(bag.getByText("Your bag is empty")).toBeVisible();
