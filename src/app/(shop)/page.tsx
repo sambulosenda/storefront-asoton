@@ -152,7 +152,7 @@ export default async function HomePage() {
           <div className="on-dark absolute inset-x-0 bottom-0 flex flex-col gap-8 px-4 pb-6 md:page-x md:flex-row md:flex-wrap md:items-end md:justify-between md:pb-16">
             {copy(true)}
             {pictured.length > 0 && (
-              <nav aria-label="In the picture" className="hidden w-[380px] max-w-full flex-col gap-0.5 md:flex">
+              <nav aria-label="In the picture" className="hidden w-[380px] max-w-full flex-col gap-0.5 lg:flex">
                 <span className="pb-1.5 text-[11px] tracking-[0.16em] uppercase">In the picture</span>
                 {pictured.slice(0, 3).map((p) => (
                   <Link

@@ -95,6 +95,9 @@ const productCardFields = /* GraphQL */ `
       nodes {
         id
         availableForSale
+        price {
+          amount
+        }
         selectedOptions {
           name
           value

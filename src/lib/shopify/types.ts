@@ -18,7 +18,7 @@ export type Product = {
   cardVariants?: { nodes: CardVariant[] };
 };
 
-export type CardVariant = { id: string; availableForSale: boolean; selectedOptions: { name: string; value: string }[] };
+export type CardVariant = { id: string; availableForSale: boolean; price: { amount: string }; selectedOptions: { name: string; value: string }[] };
 
 export type Variant = {
   id: string;

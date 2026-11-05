@@ -147,6 +147,8 @@ function Viewer({ images, title, start, onClose }: { images: ShopifyImage[]; tit
   }, [start]);
 
   const follow = (e: React.MouseEvent<HTMLElement>) => {
+    // A click from the keyboard has no pointer position: zoom on the middle.
+    if (e.detail === 0) return setOrigin("50% 50%");
     const box = e.currentTarget.getBoundingClientRect();
     setOrigin(`${((e.clientX - box.left) / box.width) * 100}% ${((e.clientY - box.top) / box.height) * 100}%`);
   };

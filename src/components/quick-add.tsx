@@ -16,12 +16,15 @@ export function quickSizes(product: Product) {
   const size = product.options.find((o) => isSizeOption(o.name));
   if (!size) return null;
   if (product.options.some((o) => o !== size && o.optionValues.length > 1)) return null;
+  // The card shows one price, so sizes priced differently are chosen on the product page.
+  if (new Set(variants.map((v) => Number(v.price.amount))).size > 1) return null;
   const byValue = new Map(
     variants.map((v) => [v.selectedOptions.find((o) => o.name === size.name)?.value ?? "", v] as const),
   );
   const sizes = sortedSizes(size.optionValues.map((v) => v.name))
-    .map((s) => ({ ...s, variant: byValue.get(s.value) }))
-    .filter((s) => s.variant);
+    .map((s) => ({ ...s, variant: byValue.get(s.value) }));
+  // Every size must be there (only the first 40 variants are fetched), or the page lists them all.
+  if (sizes.some((s) => !s.variant)) return null;
   return sizes.length > 1 ? sizes : null;
 }
 

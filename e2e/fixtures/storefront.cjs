@@ -81,7 +81,7 @@ const card = ({ _dept, _variants, ...p }) => ({
   ...p,
   priceRange: { minVariantPrice: convert(p.priceRange.minVariantPrice) },
   cardImages: { nodes: [] },
-  cardVariants: { nodes: _variants.map(({ id, availableForSale, selectedOptions }) => ({ id, availableForSale, selectedOptions })) },
+  cardVariants: { nodes: _variants.map(({ id, availableForSale, price, selectedOptions }) => ({ id, availableForSale, price, selectedOptions })) },
 });
 const byHandle = (h) => products.find((p) => p.handle === h);
 const filtersFor = (list) => [

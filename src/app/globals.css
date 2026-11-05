@@ -252,16 +252,23 @@
 ::view-transition-old(.leave) {
   animation: fade-in var(--duration-quick) ease-out reverse both;
 }
+/* Transform only, so the delayed fade-in alone sets the opacity. */
+@keyframes lift {
+  from {
+    transform: translateY(18px);
+  }
+}
 ::view-transition-new(.arrive) {
   animation:
     fade-in var(--duration-medium) var(--ease-out-soft) var(--duration-quick) both,
-    rise var(--duration-medium) var(--ease-out-soft) both;
+    lift var(--duration-medium) var(--ease-out-soft) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after,
+  ::backdrop,
   ::view-transition-group(*),
   ::view-transition-old(*),
   ::view-transition-new(*) {

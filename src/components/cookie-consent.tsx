@@ -105,11 +105,11 @@ export function CookieConsent() {
                 Cookie policy
               </Link>
             </p>
-            <div className="flex flex-none items-center gap-2">
+            <div className="grid grid-cols-2 items-center gap-2 md:flex md:flex-none">
               <button
                 type="button"
                 onClick={() => setView("prefs")}
-                className="mr-auto min-h-11 cursor-pointer pr-2 text-[13px] text-paper underline underline-offset-4 md:mr-2"
+                className="col-span-2 min-h-11 cursor-pointer justify-self-start pr-2 text-[13px] text-paper underline underline-offset-4 md:mr-2"
               >
                 Manage preferences
               </button>

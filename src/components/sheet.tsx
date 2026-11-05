@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 
 const PLACEMENT = {
   // Drawers slide in from the right; on phones they fill the screen.
@@ -32,7 +32,8 @@ export function Sheet({
 }) {
   const ref = useRef<HTMLDialogElement>(null);
 
-  useEffect(() => {
+  // A layout effect, so the dialog is open before its contents' own effects run (they may scroll it).
+  useLayoutEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
     if (open && !dialog.open) {
