@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useId, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { variantLabel } from "@/components/cart-drawer";
 import { ProductVisual } from "@/components/cloth";
+import { SecureCheckout } from "@/components/payment-marks";
 import { AlertIcon, HeartIcon } from "@/components/icons";
 import { useStore } from "@/components/store-provider";
 import { notifyAction } from "@/lib/actions";
@@ -265,6 +266,7 @@ export function ProductForm({
           {status?.kind === "error" && <AlertIcon size={18} className="mt-px flex-none" />}
           {status?.text}
         </p>
+        {product.availableForSale && !soldOut && <SecureCheckout />}
       </div>
 
       {toast && (
