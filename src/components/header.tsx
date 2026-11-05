@@ -4,9 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 import { AccountIcon, BagIcon, MenuIcon, SearchIcon } from "@/components/icons";
+import { Logo } from "@/components/logo";
 import { MarketButton } from "@/components/market-selector";
 import { useStore } from "@/components/store-provider";
-import { nav, site } from "@/lib/site";
+import { nav } from "@/lib/site";
 
 export function AnnouncementBar({ threshold }: { threshold: string }) {
   return (
@@ -39,8 +40,8 @@ export function Header({ accountUrl, minimal = false }: { accountUrl: string | n
             <SearchIcon />
           </button>
         </div>
-        <Link href="/" className="font-display text-[22px] font-medium tracking-[0.01em] whitespace-nowrap no-underline">
-          {site.brand}
+        <Link href="/" className="block no-underline">
+          <Logo tagline={false} className="h-[26px] w-auto" />
         </Link>
         <div className="flex justify-end">
           <button
@@ -65,8 +66,8 @@ export function Header({ accountUrl, minimal = false }: { accountUrl: string | n
         <button type="button" aria-label="Open menu" onClick={() => open("menu")} className="inline-flex size-11 items-center justify-start nav:hidden">
           <MenuIcon />
         </button>
-        <Link href="/" className="font-display text-[28px] font-medium tracking-[0.01em] whitespace-nowrap no-underline">
-          {site.brand}
+        <Link href="/" className="block no-underline">
+          <Logo className="h-10 w-auto xl:h-[46px]" />
         </Link>
         <div className="flex items-center justify-end gap-1">
           <button type="button" aria-label="Search" onClick={() => open("search")} className="inline-flex size-11 items-center justify-center hover:text-indigo">
@@ -97,7 +98,7 @@ function PrimaryNav() {
 
 function NavLinks({ current }: { current: string | null }) {
   return (
-    <nav aria-label="Primary" className="hidden gap-7 text-[13px] tracking-[0.1em] uppercase nav:flex">
+    <nav aria-label="Primary" className="hidden gap-5 text-[12px] tracking-[0.08em] uppercase nav:flex xl:gap-7 xl:text-[13px] xl:tracking-[0.1em]">
       {nav.map((item) => {
         const isCurrent = current === item.href;
         return (
