@@ -3,6 +3,7 @@
 
 import { CLOTHS, clothByName, clothOf, type Cloth } from "@/lib/cloths";
 import { formatMoney } from "@/lib/format";
+import { dayRange, type DeliveryPlan } from "@/lib/purchase";
 import {
   getCampaign,
   getCloths,
@@ -188,14 +189,24 @@ export async function deliveryTimes() {
       dispatchDays === 1
         ? "Dispatched next working day"
         : `Dispatched within ${dispatchDays !== null ? workingDays(dispatchDays) : `${site.dispatchDays} working days`}`,
-    dispatchDays,
     /** UK standard delivery, such as "3 working days". */
     uk: rules?.ukStandardDays != null ? workingDays(rules.ukStandardDays) : `${site.deliveryDays} working days`,
-    ukDays: rules?.ukStandardDays ?? null,
     express: rules?.ukExpressDays != null ? workingDays(rules.ukExpressDays) : null,
     international: rules?.internationalDays != null ? workingDays(rules.internationalDays) : null,
     cutoff: rules?.cutoff ?? null,
     holidays: rules?.holidays ?? [],
+  };
+}
+
+/** What the arrival dates on product pages and in the bag are worked out from. */
+export async function deliveryPlan(): Promise<DeliveryPlan> {
+  const [rules, times] = await Promise.all([getDeliveryRules(), deliveryTimes()]);
+  return {
+    dispatchLine: times.dispatchLine,
+    dispatch: rules?.dispatchDays != null ? [rules.dispatchDays, rules.dispatchDays] : dayRange(site.dispatchDays),
+    uk: rules?.ukStandardDays != null ? [rules.ukStandardDays, rules.ukStandardDays] : dayRange(site.deliveryDays),
+    cutoff: times.cutoff,
+    holidays: times.holidays,
   };
 }
 

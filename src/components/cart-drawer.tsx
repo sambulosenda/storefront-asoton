@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSyncExternalStore } from "react";
 import { collectionPath } from "@/lib/site";
 import { ProductVisual } from "@/components/cloth";
 import { CloseIcon, MinusIcon, PlusIcon } from "@/components/icons";
@@ -8,19 +9,42 @@ import { PaymentMarks } from "@/components/payment-marks";
 import { Sheet } from "@/components/sheet";
 import { useStore } from "@/components/store-provider";
 import { formatMoney, isSizeOption } from "@/lib/format";
+import { arrivalDate, isPurchaseOption, lineDelivery, makeDays, type DeliveryPlan } from "@/lib/purchase";
 import { sizeName } from "@/lib/sizes";
 import type { CartLine } from "@/lib/shopify/types";
 
+/** "UK 10 · Indigo". The purchase type is left out: the bag gives it its own line with a date. */
 export function variantLabel(options: { name: string; value: string }[]) {
   return options
-    .filter((o) => o.value !== "Default Title")
+    .filter((o) => o.value !== "Default Title" && !isPurchaseOption(o.name))
     .map((o) => (isSizeOption(o.name) ? sizeName(o.value) : o.value))
     .join(" · ");
 }
 
-export function CartDrawer({ threshold, thresholdLabel }: { threshold: number | null; thresholdLabel: string }) {
+const noSubscribe = () => () => {};
+const currentMinute = () => Math.floor(Date.now() / 60_000);
+const noMinute = () => null;
+
+export function CartDrawer({
+  threshold,
+  thresholdLabel,
+  delivery,
+}: {
+  threshold: number | null;
+  thresholdLabel: string;
+  delivery: DeliveryPlan;
+}) {
   const { cart, overlay, close, notice } = useStore();
   const lines = cart?.lines ?? [];
+  // Arrival dates depend on today, so they're worked out in the browser.
+  const minute = useSyncExternalStore(noSubscribe, currentMinute, noMinute);
+  const now = minute === null ? null : new Date(minute * 60_000);
+  // The longest making time in the bag, for the note by the checkout button.
+  const made = lines.flatMap((l) => {
+    const d = lineDelivery(l.merchandise.selectedOptions);
+    return d?.kind === "made" ? [makeDays(d.value)] : [];
+  });
+  const making = made.length > 0 ? Math.max(...made) : null;
   const count = cart?.totalQuantity ?? 0;
   const subtotal = cart ? Number(cart.cost.subtotalAmount.amount) : 0;
   const currency = cart?.cost.subtotalAmount.currencyCode ?? "GBP";
@@ -69,7 +93,7 @@ export function CartDrawer({ threshold, thresholdLabel }: { threshold: number | 
               )}
               <ul>
                 {lines.map((line) => (
-                  <CartLineRow key={line.id} line={line} />
+                  <CartLineRow key={line.id} line={line} delivery={delivery} now={now} />
                 ))}
               </ul>
             </div>
@@ -80,6 +104,13 @@ export function CartDrawer({ threshold, thresholdLabel }: { threshold: number | 
                 <span className="text-[18px]">{cart && formatMoney(cart.cost.subtotalAmount)}</span>
               </div>
               <p className="text-[12px] text-ink-2 md:text-[13px]">Tax included. Delivery and discount codes are added at checkout.</p>
+              {making !== null && (
+                <p className="bg-stone px-3.5 py-3 text-[13px] leading-[1.5]">
+                  <strong className="font-medium">Made to order:</strong> {made.length > 1 ? "these pieces are" : "this piece is"} made to your size
+                  first, which takes about {making} days. The delivery times shown at checkout start once{" "}
+                  {made.length > 1 ? "they’re" : "it’s"} made.
+                </p>
+              )}
               <a href={cart?.checkoutUrl} className="btn btn-ink mt-1 h-14 md:mt-2">
                 Checkout
               </a>
@@ -109,10 +140,18 @@ export function CartDrawer({ threshold, thresholdLabel }: { threshold: number | 
   );
 }
 
-function CartLineRow({ line }: { line: CartLine }) {
+function CartLineRow({ line, delivery, now }: { line: CartLine; delivery: DeliveryPlan; now: Date | null }) {
   const { setQuantity, close } = useStore();
   const { merchandise } = line;
   const href = `/products/${merchandise.product.handle}`;
+  const purchase = lineDelivery(merchandise.selectedOptions);
+  const arrives = purchase && purchase.kind !== "other" && now ? arrivalDate(purchase.kind, purchase.value, delivery, now) : null;
+  const how =
+    purchase?.kind === "made"
+      ? { title: `Made to order in ${makeDays(purchase.value)} days`, arrives: arrives && `arrives about ${arrives}` }
+      : purchase?.kind === "ready"
+        ? { title: "Ready to ship", arrives: arrives && `arrives ${arrives}` }
+        : null;
 
   return (
     <li className="grid grid-cols-[84px_minmax(0,1fr)] gap-4 border-b border-line py-5 md:grid-cols-[96px_minmax(0,1fr)] md:gap-5 md:py-6">
@@ -132,6 +171,13 @@ function CartLineRow({ line }: { line: CartLine }) {
           <span className="text-[14px] whitespace-nowrap md:text-[15px]">{formatMoney(line.cost.totalAmount)}</span>
         </div>
         <span className="text-[13px] text-ink-2">{variantLabel(merchandise.selectedOptions)}</span>
+        {how && (
+          <span className="text-[13px] text-ink-2">
+            <span className={purchase?.kind === "made" ? "font-medium text-ink" : ""}>{how.title}</span>
+            {/* The date fills in once the page knows today's date. */}
+            {how.arrives && <>, {how.arrives}</>}
+          </span>
+        )}
         <div className="mt-auto flex items-center justify-between gap-3 md:gap-4">
           <div role="group" aria-label="Quantity" className="inline-flex items-center border border-line">
             <button
