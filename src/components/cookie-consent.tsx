@@ -91,37 +91,32 @@ export function CookieConsent() {
   };
 
   const showBanner = raw !== "pending" && !stored && view === "closed";
-  const buttonPaper = "h-12 cursor-pointer bg-paper px-7 text-[13px] font-semibold tracking-[0.14em] text-ink uppercase";
+  const buttonBar = "h-11 cursor-pointer px-4 text-[12px] font-semibold tracking-[0.12em] whitespace-nowrap uppercase md:px-6";
 
   return (
     <>
       {showBanner && (
-        <section aria-labelledby="ck-title" className="fixed inset-x-0 bottom-0 z-40 bg-ink text-paper">
-          <div className="page-x flex flex-wrap items-center justify-between gap-x-16 gap-y-5 py-6 md:py-8">
-            <div className="flex max-w-[760px] flex-[1_1_560px] flex-col gap-2">
-              <h2 id="ck-title" className="font-display text-[24px] leading-[1.2] md:text-[26px]">
-                Cookies
-              </h2>
-              <p className="text-[14px] leading-[1.6] text-night-soft md:text-[15px]">
-                We use essential cookies to run the shop. With your permission, we’d also use analytics cookies to see how the site is used and marketing
-                cookies to show you relevant ads. You can change your mind at any time from the footer.{" "}
-                <Link href="/policies/privacy-policy" className="text-paper underline-offset-4 hover:text-paper">
-                  Cookie policy
-                </Link>
-              </p>
-            </div>
-            <div className="grid w-full grid-cols-2 items-center gap-x-4 gap-y-3 md:flex md:w-auto md:flex-wrap">
+        // A slim bar, so the first screen of the shop stays visible on phones.
+        <section aria-label="Cookies" className="fixed inset-x-0 bottom-0 z-40 bg-ink text-paper">
+          <div className="page-x flex flex-col gap-3 py-3.5 md:flex-row md:items-center md:justify-between md:gap-10 md:py-4">
+            <p className="text-[13px] leading-[1.5] text-night-soft md:text-[14px]">
+              We’d like to use cookies to see how the shop is used and to show you relevant ads.{" "}
+              <Link href="/policies/privacy-policy" className="whitespace-nowrap text-paper underline-offset-4 hover:text-paper">
+                Cookie policy
+              </Link>
+            </p>
+            <div className="flex flex-none items-center gap-2">
               <button
                 type="button"
                 onClick={() => setView("prefs")}
-                className="col-span-2 min-h-12 cursor-pointer px-2 text-[14px] text-paper underline underline-offset-4 md:col-auto"
+                className="mr-auto min-h-11 cursor-pointer pr-2 text-[13px] text-paper underline underline-offset-4 md:mr-2"
               >
                 Manage preferences
               </button>
-              <button type="button" onClick={() => choose(all(false))} className={buttonPaper}>
+              <button type="button" onClick={() => choose(all(false))} className={`${buttonBar} border border-paper/50 text-paper`}>
                 Reject all
               </button>
-              <button type="button" onClick={() => choose(all(true))} className={buttonPaper}>
+              <button type="button" onClick={() => choose(all(true))} className={`${buttonBar} bg-paper text-ink`}>
                 Accept all
               </button>
             </div>

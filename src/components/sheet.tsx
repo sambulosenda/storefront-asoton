@@ -57,6 +57,7 @@ export function Sheet({
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
+      data-placement={placement}
       className={`${PLACEMENT[placement]} ${className}`}
     >
       {open && children}

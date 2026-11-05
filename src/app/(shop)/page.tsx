@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, type CSSProperties } from "react";
 import { ClothBand } from "@/components/cloth-band";
 import { ProductVisual } from "@/components/cloth";
 import { ArrowRight } from "@/components/icons";
@@ -38,61 +38,77 @@ const organization = {
 };
 const website = { "@context": "https://schema.org", "@type": "WebSite", name: site.brand, url: siteUrl };
 
+// The shop's own line, from its logo, leads the hero until a campaign sets one.
+const BRAND_LINE = {
+  text: "Pride & beauty of African fashion",
+  italic: "African fashion",
+  body: `${site.tagline.replace(/\.$/, "")}. Ready to ship, or made to order in your size.`,
+};
+
 // Where the copy sits depends on where the people are in the campaign photo.
 const FOCUS: Record<string, string> = { left: "35% 50%", centre: "50% 50%", center: "50% 50%", right: "65% 50%" };
 
 export default async function HomePage() {
-  const [{ campaign, collection, products }, cloths, departmentImages, occasions, times] = await Promise.all([
+  const [{ campaign, products }, cloths, departmentImages, occasions, times] = await Promise.all([
     homeFeature(),
     stockedCloths(),
     Promise.all(DEPARTMENTS.map((d) => departmentImage(d.dept))),
     stockedOccasions(),
     deliveryTimes(),
   ]);
-  const [newest] = products;
-
-  // The home campaign sets the hero. Without one, the first New in piece with a photo leads it.
-  const lead = campaign ? null : (products.find((p) => p.featuredImage) ?? newest);
-  const label = campaign?.label ?? "New in";
-  const headline = campaign?.headline ?? lead?.title ?? site.brand;
-  const body = campaign?.body ?? (collection?.description || site.description);
+  // The home campaign sets the hero: its photo full width with the copy over it. Without a photo,
+  // the hero is editorial: the brand's line set large beside photos of the newest pieces.
   const image = campaign?.image ?? null;
   const mobileImage = campaign?.mobileImage ?? image;
+  const label = campaign?.label ?? "New in";
+  const headline = campaign?.headline ?? BRAND_LINE.text;
+  const italic = campaign ? (campaign.italic ?? null) : BRAND_LINE.italic;
+  const body = campaign?.body ?? BRAND_LINE.body;
   const focus = FOCUS[campaign?.position?.trim().toLowerCase() ?? ""] ?? FOCUS.right;
   // The pieces worn in the photo; the newest pieces stand in until the campaign lists them.
-  const pictured = campaign?.products.length ? campaign.products : products;
-  // Until the campaign has a photo, the hero shows a big photo of the first piece that has one.
-  const piece = image ? null : (pictured.find((p) => p.featuredImage) ?? null);
-  // The design sets a short headline at display size; product names get a smaller one.
-  const long = headline.length > 24;
+  // Those with a photo come first, so the editorial hero shows photos rather than drawings.
+  const pictured = [...(campaign?.products.length ? campaign.products : products)].sort(
+    (a, b) => Number(!a.featuredImage) - Number(!b.featuredImage),
+  );
 
   const ctas = [
-    { label: "Shop women", href: campaign?.women ? `/collections/${campaign.women}` : collectionPath("women"), light: true },
-    { label: "Shop men", href: campaign?.men ? `/collections/${campaign.men}` : collectionPath("men"), light: false },
+    { label: "Shop women", href: campaign?.women ? `/collections/${campaign.women}` : collectionPath("women"), primary: true },
+    { label: "Shop men", href: campaign?.men ? `/collections/${campaign.men}` : collectionPath("men"), primary: false },
   ];
   // An older campaign entry with its own button keeps it, in place of "Shop women".
-  if (campaign?.cta) ctas[0] = { label: campaign.cta, href: campaign.link ?? ctas[0].href, light: true };
-  if (lead) ctas.splice(0, 2, { label: "Shop now", href: `/products/${lead.handle}`, light: true }, { label: "All new in", href: collectionPath("newIn"), light: false });
+  if (campaign?.cta) ctas[0] = { label: campaign.cta, href: campaign.link ?? ctas[0].href, primary: true };
 
-  const copy = (
-    <div className="flex max-w-[720px] flex-col gap-3.5 md:gap-6">
-      <span className="text-[11px] tracking-[0.18em] uppercase md:text-[12px]">{label}</span>
+  const copy = (dark: boolean) => (
+    <div className="flex max-w-[720px] flex-col gap-4 md:gap-6">
+      <span className="rise text-[11px] tracking-[0.18em] uppercase md:text-[12px]">{label}</span>
       <h1
         id="hero-title"
-        className={`font-display leading-[0.92] tracking-[-0.025em] ${
-          long ? "text-[44px] md:text-[clamp(48px,5vw,72px)]" : "text-[60px] md:text-[clamp(52px,7.2vw,104px)]"
+        style={{ "--i": 1 } as CSSProperties}
+        className={`rise font-display leading-[0.94] tracking-[-0.025em] text-balance ${
+          dark ? "text-[60px] md:text-[clamp(52px,7.2vw,104px)]" : "text-[52px] md:text-[clamp(60px,6.4vw,112px)]"
         }`}
       >
-        <Headline text={headline} italic={campaign?.italic ?? null} />
+        <Headline text={headline} italic={italic} />
       </h1>
-      <p className="max-w-[520px] text-[15px] leading-[1.55] text-paper/90 md:text-[18px]">{body}</p>
-      <div className="grid grid-cols-2 gap-2 pt-1.5 md:flex md:flex-wrap md:gap-3 md:pt-2">
-        {ctas.slice(0, 2).map((cta) => (
+      <p
+        style={{ "--i": 2 } as CSSProperties}
+        className={`rise max-w-[460px] text-[15px] leading-[1.6] md:text-[17px] ${dark ? "text-paper/90" : "text-ink-2"}`}
+      >
+        {body}
+      </p>
+      <div style={{ "--i": 3 } as CSSProperties} className="rise grid grid-cols-2 gap-2 pt-1.5 md:flex md:flex-wrap md:gap-3 md:pt-2">
+        {ctas.map((cta) => (
           <Link
             key={cta.label}
             href={cta.href}
-            className={`inline-flex h-[52px] items-center justify-center px-3 text-[13px] font-semibold tracking-[0.14em] uppercase no-underline md:min-w-[184px] md:px-7 ${
-              cta.light ? "bg-paper text-ink hover:text-ink" : "border border-paper text-paper hover:text-paper"
+            className={`inline-flex h-[52px] items-center justify-center px-3 text-[13px] font-semibold tracking-[0.14em] uppercase no-underline transition-colors duration-(--duration-quick) md:min-w-[184px] md:px-7 ${
+              dark
+                ? cta.primary
+                  ? "bg-paper text-ink hover:text-ink"
+                  : "border border-paper text-paper hover:text-paper"
+                : cta.primary
+                  ? "bg-ink text-paper hover:bg-indigo hover:text-paper"
+                  : "border border-ink text-ink hover:bg-ink hover:text-paper"
             }`}
           >
             {cta.label}
@@ -106,104 +122,86 @@ export default async function HomePage() {
     <>
       <JsonLd data={organization} />
       <JsonLd data={website} />
-      {/* Hero: the campaign photo full width with the copy over it. Until there's one, a piece's own photo beside the copy. */}
-      {piece ? (
+      {image ? (
         <section
           aria-labelledby="hero-title"
-          className="bg-clay text-paper md:grid md:min-h-[min(808px,calc(100svh-97px))] md:grid-cols-[minmax(0,1fr)_minmax(0,44%)]"
+          className="relative h-[min(808px,calc(100svh-97px))] min-h-[600px] overflow-hidden bg-clay text-paper md:h-[clamp(600px,56vw,860px)] md:max-h-none"
         >
-          <figure className="relative aspect-[4/5] max-h-[62svh] w-full overflow-hidden bg-stone md:order-2 md:aspect-auto md:max-h-none">
-            <Image
-              src={piece.featuredImage!.url}
-              alt={piece.featuredImage!.altText ?? piece.title}
-              fill
-              preload
-              sizes="(min-width: 768px) 44vw, 100vw"
-              className="object-cover"
-              style={{ objectPosition: "50% 22%" }}
-            />
-            <figcaption className="absolute inset-x-3 bottom-3 md:inset-x-6 md:bottom-6">
-              <Link
-                href={`/products/${piece.handle}`}
-                className="flex min-h-11 items-center gap-3 bg-ink/78 px-4 text-[14px] text-paper no-underline backdrop-blur-sm hover:text-paper md:text-[15px]"
-              >
-                <span className="min-w-0 flex-auto truncate">{piece.title}</span>
-                <span className="whitespace-nowrap text-paper/85">{formatMoney(piece.priceRange.minVariantPrice)}</span>
-                <ArrowRight size={16} />
-              </Link>
-            </figcaption>
-          </figure>
-          <div className="on-dark flex flex-col justify-end px-4 pt-8 pb-10 md:page-x md:pt-[120px] md:pb-16">{copy}</div>
+          <Image
+            src={mobileImage!.url}
+            alt={mobileImage!.altText ?? ""}
+            fill
+            preload
+            sizes="100vw"
+            className="object-cover md:hidden"
+            style={{ objectPosition: focus }}
+          />
+          <Image
+            src={image.url}
+            alt={image.altText ?? ""}
+            fill
+            preload
+            sizes="100vw"
+            className="hidden object-cover md:block"
+            style={{ objectPosition: focus }}
+          />
+          {/* Scrims keep the type readable on any photo. */}
+          <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[190px] bg-linear-to-b from-ink/55 via-ink/12 via-70% to-transparent md:h-[260px]" />
+          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[66%] bg-linear-to-t from-ink/66 via-ink/18 via-55% to-transparent md:h-[64%]" />
+          <div aria-hidden="true" className="absolute inset-y-0 left-0 hidden w-[58%] bg-linear-to-r from-ink/30 to-transparent md:block" />
+          <div className="on-dark absolute inset-x-0 bottom-0 flex flex-col gap-8 px-4 pb-6 md:page-x md:flex-row md:flex-wrap md:items-end md:justify-between md:pb-16">
+            {copy(true)}
+            {pictured.length > 0 && (
+              <nav aria-label="In the picture" className="hidden w-[380px] max-w-full flex-col gap-0.5 md:flex">
+                <span className="pb-1.5 text-[11px] tracking-[0.16em] uppercase">In the picture</span>
+                {pictured.slice(0, 3).map((p) => (
+                  <Link
+                    key={p.handle}
+                    href={`/products/${p.handle}`}
+                    className="flex min-h-11 items-center gap-3 border-t border-paper/32 text-[15px] text-paper no-underline hover:text-paper"
+                  >
+                    <span className="min-w-0 flex-auto">{p.title}</span>
+                    <span className="text-[14px] whitespace-nowrap text-paper/85">{formatMoney(p.priceRange.minVariantPrice)}</span>
+                    <ArrowRight size={16} />
+                  </Link>
+                ))}
+              </nav>
+            )}
+          </div>
         </section>
       ) : (
         <section
           aria-labelledby="hero-title"
-          className={`relative overflow-hidden bg-clay text-paper ${image ? "h-[min(808px,calc(100svh-97px))] min-h-[600px] md:h-[clamp(600px,56vw,860px)] md:max-h-none" : ""}`}
+          className="overflow-hidden pt-8 pb-12 md:page-x md:grid md:min-h-[min(860px,calc(100svh-97px))] md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:items-center md:gap-x-[clamp(32px,5vw,96px)] md:py-16"
         >
-          {image && (
-            <>
-              <Image
-                src={mobileImage!.url}
-                alt={mobileImage!.altText ?? ""}
-                fill
-                preload
-                sizes="100vw"
-                className="object-cover md:hidden"
-                style={{ objectPosition: focus }}
-              />
-              <Image
-                src={image.url}
-                alt={image.altText ?? ""}
-                fill
-                preload
-                sizes="100vw"
-                className="hidden object-cover md:block"
-                style={{ objectPosition: focus }}
-              />
-              {/* Scrims keep the type readable on any photo. */}
-              <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[190px] bg-linear-to-b from-ink/55 via-ink/12 via-70% to-transparent md:h-[260px]" />
-              <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[66%] bg-linear-to-t from-ink/66 via-ink/18 via-55% to-transparent md:h-[64%]" />
-              <div aria-hidden="true" className="absolute inset-y-0 left-0 hidden w-[58%] bg-linear-to-r from-ink/30 to-transparent md:block" />
-            </>
-          )}
-          <div
-            className={`on-dark flex flex-col gap-8 px-4 pb-6 md:page-x md:flex-row md:flex-wrap md:items-end md:justify-between md:pb-16 ${
-              image ? "absolute inset-x-0 bottom-0" : "relative pt-14 md:pt-[120px]"
-            }`}
-          >
-            {copy}
-            {pictured.length > 0 &&
-              (image ? (
-                <nav aria-label="In the picture" className="hidden w-[380px] max-w-full flex-col gap-0.5 md:flex">
-                  <span className="pb-1.5 text-[11px] tracking-[0.16em] uppercase">In the picture</span>
-                  {pictured.slice(0, 3).map((p) => (
-                    <Link
-                      key={p.handle}
-                      href={`/products/${p.handle}`}
-                      className="flex min-h-11 items-center gap-3 border-t border-paper/32 text-[15px] text-paper no-underline hover:text-paper"
-                    >
-                      <span className="min-w-0 flex-auto">{p.title}</span>
-                      <span className="text-[14px] whitespace-nowrap text-paper/85">{formatMoney(p.priceRange.minVariantPrice)}</span>
-                      <ArrowRight size={16} />
-                    </Link>
-                  ))}
-                </nav>
-              ) : (
-                <nav aria-label="In the picture" className="grid grid-cols-2 gap-3 md:w-[min(560px,46%)] md:gap-6">
-                  {pictured.slice(0, 2).map((p) => (
-                    <Link key={p.handle} href={`/products/${p.handle}`} className="flex flex-col gap-3 text-[13px] text-paper no-underline hover:text-paper md:text-[14px]">
-                      <span className="relative flex aspect-[3/4] items-center justify-center overflow-hidden bg-stone">
-                        <ProductVisual product={p} image={p.featuredImage} sizes="(min-width: 768px) 280px, 50vw" />
-                      </span>
-                      <span className="flex justify-between gap-3">
-                        <span className="min-w-0">{p.title}</span>
-                        <span className="whitespace-nowrap text-paper/85">{formatMoney(p.priceRange.minVariantPrice)}</span>
-                      </span>
-                    </Link>
-                  ))}
-                </nav>
+          <div className="px-4 pb-8 md:px-0 md:pb-0">{copy(false)}</div>
+          {pictured.length > 0 && (
+            <nav
+              aria-label="In the picture"
+              className="no-scrollbar flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 md:grid md:grid-cols-2 md:items-start md:gap-6 md:overflow-visible md:px-0"
+            >
+              {pictured.slice(0, 2).map((p, i) => (
+                <Link
+                  key={p.handle}
+                  href={`/products/${p.handle}`}
+                  style={{ "--i": 2 + i * 2 } as CSSProperties}
+                  className={`rise group flex w-[76vw] max-w-[360px] flex-none snap-start flex-col gap-3 text-[13px] text-ink no-underline hover:text-ink md:w-auto md:max-w-none md:text-[14px] ${
+                    i === 1 ? "md:mt-[22%]" : ""
+                  }`}
+                >
+                  <span className="relative flex aspect-[3/4] items-center justify-center overflow-hidden bg-stone">
+                    <span className="absolute inset-0 transition-transform duration-(--duration-slow) ease-(--ease-out-soft) group-hover:scale-[1.03]">
+                      <ProductVisual product={p} image={p.featuredImage} priority={i === 0} sizes="(min-width: 768px) 28vw, 76vw" />
+                    </span>
+                  </span>
+                  <span className="flex justify-between gap-3">
+                    <span className="min-w-0">{p.title}</span>
+                    <span className="whitespace-nowrap text-ink-2">{formatMoney(p.priceRange.minVariantPrice)}</span>
+                  </span>
+                </Link>
               ))}
-          </div>
+            </nav>
+          )}
         </section>
       )}
 
@@ -237,7 +235,7 @@ export default async function HomePage() {
             key={d.href}
             href={d.href}
             style={{ backgroundColor: d.tone }}
-            className="relative block h-[448px] overflow-hidden text-paper no-underline hover:text-paper md:aspect-[4/5] md:h-auto md:max-h-[820px]"
+            className="group reveal relative block h-[448px] overflow-hidden text-paper no-underline hover:text-paper md:aspect-[4/5] md:h-auto md:max-h-[820px]"
           >
             {departmentImages[i] && (
               <>
@@ -246,7 +244,7 @@ export default async function HomePage() {
                   alt=""
                   fill
                   sizes="(min-width: 768px) 50vw, 100vw"
-                  className="object-cover"
+                  className="object-cover transition-transform duration-(--duration-slow) ease-(--ease-out-soft) group-hover:scale-[1.03]"
                 />
                 {/* Keeps the white type readable on light photos. */}
                 <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-transparent" />

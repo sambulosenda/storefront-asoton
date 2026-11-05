@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Suspense, type ReactNode } from "react";
+import { Suspense, ViewTransition, type ReactNode } from "react";
 import { Accordion } from "@/components/accordion";
 import { ClothSwatch, drawingFor } from "@/components/cloth";
 import { ArrowRight, StarIcon } from "@/components/icons";
@@ -58,8 +58,17 @@ function summary(text: string, max = 160) {
 
 export default function ProductPage({ params }: PageProps<"/products/[handle]">) {
   return (
-    <Suspense fallback={<ProductSkeleton />}>
-      <Product params={params} />
+    // The page eases up into place as it replaces its loading placeholder.
+    <Suspense
+      fallback={
+        <ViewTransition exit="leave" default="none">
+          <ProductSkeleton />
+        </ViewTransition>
+      }
+    >
+      <ViewTransition enter="arrive" default="none">
+        <Product params={params} />
+      </ViewTransition>
     </Suspense>
   );
 }
@@ -84,6 +93,10 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
 
   const clothKey = (clothByName(product.clothFields?.name) ?? clothOf(product))?.key;
   const cloth = cloths.find((c) => c.key === clothKey);
+  // Most pieces are printed in a cloth's pattern rather than made of the woven or dyed cloth itself,
+  // so they don't take its technique or care. Only a cloth set on the product in Shopify says otherwise.
+  const printed =
+    !!cloth && cloth.key !== "wax" && !clothByName(product.clothFields?.name) && (/\bprint/i.test(product.title) || !clothOf({ title: product.title }));
   const dept = product.collections.some((c) => c.handle === collections.men || c.handle === "men") ? "men" : "women";
   const department = DEPARTMENTS.map((d) => product.collections.find((c) => c.handle === d)).find(Boolean);
   // After the department, one more collection (such as the cloth), but never a stand-in or retired one.
@@ -94,7 +107,7 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
       .slice(0, 1),
   ].map((c) => ({ handle: c.handle, title: collectionName(c.handle, c.title) }));
 
-  const care = product.care ?? cloth?.care;
+  const care = product.care ?? (printed ? null : cloth?.care);
   const panels: ({ title: string; body: ReactNode } | false | null | undefined | "")[] = [
     product.descriptionHtml && {
       title: "Description",
@@ -109,10 +122,15 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
   ];
 
   const about = product.clothFields?.about ?? cloth?.about ?? cloth?.caption;
-  const terms = cloth?.styles ?? (cloth ? [
-    { name: "Technique", note: cloth.technique },
-    { name: "Origin", note: cloth.origin },
-  ] : []);
+  const terms = printed
+    ? [
+        { name: "This piece", note: `Printed in a ${cloth.name.toLowerCase()} pattern. The original cloth is ${cloth.technique.toLowerCase()}.` },
+        { name: "Origin", note: cloth.origin },
+      ]
+    : (cloth?.styles ?? (cloth ? [
+        { name: "Technique", note: cloth.technique },
+        { name: "Origin", note: cloth.origin },
+      ] : []));
 
   // Product details for search results (price, stock and rating stars).
   const url = `${siteUrl}/products/${product.handle}`;
@@ -173,7 +191,7 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
       </nav>
 
       <section className="flex flex-col md:page-x md:flex-row md:flex-wrap md:items-start md:gap-x-16 md:gap-y-12">
-        <ProductGallery images={product.images} title={product.title} drawing={drawingFor(product)} />
+        <ProductGallery images={product.images} title={product.title} handle={product.handle} drawing={drawingFor(product)} />
 
         <div className="flex min-w-0 flex-col gap-6 px-4 pt-5 pb-12 md:sticky md:top-6 md:flex-[5_1_380px] md:gap-8 md:p-0">
           <div className="flex flex-col gap-2 md:gap-3">
@@ -182,7 +200,7 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
                 href={cloth.href}
                 className="self-start text-[11px] tracking-[0.14em] text-ink-2 uppercase no-underline md:text-[12px]"
               >
-                {cloth.name} · {cloth.technique}
+                {printed ? `${cloth.name} print` : `${cloth.name} · ${cloth.technique}`}
               </Link>
             )}
             <h1 className="font-display text-[32px] leading-[1.1] tracking-[-0.01em] md:text-[clamp(36px,3.4vw,48px)] md:leading-[1.05]">
