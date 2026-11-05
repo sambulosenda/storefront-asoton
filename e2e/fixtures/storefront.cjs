@@ -109,30 +109,32 @@ function respond(query, vars) {
   switch (op) {
     case "Markets": return { localization: { country: marketOut(MARKETS[0]), availableCountries: MARKETS.map(marketOut) } };
     case "Collection": {
-      const map = { women: "women", men: "men" };
+      // The departments go by the live store's handles for its full ranges.
+      const map = { "womens-clothing": "women", "mens-all": "men" };
       // The occasion collections: Church exists but is empty, as in the live store.
       const occasions = { "wedding-guest": products.slice(0, 4), couples: products.slice(4, 6), church: [] };
       // One sub-category collection, like the live store's women-dresses.
       occasions["women-dresses"] = products.filter((p) => p._dept === "women" && /dress/i.test(p.title));
-      if (!["women", "men", "new-in", ...Object.keys(occasions)].includes(vars.handle)) return { collection: null };
+      if (!["womens-clothing", "mens-all", "new-in", ...Object.keys(occasions)].includes(vars.handle)) return { collection: null };
       let list = vars.handle === "new-in" ? products.slice(0, 12) : occasions[vars.handle] ?? products.filter((p) => p._dept === map[vars.handle]);
       // Size 6 has no stock (its filter is disabled); size 20 matches nothing once applied.
       if (vars.filters?.some((f) => f.variantOption?.value === "20")) list = [];
       const start = vars.after ? Number(vars.after) : 0;
       const page = list.slice(start, start + vars.first);
-      const titles = { women: "Women", men: "Men", "new-in": "New in", "wedding-guest": "Wedding guest", couples: "Couples", church: "Church", "women-dresses": "Dresses" };
+      const titles = { "womens-clothing": "Women's Clothing", "mens-all": "Mens All Collection | African Print Shirts & Apparel", "new-in": "New in", "wedding-guest": "Wedding guest", couples: "Couples", church: "Church", "women-dresses": "Dresses" };
       // Only Women has a collection image, so the home page shows one tile with a photo and one without.
-      const image = vars.handle === "women" ? { url: "https://cdn.shopify.com/s/files/fixture/women.jpg", altText: null, width: 1200, height: 1500 } : null;
+      const image = vars.handle === "womens-clothing" ? { url: "https://cdn.shopify.com/s/files/fixture/women.jpg", altText: null, width: 1200, height: 1500 } : null;
       return { collection: { id: "c", handle: vars.handle, title: titles[vars.handle], description: "", image, products: { filters: filtersFor(list), pageInfo: { hasNextPage: start + vars.first < list.length, endCursor: String(start + vars.first) }, nodes: page.map(card) } } };
     }
     case "SitemapProducts": return { products: { nodes: products.map((p) => ({ handle: p.handle, updatedAt: "2026-10-01T00:00:00Z", images: { nodes: [] } })), pageInfo: { hasNextPage: false, endCursor: null } } };
-    case "SitemapCollections": return { collections: { nodes: ["new-in", "women", "men"].map((handle) => ({ handle, updatedAt: "2026-10-01T00:00:00Z", images: { nodes: [] } })), pageInfo: { hasNextPage: false, endCursor: null } } };
+    // "church" is empty and "frontpage" is a catch-all, so neither belongs in the sitemap.
+    case "SitemapCollections": return { collections: { nodes: ["new-in", "womens-clothing", "mens-all", "church", "frontpage"].map((handle) => ({ handle, updatedAt: "2026-10-01T00:00:00Z", products: { nodes: handle === "church" ? [] : [{ id: "p" }] } })), pageInfo: { hasNextPage: false, endCursor: null } } };
     case "Products": return { products: { nodes: products.slice(0, vars.first).map(card), pageInfo: { hasNextPage: false, endCursor: null } } };
     case "Product": {
       const p = byHandle(vars.handle);
       if (!p) return { product: null };
       const { _dept, _variants, ...rest } = p;
-      return { product: { ...rest, priceRange: { minVariantPrice: convert(rest.priceRange.minVariantPrice) }, description: "A wrap dress cut from adire.", descriptionHtml: "<p>A wrap dress cut from adire, the indigo resist-dyed cloth of the Yorùbá. Because the pattern is made by hand, no two panels sit exactly alike. Self-tie waist, three-quarter sleeves and a midi hem with room to move.</p>", seo: { title: null, description: null }, variants: { nodes: _variants.map((v) => ({ ...v, price: convert(v.price) })) }, images: { nodes: [] }, collections: { nodes: _dept === "men" ? [{ handle: "men-old-rules", title: "Men (old rules)" }, { handle: "men", title: "Men" }] : [{ handle: "women", title: "Women" }, { handle: "dresses", title: "Dresses" }] }, metafields: [{ namespace: "custom", key: "model", value: "Model is 5ft 9in and wears UK 10.", reference: null }, { namespace: "reviews", key: "rating", value: '{"value":"4.8"}', reference: null }, { namespace: "reviews", key: "rating_count", value: "24", reference: null }] } };
+      return { product: { ...rest, priceRange: { minVariantPrice: convert(rest.priceRange.minVariantPrice) }, description: "A wrap dress cut from adire.", descriptionHtml: "<p>A wrap dress cut from adire, the indigo resist-dyed cloth of the Yorùbá. Because the pattern is made by hand, no two panels sit exactly alike. Self-tie waist, three-quarter sleeves and a midi hem with room to move.</p>", seo: { title: null, description: null }, variants: { nodes: _variants.map((v) => ({ ...v, price: convert(v.price) })) }, images: { nodes: [] }, collections: { nodes: _dept === "men" ? [{ handle: "men-old-rules", title: "Men (old rules)" }, { handle: "mens-all", title: "Mens All Collection | African Print Shirts & Apparel" }] : [{ handle: "womens-clothing", title: "Women's Clothing" }, { handle: "dresses", title: "Dresses" }] }, metafields: [{ namespace: "custom", key: "model", value: "Model is 5ft 9in and wears UK 10.", reference: null }, { namespace: "reviews", key: "rating", value: '{"value":"4.8"}', reference: null }, { namespace: "reviews", key: "rating_count", value: "24", reference: null }] } };
     }
     case "Recommendations": return { productRecommendations: [byHandle("adire-headwrap"), byHandle("kente-stole"), byHandle("aso-oke-fila-cap"), byHandle("adire-drawstring-trousers")].map(card) };
     case "Search": {
@@ -163,8 +165,8 @@ function respond(query, vars) {
       { key: "body", value: "Occasion dresses, matching sets and embroidered suits for weddings, church and celebrations.", reference: null, references: null },
       { key: "desktop_image", value: null, reference: null, references: null },
       { key: "subject_position", value: "Right", reference: null, references: null },
-      { key: "women_link", value: "gid://shopify/Collection/1", reference: { handle: "women" }, references: null },
-      { key: "men_link", value: "gid://shopify/Collection/2", reference: { handle: "men" }, references: null },
+      { key: "women_link", value: "gid://shopify/Collection/1", reference: { handle: "womens-clothing" }, references: null },
+      { key: "men_link", value: "gid://shopify/Collection/2", reference: { handle: "mens-all" }, references: null },
       { key: "in_the_picture", value: "[]", reference: null, references: { nodes: [byHandle("adire-wrap-dress"), byHandle("aso-oke-kaftan")].map(card) } },
     ] }] } };
     case "Occasions": return { metaobjects: { nodes: [["wedding-guest", "Wedding guest", "Statement pieces for weddings and traditional ceremonies."], ["church", "Church", "Polished, modest pieces for Sunday service."], ["couples", "Couples", "Matching outfits for him and her in the same cloth."]].map(([handle, name, intro]) => ({ handle, fields: [{ key: "name", value: name, reference: null }, { key: "intro", value: intro, reference: null }, { key: "collection", value: "gid", reference: { handle } }] })) } };

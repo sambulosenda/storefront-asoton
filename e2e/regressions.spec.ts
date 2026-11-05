@@ -25,6 +25,9 @@ test("search engines get a sitemap, robots rules and product data", async ({ req
   const sitemap = await (await request.get("/sitemap.xml")).text();
   expect(sitemap).toContain("/products/adire-wrap-dress");
   expect(sitemap).toContain("/collections/");
+  expect(sitemap).toContain("/collections/womens-clothing<");
+  expect(sitemap).not.toContain("/collections/church<");
+  expect(sitemap).not.toContain("/collections/frontpage<");
   const robots = await (await request.get("/robots.txt")).text();
   expect(robots).toContain("Sitemap:");
 
