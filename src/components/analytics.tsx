@@ -15,7 +15,7 @@ declare global {
 
 /**
  * Google Analytics 4, only after the shopper says yes to analytics cookies in the cookie banner.
- * Consent Mode starts with everything denied, then follows the banner, so a later "no" stops it too.
+ * Consent Mode starts with everything denied, then follows the banner, and a later "no" switches GA off.
  * GA4's own page-change tracking counts the in-site page views.
  */
 export function Analytics() {
@@ -32,6 +32,9 @@ export function Analytics() {
       ad_user_data: marketing ? "granted" : "denied",
       ad_personalization: marketing ? "granted" : "denied",
     };
+    // Google's own opt-out flag: while it's set, the tag sends nothing at all, not even
+    // the cookieless pings Consent Mode allows, so a later "no" really stops measurement.
+    (window as unknown as Record<string, boolean>)[`ga-disable-${GA_ID}`] = !analytics;
     if (window.gtag) {
       window.gtag("consent", "update", consent);
       return;

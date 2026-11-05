@@ -80,4 +80,11 @@ test("Google Analytics waits for analytics consent", async ({ page }) => {
   await page.getByRole("button", { name: "Accept all" }).last().click();
   await expect.poll(() => requests.length).toBeGreaterThan(0);
   expect(requests[0]).toContain("id=G-TEST000000");
+  const disabled = () => page.evaluate(() => (window as unknown as Record<string, boolean>)["ga-disable-G-TEST000000"]);
+  expect(await disabled()).toBe(false);
+
+  // Turning analytics off afterwards switches GA off on the open page.
+  await page.getByRole("contentinfo").getByRole("button", { name: "Cookie settings" }).first().click();
+  await page.getByRole("button", { name: "Reject all" }).last().click();
+  await expect.poll(disabled).toBe(true);
 });
