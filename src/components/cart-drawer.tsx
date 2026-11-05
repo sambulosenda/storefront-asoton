@@ -111,8 +111,6 @@ function CartLineRow({ line }: { line: CartLine }) {
   const { setQuantity, close } = useStore();
   const { merchandise } = line;
   const href = `/products/${merchandise.product.handle}`;
-  // Stores that don't track stock (or keep selling when out) report 0 available, so only a positive count caps it.
-  const atMax = merchandise.quantityAvailable !== null && merchandise.quantityAvailable > 0 && line.quantity >= merchandise.quantityAvailable;
 
   return (
     <li className="grid grid-cols-[84px_minmax(0,1fr)] gap-4 border-b border-line py-5 md:grid-cols-[96px_minmax(0,1fr)] md:gap-5 md:py-6">
@@ -148,9 +146,8 @@ function CartLineRow({ line }: { line: CartLine }) {
             <button
               type="button"
               aria-label="Increase quantity"
-              disabled={atMax}
               onClick={() => setQuantity(line.id, line.quantity + 1)}
-              className="inline-flex size-11 items-center justify-center disabled:text-muted"
+              className="inline-flex size-11 items-center justify-center"
             >
               <PlusIcon size={16} />
             </button>

@@ -67,7 +67,6 @@ const products = CATALOG.map(([title, colour, type, dept, price, tags], i) => {
           id: `gid://shopify/ProductVariant/${i + 1}${colours.indexOf(c)}${j}${p ? k : ""}`,
           title: [c, s, p].filter(Boolean).join(" / "),
           availableForSale: title !== "Bògòlan Shirt Dress" && !(title === "Adire Wrap Dress" && s === "18"),
-          quantityAvailable: 2,
           price: gbp(price),
           compareAtPrice: null,
           selectedOptions: [{ name: "Colour", value: c }, { name: "Size", value: s }, ...(p ? [{ name: "PURCHASE TYPE", value: p }] : [])],
@@ -92,7 +91,7 @@ const lineCost = (l) => l.quantity * Number(l.v.price.amount);
 const cartOut = () => cart && {
   id: "gid://shopify/Cart/1", checkoutUrl: "https://example.com/checkout", totalQuantity: cart.lines.reduce((n, l) => n + l.quantity, 0),
   cost: { subtotalAmount: money(cart.lines.reduce((n, l) => n + lineCost(l), 0), cart.market) },
-  lines: { nodes: cart.lines.map((l) => ({ id: l.id, quantity: l.quantity, cost: { totalAmount: money(lineCost(l), cart.market) }, merchandise: { id: l.v.id, title: l.v.title, quantityAvailable: 2, selectedOptions: l.v.selectedOptions, image: null, product: { handle: l.p.handle, title: l.p.title, tags: l.p.tags, productType: l.p.productType } } })) },
+  lines: { nodes: cart.lines.map((l) => ({ id: l.id, quantity: l.quantity, cost: { totalAmount: money(lineCost(l), cart.market) }, merchandise: { id: l.v.id, title: l.v.title, selectedOptions: l.v.selectedOptions, image: null, product: { handle: l.p.handle, title: l.p.title, tags: l.p.tags, productType: l.p.productType } } })) },
 };
 function addLines(lines) {
   cart ??= { lines: [], market: MARKETS[0] };

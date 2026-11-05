@@ -1157,7 +1157,6 @@ export const cartFields = /* GraphQL */ `
           ... on ProductVariant {
             id
             title
-            quantityAvailable
             selectedOptions {
               name
               value
