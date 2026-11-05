@@ -103,8 +103,9 @@ export async function stockedCloths(): Promise<StockedCloth[]> {
  */
 export async function homeFeature() {
   const [campaign, newIn] = await Promise.all([getHomeCampaign(), getCollectionOrAll({ handle: collections.newIn, first: 24 })]);
-  const showcase = (p: Product) => Boolean(p.featuredImage) && isAfricanPiece(p);
-  const products = [...newIn.products.filter(showcase), ...newIn.products.filter((p) => !showcase(p))].slice(0, 4);
+  // African pieces with a photo, then other pieces with a photo, then the rest; New in's order within each.
+  const rank = (p: Product) => (p.featuredImage ? (isAfricanPiece(p) ? 0 : 1) : 2);
+  const products = [...newIn.products].sort((x, y) => rank(x) - rank(y)).slice(0, 4);
   return { campaign, collection: newIn.collection, products };
 }
 

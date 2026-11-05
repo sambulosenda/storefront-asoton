@@ -51,8 +51,8 @@ export default async function HomePage() {
   ]);
   const [newest] = products;
 
-  // The home campaign sets the hero. Without one, the newest piece leads it.
-  const lead = campaign ? null : newest;
+  // The home campaign sets the hero. Without one, the first New in piece with a photo leads it.
+  const lead = campaign ? null : (products.find((p) => p.featuredImage) ?? newest);
   const label = campaign?.label ?? "New in";
   const headline = campaign?.headline ?? lead?.title ?? site.brand;
   const body = campaign?.body ?? (collection?.description || site.description);
