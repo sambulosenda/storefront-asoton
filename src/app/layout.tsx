@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Bodoni_Moda, Hanken_Grotesk } from "next/font/google";
+import { Analytics } from "@/components/analytics";
 import { CartDrawer } from "@/components/cart-drawer";
 import { ClothPatterns } from "@/components/cloth";
 import { CookieConsent } from "@/components/cookie-consent";
@@ -88,6 +89,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <MarketSheet />
         </StoreProvider>
         <CookieConsent />
+        <Analytics />
       </body>
     </html>
   );

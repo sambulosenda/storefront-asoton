@@ -6,7 +6,7 @@ import { CloseIcon } from "@/components/icons";
 import { Sheet } from "@/components/sheet";
 import { Switch } from "@/components/switch";
 
-type Prefs = { analytics: boolean; marketing: boolean; preferences: boolean };
+export type Prefs = { analytics: boolean; marketing: boolean; preferences: boolean };
 
 const STORAGE_KEY = "cookie-consent";
 
@@ -33,7 +33,7 @@ declare global {
 
 const CHANGE_EVENT = "cookie-consent-change";
 
-function subscribe(onChange: () => void) {
+export function subscribe(onChange: () => void) {
   window.addEventListener(CHANGE_EVENT, onChange);
   window.addEventListener("storage", onChange);
   return () => {
@@ -42,7 +42,7 @@ function subscribe(onChange: () => void) {
   };
 }
 
-function readStored() {
+export function readStored() {
   try {
     return localStorage.getItem(STORAGE_KEY) ?? "";
   } catch {
@@ -50,7 +50,7 @@ function readStored() {
   }
 }
 
-function parse(raw: string): Prefs | null {
+export function parse(raw: string): Prefs | null {
   try {
     return raw ? (JSON.parse(raw) as Prefs) : null;
   } catch {

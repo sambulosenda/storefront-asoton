@@ -33,6 +33,8 @@ export default defineConfig({
       // Emails to the shop go to the fixture, which accepts them without sending.
       RESEND_API_KEY: "test",
       SHOP_EMAIL: "shop@example.com",
+      // Google Analytics loads only after consent; the test blocks the request itself.
+      NEXT_PUBLIC_GA_MEASUREMENT_ID: "G-TEST000000",
     },
   },
 });

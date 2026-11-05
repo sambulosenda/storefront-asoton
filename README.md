@@ -62,10 +62,14 @@ The pages fall back gracefully when these are missing, but they look like the de
 
 To switch on the emails, make a free Resend account with the shop's inbox, create an API key, and set `RESEND_API_KEY` and `SHOP_EMAIL` (that same inbox). Until a domain is verified in Resend, mail comes from `onboarding@resend.dev` and can only go to that inbox, which is all these forms need. Without these, the forms say plainly that they aren't connected, and nothing pretends to send. A hidden field drops form spam from bots.
 
+## Analytics
+
+Set `NEXT_PUBLIC_GA_MEASUREMENT_ID` to the shop's Google Analytics 4 measurement ID (`G-…`, from GA4 **Admin > Data streams > Web**) and redeploy. GA4 loads only after a shopper accepts analytics cookies in the banner, using Google Consent Mode, and stops collecting if they later turn it off. It counts page views across the site; sales happen on Shopify's checkout, so connect the same GA4 property in Shopify's **Google & YouTube** app to record purchases.
+
 ## Deploying to Vercel
 
 1. Sign in at [vercel.com](https://vercel.com) with GitHub and **Add New > Project**, then import `storefront-asoton`. Vercel finds Next.js on its own; keep the default build settings.
-2. Under **Environment Variables**, add `SHOPIFY_STORE_DOMAIN`, `SHOPIFY_STOREFRONT_ACCESS_TOKEN`, `SHOPIFY_STOREFRONT_API_VERSION`, `SITE_URL` (the address the site will live at, such as `https://africanclothingstore.co.uk`), and `RESEND_API_KEY` and `SHOP_EMAIL` if the forms should send.
+2. Under **Environment Variables**, add `SHOPIFY_STORE_DOMAIN`, `SHOPIFY_STOREFRONT_ACCESS_TOKEN`, `SHOPIFY_STOREFRONT_API_VERSION`, `SITE_URL` (the address the site will live at, such as `https://africanclothingstore.co.uk`), `RESEND_API_KEY` and `SHOP_EMAIL` if the forms should send, and `NEXT_PUBLIC_GA_MEASUREMENT_ID` for Google Analytics.
 3. Click **Deploy**. Every push to `main` deploys again, and every pull request gets its own preview link.
 4. To use your own domain, add it under **Settings > Domains** and follow the DNS steps there, then change `SITE_URL` to it and redeploy (the sitemap and robots file are built with it).
 

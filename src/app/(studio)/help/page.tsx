@@ -111,7 +111,7 @@ export default async function HelpPage() {
             <ul className="flex list-disc flex-col gap-2 pl-5 text-[15px] leading-[1.6] text-ink-2">
               <li>Return ready-to-ship pieces within {site.returnDays} days of delivery.</li>
               <li>Made-to-order pieces are made to your size, so we can only take them back if they’re faulty.</li>
-              <li>Sale pieces can be exchanged or returned for store credit.</li>
+              <li>Sale pieces can be returned for a refund within 14 days of delivery, then exchanged or returned for store credit up to {site.returnDays} days.</li>
               <li>
                 Faulty or wrong item?{" "}
                 <a href="#contact" className="underline-offset-4">
