@@ -88,3 +88,16 @@ test("Google Analytics waits for analytics consent", async ({ page }) => {
   await page.getByRole("button", { name: "Reject all" }).last().click();
   await expect.poll(disabled).toBe(true);
 });
+
+test("the old FAQ address opens the FAQ page, with its questions for search engines", async ({ page }) => {
+  await acceptCookies(page);
+  await page.goto("/pages/faqs");
+  await expect(page).toHaveURL(/\/faqs$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Questions and answers" })).toBeVisible();
+  const question = page.getByText("Can I return something?");
+  await question.click();
+  await expect(page.getByText(/You can return ready-to-ship pieces within 30 days/)).toBeVisible();
+  const data = await page.locator('script[type="application/ld+json"]').allTextContents();
+  const faq = data.map((d) => JSON.parse(d)).find((d) => d["@type"] === "FAQPage");
+  expect(faq.mainEntity.length).toBeGreaterThan(10);
+});
