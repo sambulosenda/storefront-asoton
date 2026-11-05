@@ -59,3 +59,32 @@ test("search engines get a 404 status for a product that doesn't exist", async (
   const res = await request.get("/products/no-such-piece", { headers: { "User-Agent": googlebot } });
   expect(res.status()).toBe(404);
 });
+
+test("Google Analytics waits for analytics consent", async ({ page }) => {
+  const requests: string[] = [];
+  await page.route("https://www.googletagmanager.com/**", (route) => {
+    requests.push(route.request().url());
+    return route.fulfill({ status: 200, contentType: "text/javascript", body: "" });
+  });
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Reject all" })).toBeVisible();
+  await page.waitForTimeout(500);
+  expect(requests).toHaveLength(0);
+
+  await page.getByRole("button", { name: "Reject all" }).click();
+  await page.reload();
+  await page.waitForTimeout(500);
+  expect(requests).toHaveLength(0);
+
+  await page.getByRole("contentinfo").getByRole("button", { name: "Cookie settings" }).first().click();
+  await page.getByRole("button", { name: "Accept all" }).last().click();
+  await expect.poll(() => requests.length).toBeGreaterThan(0);
+  expect(requests[0]).toContain("id=G-TEST000000");
+  const disabled = () => page.evaluate(() => (window as unknown as Record<string, boolean>)["ga-disable-G-TEST000000"]);
+  expect(await disabled()).toBe(false);
+
+  // Turning analytics off afterwards switches GA off on the open page.
+  await page.getByRole("contentinfo").getByRole("button", { name: "Cookie settings" }).first().click();
+  await page.getByRole("button", { name: "Reject all" }).last().click();
+  await expect.poll(disabled).toBe(true);
+});
