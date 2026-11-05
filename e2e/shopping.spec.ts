@@ -65,11 +65,12 @@ test("without campaigns or looks, nothing from the design's sample copy shows", 
   await expect(page.getByRole("heading", { level: 2, name: "Adire Wrap Dress" })).toBeVisible();
 });
 
-test("the department tiles show the collection's photo when it has one", async ({ page }) => {
+test("the department tiles show the campaign photo, never the collection's own image", async ({ page }) => {
   await page.goto("/");
   const tiles = page.getByRole("region", { name: "Shop by department" });
-  await expect(tiles.getByRole("link", { name: /^Women/ }).locator("img")).toHaveAttribute("src", /women\.jpg/);
-  // The fixture's Men collection has no image and its products have no photos, so that tile keeps its colour.
+  // The "women" campaign entry's photo wins over the Women collection's image (women.jpg).
+  await expect(tiles.getByRole("link", { name: /^Women/ }).locator("img")).toHaveAttribute("src", /women-tile\.jpg/);
+  // No "men" entry, and the fixture's Men products have no photos, so that tile keeps its colour.
   await expect(tiles.getByRole("link", { name: /^Men/ }).locator("img")).toHaveCount(0);
 });
 
