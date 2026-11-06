@@ -51,7 +51,7 @@ export function Newsletter() {
               {state.message}
             </p>
           )}
-          <p className="hidden text-[12px] text-ink-2 md:block">
+          <p className="text-[12px] text-ink-2">
             Unsubscribe at any time. Read our{" "}
             <Link href="/policies/privacy-policy" className="text-ink-2">
               Privacy Policy

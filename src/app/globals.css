@@ -12,10 +12,8 @@
   --color-ink-2: #57534c;
   --color-muted: #736e66;
   --color-indigo: #1e2a55;
-  /* Secondary text on the indigo band, tinted from the indigo rather than a grey. */
+  /* Secondary text on an indigo ground, tinted from the indigo rather than a grey. */
   --color-indigo-soft: #c5c9d8;
-  /* The cloth names not being previewed, on the indigo band. */
-  --color-indigo-dim: #9aa1bc;
   /* The home hero's ground, behind the campaign photo. */
   --color-clay: #6e4430;
   --color-error: #8c2f23;

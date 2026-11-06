@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ViewTransition } from "react";
 import { ProductVisual } from "@/components/cloth";
 import { QuickAdd } from "@/components/quick-add";
-import { clothOf } from "@/lib/cloths";
+import { pieceCloth } from "@/lib/cloths";
 import { colourLine, formatMoney, isColourOption } from "@/lib/format";
 import type { Product } from "@/lib/shopify/types";
 
@@ -31,9 +31,8 @@ export function ProductCard({
 }) {
   const badge = badgeFor(product);
   const colour = colourLine(product.options);
-  // The cloth leads the card's second line: the shop names what every piece is cut from. Only the
-  // title and type decide it, as tags carry loose search words that would name the wrong cloth.
-  const cloth = clothOf({ title: product.title, productType: product.productType })?.name ?? null;
+  // The cloth leads the card's second line: the shop names what every piece is cut from.
+  const cloth = pieceCloth(product)?.name ?? null;
   const detail = [cloth, colour].filter(Boolean).join(" · ");
   const price = formatMoney(product.priceRange.minVariantPrice);
 

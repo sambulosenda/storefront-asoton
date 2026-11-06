@@ -171,6 +171,16 @@ export async function collectionImage(handle: string): Promise<Image | null> {
   return page.products.find((p) => p.featuredImage && isAfricanPiece(p))?.featuredImage ?? firstPhoto(page.products);
 }
 
+/**
+ * A close-up of a cloth for the home hero: the photo of a Fabric & lace piece of that cloth, so the
+ * swatch beside a garment is the real cloth it is cut from. Null when the shop sells none of it.
+ */
+export async function clothSwatch(key: Cloth["key"]): Promise<{ image: Image; handle: string } | null> {
+  const page = await getCollection({ handle: collections.fabric, first: 48 });
+  const piece = page?.products.find((p) => p.featuredImage && clothOf({ title: p.title, productType: p.productType })?.key === key);
+  return piece?.featuredImage ? { image: piece.featuredImage, handle: piece.handle } : null;
+}
+
 /** The free UK delivery amount: the shop metafield, else the "delivery_rules" entry, else the placeholder. */
 export async function deliveryThreshold() {
   const [metafield, rules] = await Promise.all([getFreeDeliveryThreshold(), getDeliveryRules()]);

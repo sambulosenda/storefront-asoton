@@ -2,19 +2,19 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense, type CSSProperties } from "react";
-import { ClothBand } from "@/components/cloth-band";
 import { ProductVisual } from "@/components/cloth";
 import { ArrowRight } from "@/components/icons";
 import { JsonLd } from "@/components/json-ld";
 import { Newsletter } from "@/components/newsletter";
 import { ProductGrid, ProductRail } from "@/components/product-card";
 import { GridSkeleton } from "@/components/skeletons";
-import { collectionImage, deliveryThreshold, deliveryTimes, departmentImage, homeFeature, isAfricanPiece, stockedCloths, stockedOccasions } from "@/lib/catalog";
-import { clothOf } from "@/lib/cloths";
+import { clothSwatch, collectionImage, deliveryThreshold, deliveryTimes, departmentImage, homeFeature, isAfricanPiece, stockedOccasions } from "@/lib/catalog";
+import { clothOf, pieceCloth } from "@/lib/cloths";
 import { formatMoney } from "@/lib/format";
 import { getCountry } from "@/lib/market";
 import { getCollectionOrAll } from "@/lib/shopify";
 import { collectionPath, collections, nav, site, siteUrl } from "@/lib/site";
+import type { Product } from "@/lib/shopify/types";
 
 // The four ways into the shop. Fabric & lace sits beside the clothes: the cloth is what the shop knows.
 const TILES = [
@@ -46,16 +46,15 @@ const website = { "@context": "https://schema.org", "@type": "WebSite", name: si
 const BRAND_LINE = {
   text: "Pride & beauty of African fashion",
   italic: "African fashion",
-  body: `${site.tagline.replace(/\.$/, "")}. Ready to ship, or made to order in your size.`,
+  body: site.tagline,
 };
 
 // Where the copy sits depends on where the people are in the campaign photo.
 const FOCUS: Record<string, string> = { left: "35% 50%", centre: "50% 50%", center: "50% 50%", right: "65% 50%" };
 
 export default async function HomePage() {
-  const [{ campaign, products }, cloths, tileImages, occasions, times, threshold] = await Promise.all([
+  const [{ campaign, products }, tileImages, occasions, times, threshold] = await Promise.all([
     homeFeature(),
-    stockedCloths(),
     Promise.all(TILES.map((t) => (t.key === "fabric" ? collectionImage(collections.fabric) : departmentImage(t.key)))),
     stockedOccasions(),
     deliveryTimes(),
@@ -76,8 +75,13 @@ export default async function HomePage() {
   const pictured = [...(campaign?.products.length ? campaign.products : products)].sort(
     (a, b) => Number(!a.featuredImage) - Number(!b.featuredImage),
   );
+  // The editorial hero pins a swatch of its piece's cloth beside it: the real cloth, from Fabric &
+  // lace. Not for a piece printed in a cloth's pattern, which a swatch of the woven cloth would misname.
+  const heroPiece = image ? null : (pictured[0] ?? null);
+  const heroClothKey = heroPiece && pieceCloth(heroPiece)?.origin ? clothOf({ title: heroPiece.title, productType: heroPiece.productType })?.key : undefined;
+  const swatch = heroClothKey ? await clothSwatch(heroClothKey) : null;
   // The pieces the hero shows, so New in doesn't show them again right below.
-  const inHero = pictured.slice(0, image ? 3 : 2).map((p) => p.handle);
+  const inHero = pictured.slice(0, image ? 3 : 1).map((p) => p.handle);
 
   const ctas = [
     { label: "Shop women", href: campaign?.women ? `/collections/${campaign.women}` : collectionPath("women"), primary: true },
@@ -93,14 +97,14 @@ export default async function HomePage() {
         id="hero-title"
         style={{ "--i": 1 } as CSSProperties}
         className={`rise font-display leading-[0.94] tracking-[-0.025em] text-balance ${
-          dark ? "text-[60px] md:text-[clamp(52px,7.2vw,104px)]" : "text-[52px] md:text-[clamp(60px,6.4vw,112px)]"
+          dark ? "text-[60px] md:text-[clamp(52px,7.2vw,104px)]" : "text-[52px] md:text-[clamp(56px,6vw,96px)]"
         }`}
       >
         <Headline text={headline} italic={italic} />
       </h1>
       <p
         style={{ "--i": 2 } as CSSProperties}
-        className={`rise max-w-[460px] text-[15px] leading-[1.6] md:text-[17px] ${dark ? "text-paper/90" : "text-ink-2"}`}
+        className={`rise max-w-[460px] text-[15px] leading-[1.6] text-pretty md:text-[17px] ${dark ? "text-paper/90" : "text-ink-2"}`}
       >
         {body}
       </p>
@@ -123,13 +127,36 @@ export default async function HomePage() {
           </Link>
         ))}
       </div>
-      <p style={{ "--i": 4 } as CSSProperties} className={`rise text-[13px] md:text-[14px] ${dark ? "text-paper/90" : "text-ink-2"}`}>
-        Free UK delivery over {threshold.label} ·{" "}
-        <Link href="/help#delivery" className={dark ? "text-paper underline-offset-4 hover:text-paper" : "text-ink-2 underline-offset-4"}>
+      {/* The two ways to buy and how long each takes, where people decide, not at the foot of the page. */}
+      <div
+        style={{ "--i": 4 } as CSSProperties}
+        className={`rise flex flex-col gap-1.5 border-t pt-4 text-[14px] ${dark ? "border-paper/32 text-paper/90" : "border-line text-ink-2"}`}
+      >
+        <p>
+          <span className={dark ? "text-paper" : "text-ink"}>Ready to ship</span>: leaves us within {times.dispatch}.
+        </p>
+        <p>
+          <span className={dark ? "text-paper" : "text-ink"}>Made to order</span>: in your size, in 14 days.
+        </p>
+        <Link
+          href="/help#delivery"
+          className={`self-start underline-offset-4 ${dark ? "text-paper hover:text-paper" : "text-ink-2"}`}
+        >
           Delivery and returns
         </Link>
-      </p>
+      </div>
     </div>
+  );
+
+  // The four main ways in on phones; the rest are in the menu.
+  const chips = (spacing: string) => (
+    <nav aria-label="Shop categories" className={`grid grid-cols-4 gap-2 px-4 md:hidden ${spacing}`}>
+      {[nav[1], nav[2], nav[3], nav[0]].map((item) => (
+        <Link key={item.href} href={item.href} className="inline-flex h-11 items-center justify-center border border-line px-2 text-[14px] whitespace-nowrap no-underline">
+          {item.label}
+        </Link>
+      ))}
+    </nav>
   );
 
   return (
@@ -184,57 +211,19 @@ export default async function HomePage() {
           </div>
         </section>
       ) : (
+        // Until a campaign photo exists: the line beside one piece, large, on the sand ground.
         <section
           aria-labelledby="hero-title"
-          className="overflow-hidden pt-8 pb-12 md:page-x md:grid md:min-h-[min(860px,calc(100svh-97px))] md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:items-center md:gap-x-[clamp(32px,5vw,96px)] md:py-16"
+          className="overflow-hidden pt-6 pb-10 md:page-x md:grid md:min-h-[min(820px,calc(100svh-97px))] md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-center md:gap-x-[clamp(32px,5vw,96px)] md:py-12"
         >
-          <div className="px-4 pb-8 md:px-0 md:pb-0">{copy(false)}</div>
-          {pictured.length > 0 && (
-            <nav
-              aria-label="In the picture"
-              className="px-4 md:grid md:grid-cols-2 md:items-start md:gap-6 md:px-0"
-            >
-              {pictured.slice(0, 2).map((p, i) => (
-                <Link
-                  key={p.handle}
-                  href={`/products/${p.handle}`}
-                  style={{ "--i": 2 + i * 2 } as CSSProperties}
-                  className={`rise group flex-col gap-3 text-[13px] text-ink no-underline hover:text-ink md:text-[14px] ${
-                    i === 1 ? "hidden md:mt-[22%] md:flex" : "flex"
-                  }`}
-                >
-                  <span className="relative flex aspect-[3/4] items-center justify-center overflow-hidden bg-stone">
-                    <span className="absolute inset-0 transition-transform duration-(--duration-slow) ease-(--ease-out-soft) group-hover:scale-[1.03]">
-                      <ProductVisual product={p} image={p.featuredImage} priority sizes="(min-width: 768px) 28vw, 100vw" />
-                    </span>
-                  </span>
-                  <span className="flex justify-between gap-3">
-                    <span className="flex min-w-0 flex-col gap-0.5">
-                      {p.title}
-                      {/* The cloth, where it comes from: the shop's edge, in the first screen. */}
-                      {heroCloth(p) && <span className="text-ink-2">{heroCloth(p)}</span>}
-                    </span>
-                    <span className="whitespace-nowrap text-ink-2">{formatMoney(p.priceRange.minVariantPrice)}</span>
-                  </span>
-                </Link>
-              ))}
-            </nav>
-          )}
+          <div className="px-4 pb-6 md:px-0 md:pb-0">{copy(false)}</div>
+          {chips("pb-8")}
+          {heroPiece && <HeroPiece product={heroPiece} swatch={swatch} />}
         </section>
       )}
 
-      {/* Category chips (phones) */}
-      <nav aria-label="Shop categories" className="grid grid-cols-4 gap-2 px-4 pt-6 pb-10 md:hidden">
-        {/* The four main ways in; the rest are in the menu. */}
-        {[nav[1], nav[2], nav[3], nav[0]].map((item) => (
-          <Link key={item.href} href={item.href} className="inline-flex h-11 items-center justify-center border border-line px-2 text-[14px] whitespace-nowrap no-underline">
-            {item.label}
-          </Link>
-        ))}
-      </nav>
-
-      {/* The cloth comes first: it's what the shop knows and others don't. */}
-      <ClothBand cloths={cloths} />
+      {/* Under a campaign photo the chips follow the hero; the editorial hero holds them under its copy. */}
+      {image && chips("pt-6 pb-10")}
 
       {/* New in: prices follow the shopper's country, so this part renders per request. */}
       <Suspense
@@ -310,9 +299,12 @@ export default async function HomePage() {
 
       {/* Shopping with us */}
       <section
-        aria-label="Shopping with us"
+        aria-labelledby="shopping-with-us"
         className="flex flex-col gap-7 px-4 py-14 md:page-x md:grid md:grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] md:gap-x-12 md:gap-y-10 md:py-[120px]"
       >
+        <h2 id="shopping-with-us" className="sr-only">
+          Shopping with us
+        </h2>
         {[
           {
             title: "Size guide",
@@ -388,10 +380,64 @@ async function NewIn({ exclude }: { exclude: string[] }) {
   );
 }
 
-/** A piece's cloth and where it comes from, such as "Adire · Nigeria", when its name or type says. */
-function heroCloth(p: { title: string; productType: string }) {
-  const cloth = clothOf({ title: p.title, productType: p.productType });
-  return cloth ? `${cloth.name} · ${cloth.country}` : null;
+/**
+ * The editorial hero's one piece, large on the sand ground, with a swatch of its cloth pinned to the
+ * corner of the photo: the garment and the cloth it is cut from, side by side.
+ */
+function HeroPiece({ product: p, swatch }: { product: Product; swatch: { image: { url: string }; handle: string } | null }) {
+  const cloth = pieceCloth(p);
+  return (
+    <nav aria-label="In the picture" className="px-4 md:px-0">
+      <div className="md:mx-auto md:max-w-[min(100%,calc((100svh-260px)*0.8))]">
+        <div className="relative">
+          <Link
+            href={`/products/${p.handle}`}
+            style={{ "--i": 2 } as CSSProperties}
+            className="rise group relative isolate flex aspect-[4/5] items-center justify-center overflow-hidden bg-stone no-underline"
+          >
+            {/* The blend stays inside the frame: a photo shot on white takes on the sand ground. */}
+            <span className="absolute inset-0 mix-blend-multiply transition-transform duration-(--duration-slow) ease-(--ease-out-soft) group-hover:scale-[1.03]">
+              <ProductVisual product={p} image={p.featuredImage} priority sizes="(min-width: 768px) 45vw, 100vw" />
+            </span>
+          </Link>
+          {swatch && cloth && (
+            <Link
+              href={`/products/${swatch.handle}`}
+              style={{ "--i": 4 } as CSSProperties}
+              className="rise group absolute bottom-3 left-3 flex w-[38%] flex-col bg-paper p-1.5 text-ink no-underline hover:text-ink md:bottom-[8%] md:-left-[14%] md:w-[42%] md:p-2"
+            >
+              {/* Cropped close so the weave or print fills the swatch, not the folded bolt. */}
+              <span className="relative block aspect-square overflow-hidden bg-stone">
+                <Image
+                  src={swatch.image.url}
+                  alt=""
+                  fill
+                  sizes="(min-width: 768px) 18vw, 38vw"
+                  className="scale-[1.9] object-cover transition-transform duration-(--duration-slow) ease-(--ease-out-soft) group-hover:scale-[2.05]"
+                />
+              </span>
+              <span className="flex flex-col gap-0.5 px-1 pt-2 pb-1 md:px-1.5 md:pt-3 md:pb-1.5">
+                <span className="font-display text-[18px] leading-none md:text-[26px]">{cloth.name}</span>
+                <span className="text-[11px] text-ink-2 md:text-[13px]">{cloth.origin}</span>
+              </span>
+            </Link>
+          )}
+        </div>
+        <div className="flex items-baseline justify-between gap-4 pt-3 text-[14px] md:text-[15px]">
+          <span className="flex min-w-0 flex-col gap-0.5">
+            <span className="font-medium">{p.title}</span>
+            {/* With a swatch the cloth is named on it; without one, here. */}
+            {!(swatch && cloth) && cloth && <span className="text-ink-2">{[cloth.name, cloth.origin].filter(Boolean).join(" · ")}</span>}
+          </span>
+          <Link href={`/products/${p.handle}`} className="inline-flex items-center gap-2 whitespace-nowrap no-underline">
+            {formatMoney(p.priceRange.minVariantPrice)}
+            <span className="underline underline-offset-4">Shop this piece</span>
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+      </div>
+    </nav>
+  );
 }
 
 /** The headline with its italic words (the campaign's italic_word) set in italic, on a line of their own. */

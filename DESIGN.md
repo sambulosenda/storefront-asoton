@@ -14,7 +14,6 @@ colors:
   muted: "#736e66"
   adire-indigo: "#1e2a55"
   indigo-soft: "#c5c9d8"
-  indigo-dim: "#9aa1bc"
   laterite-clay: "#6e4430"
   error-red: "#8c2f23"
   night-text: "#b5b0a6"
@@ -117,9 +116,9 @@ components:
 
 The cloth is the loudest thing on every page. Ankara, kente, adire and embroidered cloth bring the pattern and the saturated colour; the interface around them is raw cotton, sand and charcoal ink, and stays out of the way. The look is a high-end tailor's shop: a quiet room, good light, the garments hung where you can see them.
 
-The type holds that balance. Bodoni Moda, a high-contrast serif with a true italic, sets headlines with editorial confidence. Hanken Grotesk does the work: names, prices, delivery facts, labels. Corners are square, surfaces are flat, and lines are hairline seams. A single cool accent, Adire Indigo, named after the Yoruba indigo-dyed cloth, marks interaction and one band of the home page. Motion is slow and soft, like cloth settling, and switches off for anyone who asks for less motion.
+The type holds that balance. Bodoni Moda, a high-contrast serif with a true italic, sets headlines with editorial confidence. Hanken Grotesk does the work: names, prices, delivery facts, labels. Corners are square, surfaces are flat, and lines are hairline seams. A single cool accent, Adire Indigo, named after the Yoruba indigo-dyed cloth, marks interaction and, at most, one ground per page. Motion is slow and soft, like cloth settling, and switches off for anyone who asks for less motion.
 
-The density is generous on editorial surfaces (hero, cloth band, story) and tight and orderly where people shop (grids, filters, product form).
+The density is generous on editorial surfaces (hero, story, lookbook) and tight and orderly where people shop (grids, filters, product form).
 
 **Key Characteristics:**
 - Neutral, warm ground; photography and cloth supply all pattern and strong colour.
@@ -134,9 +133,9 @@ The density is generous on editorial surfaces (hero, cloth band, story) and tigh
 A warm, undyed-cotton neutral palette with one indigo accent and one earth tone, so the clothing is never out-shouted.
 
 ### Primary
-- **Adire Indigo** (`adire-indigo`): the only interactive accent. Link hover, the focus ring, the hover state of the hero's filled button, and the full-bleed Shop by cloth band behind cream text.
+- **Adire Indigo** (`adire-indigo`): the only interactive accent. Link hover, the focus ring, the hover state of the hero's filled button, and the ground behind a product page's cloth story.
 
-- **Indigo Soft** (`indigo-soft`) and **Indigo Dim** (`indigo-dim`): secondary text and unpreviewed cloth names on the indigo band, tinted from the indigo rather than grey.
+- **Indigo Soft** (`indigo-soft`): secondary text on an indigo ground, tinted from the indigo rather than grey.
 
 ### Secondary
 - **Laterite Clay** (`laterite-clay`): the home hero's ground, seen behind and around the campaign photo before it loads and at its edges. Used nowhere else.
@@ -166,7 +165,7 @@ A warm, undyed-cotton neutral palette with one indigo accent and one earth tone,
 **Character:** A fashion-house Didone against a clean, slightly warm grotesque. The serif is the editorial voice; the grotesque speaks plainly about price, size and delivery.
 
 ### Hierarchy
-- **Display** (400, `clamp(56px, 9vw, 136px)`, 0.9, −0.02em): the home hero headline. Lookbook and story openers use the same treatment at `clamp(52px, 7vw, 112px)` and `clamp(44px, 5vw, 72px)`; collection heroes at `clamp(48px, 6vw, 88px)`.
+- **Display** (400, `clamp(56px, 9vw, 136px)`, 0.9, −0.02em): the largest opener. The home hero sets its headline at 52px on phones and `clamp(56px, 6vw, 96px)` beside its photos (`clamp(52px, 7.2vw, 104px)` over a campaign photo), so a two-clause line holds to three lines. Lookbook and story openers use the same treatment at `clamp(52px, 7vw, 112px)` and `clamp(44px, 5vw, 72px)`; collection heroes at `clamp(48px, 6vw, 88px)`.
 - **Headline** (400, 32px on phones, `clamp(36px, 3.4vw, 48px)` from md, 1.0): section headings such as product grids and shop-by lists.
 - **Title** (400, 26 to 30px rising to 28 to 36px at md, 1.1 to 1.2): editorial block headings, prose `h2` (28px), the search field (22px, 32px at md).
 - **Body** (400, 16px, 1.5; prose at 1.7 and max 720px): running text, policies, story.
@@ -180,7 +179,7 @@ A warm, undyed-cotton neutral palette with one indigo accent and one earth tone,
 
 ## Layout
 
-A centred page container (max 1440px) with a fluid side gutter of `clamp(16px, 4vw, 48px)`. Editorial bands (hero, Shop by cloth, footer) run full-bleed; their content sits back inside the container.
+A centred page container (max 1440px) with a fluid side gutter of `clamp(16px, 4vw, 48px)`. Editorial bands (a campaign hero, the footer) run full-bleed; their content sits back inside the container.
 
 Product grids are two columns on phones (12px column gap, 32px row gap) and widen to more columns from md (24px column gap, 40 to 48px row gap). On phones, rails of 240px cards scroll sideways with snap points instead of wrapping.
 
@@ -237,8 +236,8 @@ Tailored and confident: tall, square, uppercase.
 - **Links:** underlined by default; hover turns Adire Indigo. Components that shouldn't look like links say so.
 - **Footer:** Charcoal Ink ground, Night Text links, Night Line dividers.
 
-### Shop by Cloth band (signature)
-A full-bleed Adire Indigo band with Raw Cotton text listing each cloth the shop has pieces in, previewed with one of its pieces. The page's one indigo ground.
+### Hero cloth swatch (signature)
+Until a campaign photo leads the home page, the hero shows one piece large on Sand Stone (a photo shot on white is multiplied into the sand) with a swatch of its cloth pinned to the photo's corner: a Raw Cotton frame around a tight crop of a Fabric & lace photo of that cloth, the cloth's name in Bodoni beneath and its origin in small sans. It overlaps the photo's left edge on desktop and sits inside the corner on phones. A piece printed in a cloth's pattern gets no swatch.
 
 ### Drawers and dialogs
 Raw Cotton surfaces with no radius. Right-side drawers are full width on phones and 480px from md, sliding in over 420ms; top sheets slide down; centred dialogs settle in. The backdrop fades in.
