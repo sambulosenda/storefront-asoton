@@ -77,7 +77,12 @@ const products = CATALOG.map(([title, colour, type, dept, price, tags], i) => {
 });
 const convert = (m) => ({ amount: (Number(m.amount) * market.rate).toFixed(1), currencyCode: market.currency.isoCode });
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const card = ({ _dept, _variants, ...p }) => ({ ...p, priceRange: { minVariantPrice: convert(p.priceRange.minVariantPrice) } });
+const card = ({ _dept, _variants, ...p }) => ({
+  ...p,
+  priceRange: { minVariantPrice: convert(p.priceRange.minVariantPrice) },
+  cardImages: { nodes: [] },
+  cardVariants: { nodes: _variants.map(({ id, availableForSale, price, selectedOptions }) => ({ id, availableForSale, price, selectedOptions })) },
+});
 const byHandle = (h) => products.find((p) => p.handle === h);
 const filtersFor = (list) => [
   { id: "filter.p.m.custom.cloth", label: "Cloth", type: "LIST", values: ["Adire", "Kente", "Bògòlanfini", "Aso-oke", "Wax print"].map((n, i) => ({ id: `c${i}`, label: n, count: list.filter((p) => p.tags.some((t) => n.toLowerCase().startsWith(t.slice(0, 3)))).length, input: JSON.stringify({ productMetafield: { namespace: "custom", key: "cloth", value: n } }), swatch: null })) },

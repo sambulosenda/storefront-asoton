@@ -37,6 +37,8 @@ test("no WCAG 2.1 AA problems in the open overlays", async ({ page, isMobile }) 
     await open();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
+    // Check the overlay once it has finished sliding or fading in.
+    await dialog.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished)));
     const { violations } = await new AxeBuilder({ page }).include("dialog[open]").withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
     expect(violations.map((v) => `${v.id}: ${v.help} (${v.nodes.map((n) => n.target.join(" ")).join(", ")})`)).toEqual([]);
     await page.keyboard.press("Escape");

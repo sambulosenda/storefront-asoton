@@ -239,3 +239,17 @@ test("a department's heading is its plain name, not the store's SEO title", asyn
   await page.goto("/collections/mens-all");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Men");
 });
+
+test("on a computer, a size can go in the bag straight from a card", async ({ page, isMobile }) => {
+  test.skip(isMobile, "Quick add shows on hover, with a mouse.");
+  await page.goto("/collections/womens-clothing");
+  const card = page.locator(".group\\/card").filter({ has: page.getByRole("link", { name: /Wax-print Two-piece Set/ }) });
+  await card.hover();
+  const sizes = card.getByRole("group", { name: "Add Wax-print Two-piece Set to your bag" });
+  await expect(sizes).toBeVisible();
+  await sizes.getByRole("button", { name: "Add size UK 10" }).click();
+  await expect(page.getByRole("dialog").getByText("Wax-print Two-piece Set")).toBeVisible();
+  // A piece that comes in more than one colour asks on its own page instead.
+  const wrap = page.locator(".group\\/card").filter({ has: page.getByRole("link", { name: /Adire Wrap Dress/ }) });
+  await expect(wrap.getByRole("group")).toHaveCount(0);
+});

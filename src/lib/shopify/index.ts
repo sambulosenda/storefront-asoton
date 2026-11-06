@@ -86,6 +86,24 @@ const productCardFields = /* GraphQL */ `
     featuredImage {
       ...ImageFields
     }
+    cardImages: images(first: 2) {
+      nodes {
+        ...ImageFields
+      }
+    }
+    cardVariants: variants(first: 40) {
+      nodes {
+        id
+        availableForSale
+        price {
+          amount
+        }
+        selectedOptions {
+          name
+          value
+        }
+      }
+    }
     priceRange {
       minVariantPrice {
         amount

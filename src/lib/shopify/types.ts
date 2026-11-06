@@ -12,7 +12,13 @@ export type Product = {
   featuredImage: Image | null;
   priceRange: { minVariantPrice: Money };
   options: { name: string; optionValues: { name: string; swatch?: { color: string | null } | null }[] }[];
+  /** The first two photos, for the card's second look on hover. */
+  cardImages?: { nodes: Image[] };
+  /** Sizes and stock, for adding to the bag straight from a card. */
+  cardVariants?: { nodes: CardVariant[] };
 };
+
+export type CardVariant = { id: string; availableForSale: boolean; price: { amount: string }; selectedOptions: { name: string; value: string }[] };
 
 export type Variant = {
   id: string;
