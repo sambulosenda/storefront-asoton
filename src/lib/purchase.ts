@@ -82,6 +82,19 @@ export function arrivalDate(kind: PurchaseKind, value: string, plan: DeliveryPla
   return dateSpan(arrive(0), arrive(1));
 }
 
+/**
+ * "Order by 2pm for these dates": only on a working day, before the cutoff set in Shopify, since
+ * that's when the dates shown hold. Null otherwise, or when no cutoff is set.
+ */
+export function cutoffNote(plan: DeliveryPlan, now: Date) {
+  const [h, m = 0] = (plan.cutoff ?? "").split(":").map(Number);
+  if (!Number.isFinite(h)) return null;
+  const working = now.getDay() !== 0 && now.getDay() !== 6 && !plan.holidays.includes(ymd(now));
+  if (!working || now.getHours() * 60 + now.getMinutes() >= h * 60 + m) return null;
+  const time = `${h % 12 || 12}${m ? `:${String(m).padStart(2, "0")}` : ""}${h < 12 ? "am" : "pm"}`;
+  return `Order by ${time} for these dates`;
+}
+
 /** The purchase type picked in a bag line's options: ready to ship, made to order, or neither. */
 export function lineDelivery(options: { name: string; value: string }[]) {
   const option = options.find((o) => isPurchaseOption(o.name));
