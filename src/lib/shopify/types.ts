@@ -51,6 +51,8 @@ export type Collection = {
   handle: string;
   title: string;
   description: string;
+  /** The search title and description set in Shopify, when there are any. */
+  seo?: { title: string | null; description: string | null };
   image: Image | null;
 };
 

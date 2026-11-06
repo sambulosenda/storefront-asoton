@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Suspense, ViewTransition, type ReactNode } from "react";
 import { Accordion } from "@/components/accordion";
 import { ClothSwatch, drawingFor } from "@/components/cloth";
@@ -13,6 +13,8 @@ import { ProductSkeleton } from "@/components/skeletons";
 import { clothLinks, deliveryPlan, deliveryThreshold, deliveryTimes } from "@/lib/catalog";
 import { clothByName, clothOf } from "@/lib/cloths";
 import { getCountry } from "@/lib/market";
+import { movedProducts } from "@/lib/old-links";
+import { searchDescription, searchTitle, snippet } from "@/lib/seo";
 import { getProduct, getRecommendations } from "@/lib/shopify";
 import { collectionName, collections, site, siteUrl, unlistedCollections } from "@/lib/site";
 
@@ -20,12 +22,14 @@ export async function generateMetadata({ params }: PageProps<"/products/[handle]
   const [{ handle }, country] = await Promise.all([params, getCountry()]);
   // Same market as the page, so a piece sold only outside the default market isn't a 404.
   const product = await getProduct(handle, country);
-  // Throwing here, before the page streams, sends search engines a real 404 status.
-  if (!product) notFound();
-  const title = product.seo.title ?? product.title;
+  // Throwing here, before the page streams, sends search engines a real 404 status
+  // (or, for a piece the old site had moved, a permanent redirect to its replacement).
+  if (!product) gone(handle);
+  // The old theme's search fields carry the shop's address and stray HTML, so they are tidied first.
+  const title = searchTitle(product.seo.title) ?? product.title;
   const description =
-    product.seo.description ||
-    summary(product.description) ||
+    searchDescription(product.seo.description) ||
+    snippet(product.description) ||
     `${product.title}, contemporary African clothing from ${site.brand}. UK delivery and ${site.returnDays}-day returns.`;
   // Setting openGraph replaces the layout's, so the shared fields are repeated here.
   // Without a product photo the site's share image is used.
@@ -38,6 +42,13 @@ export async function generateMetadata({ params }: PageProps<"/products/[handle]
   };
 }
 
+/** A missing product: the one that replaced it, as the old Shopify site's redirects say, or a 404. */
+function gone(handle: string): never {
+  const moved = movedProducts[handle];
+  if (moved) permanentRedirect(`/products/${moved}`);
+  notFound();
+}
+
 /** A GTIN-8, 12, 13 or 14 barcode with a correct check digit. */
 function isGtin(code: string) {
   if (!/^(\d{8}|\d{12,14})$/.test(code)) return false;
@@ -46,14 +57,6 @@ function isGtin(code: string) {
   // From the right, digits are weighted 3, 1, 3, 1…
   const sum = digits.reverse().reduce((total, d, i) => total + d * (i % 2 ? 1 : 3), 0);
   return (10 - (sum % 10)) % 10 === check;
-}
-
-/** A description shortened to fit a search result snippet, cut at a word. */
-function summary(text: string, max = 160) {
-  const clean = text.replace(/\s+/g, " ").trim();
-  if (clean.length <= max) return clean;
-  const cut = clean.slice(0, max - 1);
-  return `${cut.slice(0, cut.lastIndexOf(" ")).replace(/[,;:.\s]+$/, "")}…`;
 }
 
 export default function ProductPage({ params }: PageProps<"/products/[handle]">) {
@@ -81,7 +84,7 @@ const hiddenCrumb = (handle: string) => HIDDEN_CRUMB.test(handle) || unlistedCol
 async function Product({ params }: { params: Promise<{ handle: string }> }) {
   const [{ handle }, country] = await Promise.all([params, getCountry()]);
   const product = await getProduct(handle, country);
-  if (!product) notFound();
+  if (!product) gone(handle);
 
   const [recommendations, cloths, threshold, times, plan] = await Promise.all([
     getRecommendations(product.id, country),
@@ -134,6 +137,25 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
 
   // Product details for search results (price, stock and rating stars).
   const url = `${siteUrl}/products/${product.handle}`;
+  const freeOver = threshold.amount ?? Number(site.freeDeliveryThreshold.replace(/[^\d.]/g, ""));
+  // UK delivery and returns, so results can show "Free delivery" and the returns window.
+  const shipping = (price: number) => ({
+    "@type": "OfferShippingDetails",
+    shippingDestination: { "@type": "DefinedRegion", addressCountry: "GB" },
+    shippingRate: { "@type": "MonetaryAmount", value: freeOver && price >= freeOver ? 0 : Number(site.ukStandardRate), currency: "GBP" },
+    deliveryTime: {
+      "@type": "ShippingDeliveryTime",
+      handlingTime: { "@type": "QuantitativeValue", minValue: plan.dispatch[0], maxValue: plan.dispatch[1], unitCode: "DAY" },
+      transitTime: { "@type": "QuantitativeValue", minValue: plan.uk[0], maxValue: plan.uk[1], unitCode: "DAY" },
+    },
+  });
+  const returns = {
+    "@type": "MerchantReturnPolicy",
+    applicableCountry: "GB",
+    returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+    merchantReturnDays: Number(site.returnDays),
+    returnMethod: "https://schema.org/ReturnByMail",
+  };
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -154,6 +176,8 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
       itemCondition: "https://schema.org/NewCondition",
       seller: { "@type": "Organization", name: site.brand },
       url,
+      // Rates and returns here are the UK's, so they're only given with pound prices.
+      ...(v.price.currencyCode === "GBP" ? { shippingDetails: shipping(Number(v.price.amount)), hasMerchantReturnPolicy: returns } : {}),
     })),
     ...(product.rating && product.ratingCount
       ? { aggregateRating: { "@type": "AggregateRating", ratingValue: product.rating, reviewCount: product.ratingCount } }

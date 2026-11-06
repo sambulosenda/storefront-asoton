@@ -5,11 +5,13 @@ import { CollectionBrowser } from "@/components/collection-browser";
 import { Editorial } from "@/components/editorial";
 import { breadcrumbs, JsonLd } from "@/components/json-ld";
 import { CollectionSkeleton } from "@/components/skeletons";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
+import { movedCollections } from "@/lib/old-links";
 import { departmentMenu, parentDepartment } from "@/lib/catalog";
 import { parseFilters, parseSort } from "@/lib/filters";
 import { getCountry } from "@/lib/market";
 import { getCampaign, getCollection, getCollectionOrAll, getMenu } from "@/lib/shopify";
+import { searchDescription, searchTitle, snippet } from "@/lib/seo";
 import { collectionName, collectionPath, collections, departmentNames, departmentOf, departments, site, siteUrl } from "@/lib/site";
 
 const titleFromHandle = (handle: string) =>
@@ -22,10 +24,24 @@ export async function generateMetadata({ params }: PageProps<"/collections/[hand
   const { handle } = await params;
   const page = await getCollection({ handle, first: 1 });
   const collection = page?.collection;
-  // Throwing here, before the page streams, sends search engines a real 404 status.
-  if (!collection && !standIns[handle]) notFound();
-  const title = collection ? (departmentOf(handle) ? collectionName(handle, collection.title) : collection.title) : standIns[handle];
-  const description = collection?.description || departments[handle]?.intro;
+  // Throwing here, before the page streams, sends search engines a real 404 status
+  // (or a permanent redirect, for a collection the old site had moved).
+  if (!collection && !standIns[handle]) {
+    if (movedCollections[handle]) permanentRedirect(`/collections/${movedCollections[handle]}`);
+    notFound();
+  }
+  const title = collection
+    ? departmentOf(handle)
+      ? collectionName(handle, collection.title)
+      : (searchTitle(collection.seo?.title) ?? collection.title)
+    : standIns[handle];
+  // Most collections have no text of their own, and without a line here they'd all share the shop's one.
+  const description =
+    searchDescription(collection?.seo?.description) ||
+    (collection?.description && snippet(collection.description)) ||
+    departments[handle]?.intro ||
+    (collection ? undefined : site.description) ||
+    `Shop ${title.toLowerCase().startsWith("african") ? title : `African ${title.toLowerCase()}`} at ${site.brand}. Contemporary African clothing, UK delivery and ${site.returnDays}-day returns.`;
   return {
     title,
     description,
@@ -72,7 +88,10 @@ async function Collection({
     // Department campaigns go by the department ("women"), others by the collection's handle.
     getCampaign(departmentOf(handle) ?? handle),
   ]);
-  if (!page) notFound();
+  if (!page) {
+    if (movedCollections[handle]) permanentRedirect(`/collections/${movedCollections[handle]}`);
+    notFound();
+  }
 
   const department = departments[handle];
   const title = page.collection ? collectionName(handle, page.collection.title) : (standIns[handle] ?? titleFromHandle(handle));

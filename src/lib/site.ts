@@ -7,6 +7,12 @@ export const siteUrl = (
   (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000")
 ).replace(/\/$/, "");
 
+/**
+ * Whether search engines may list this copy of the site. Only the build for the real address
+ * (SITE_URL set) is listed, so the vercel.app address and preview builds don't compete with it.
+ */
+export const indexable = !!process.env.SITE_URL && process.env.VERCEL_ENV !== "preview";
+
 export const site = {
   brand: "African Clothing Store",
   /** The company behind the shop, for the footer and the Our story page. */
@@ -17,6 +23,8 @@ export const site = {
   market: "United Kingdom · GBP £",
   /** Used when the shop metafield custom.free_delivery_threshold isn't set. */
   freeDeliveryThreshold: "£50",
+  /** UK Standard delivery under the free threshold, as Shopify checkout charges it. For search results. */
+  ukStandardRate: "4.99",
   /** Ready-to-ship pieces. Made-to-order pieces are made first: the days in their option, else 14. */
   dispatchDays: "2 to 4",
   /** UK delivery once dispatched, by priority courier. */
