@@ -58,7 +58,7 @@ export default async function FaqsPage() {
         {
           q: "How long do made-to-order pieces take?",
           answer:
-            "Made-to-order and custom-made pieces take 7 to 10 working days to make before they’re dispatched. If your order has ready-to-ship pieces too, we send everything together once it’s all ready, unless you ask us to split it.",
+            "Made-to-order and custom-made pieces are made to your size first, which usually takes about 14 days. Each piece shows its own making time when you choose it. If your order has ready-to-ship pieces too, we send everything together once it’s all ready, unless you ask us to split it.",
         },
         {
           q: "Do you offer free delivery?",
@@ -125,7 +125,7 @@ export default async function FaqsPage() {
         {
           q: "Can you make a piece in my size or to my choices?",
           answer:
-            "Yes, pieces in our Custom made range are made to your size or your choices. They take 7 to 10 working days to make, and because they’re made for you, they can only be returned if they’re faulty.",
+            "Yes, pieces in our Custom made range are made to your size or your choices. They usually take about 14 days to make (each piece shows its own making time), and because they’re made for you, they can only be returned if they’re faulty.",
           link: { label: "Shop custom made", href: collectionPath("customMade") },
         },
         {
