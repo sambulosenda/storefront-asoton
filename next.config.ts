@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const shopifyDomain = process.env.SHOPIFY_STORE_DOMAIN;
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [{ protocol: "https", hostname: "cdn.shopify.com" }],
@@ -19,6 +21,23 @@ const nextConfig: NextConfig = {
     return [
       { source: "/pages/faqs", destination: "/faqs", permanent: true },
       { source: "/pages/african-clothing-faqs-support", destination: "/faqs", permanent: true },
+      // The old theme's other pages, to the page that now says the same thing.
+      { source: "/pages/african-fashion-about-us", destination: "/story", permanent: true },
+      { source: "/pages/contact", destination: "/help#contact", permanent: true },
+      { source: "/pages/african-clothing-contact-us", destination: "/help#contact", permanent: true },
+      { source: "/pages/african-clothing-shipping-delivery", destination: "/help#delivery", permanent: true },
+      { source: "/pages/african-clothing-track-order", destination: "/help#delivery", permanent: true },
+      { source: "/pages/african-clothing-refund-policy", destination: "/help#returns", permanent: true },
+      { source: "/pages/african-clothing-privacy-policy", destination: "/policies/privacy-policy", permanent: true },
+      { source: "/collections/:collection/products/:product", destination: "/products/:product", permanent: true },
+      { source: "/cart", destination: "/", permanent: false },
+      // What only Shopify serves (accounts, orders, checkout, the blog, and old pages with no match
+      // here, such as the terms) goes back to Shopify, which sends it on to the store's primary domain.
+      ...(shopifyDomain
+        ? ["/account/:path*", "/account", "/orders/:path*", "/checkouts/:path*", "/cart/c/:path*", "/blogs/:path*", "/apps/:path*", "/pages/:page"].map(
+            (source) => ({ source, destination: `https://${shopifyDomain}${source}`, permanent: false }),
+          )
+        : []),
     ];
   },
   turbopack: {
