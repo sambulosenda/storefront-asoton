@@ -173,7 +173,7 @@ export function ProductForm({
             </span>
             <button
               type="button"
-              onClick={() => openSizeGuide(dept)}
+              onClick={() => openSizeGuide(dept, { chosen: chosen?.full, offered: sizes.map((s) => s.full) })}
               className="inline-flex min-h-11 cursor-pointer items-center text-[13px] underline underline-offset-4 md:min-h-0 md:py-2"
             >
               Size guide

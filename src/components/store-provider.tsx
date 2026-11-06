@@ -15,6 +15,8 @@ import { addToCart, getCart, setCountry, updateCartLine, type CartResult } from 
 import type { Market } from "@/lib/shopify";
 import type { Cart } from "@/lib/shopify/types";
 
+export type SizeGuideSizes = { chosen?: string; offered?: string[] };
+
 export type Overlay = "cart" | "search" | "menu" | "size-guide" | "market" | null;
 
 const COUNTRY_EVENT = "country-change";
@@ -39,7 +41,9 @@ type Store = {
   open: (overlay: Exclude<Overlay, null>) => void;
   close: () => void;
   sizeGuideDept: "women" | "men";
-  openSizeGuide: (dept?: "women" | "men") => void;
+  /** From a product page: the size chosen ("UK 14") and the sizes the piece comes in, for the chart. */
+  sizeGuideSizes: SizeGuideSizes;
+  openSizeGuide: (dept?: "women" | "men", sizes?: SizeGuideSizes) => void;
   /** Countries the store sells to, and the one prices are shown in. */
   markets: Market[];
   market: Market | null;
@@ -69,6 +73,7 @@ export function StoreProvider({
   const [notice, setNotice] = useState<string | null>(null);
   const [overlay, setOverlay] = useState<Overlay>(null);
   const [sizeGuideDept, setSizeGuideDept] = useState<"women" | "men">("women");
+  const [sizeGuideSizes, setSizeGuideSizes] = useState<SizeGuideSizes>({});
   const [pending, startTransition] = useTransition();
   const [switchingCountry, startSwitching] = useTransition();
   const code = useSyncExternalStore(subscribeCountry, readCountry, () => null);
@@ -137,8 +142,10 @@ export function StoreProvider({
       open: setOverlay,
       close: () => setOverlay(null),
       sizeGuideDept,
-      openSizeGuide: (dept) => {
+      sizeGuideSizes,
+      openSizeGuide: (dept, sizes) => {
         if (dept) setSizeGuideDept(dept);
+        setSizeGuideSizes(sizes ?? {});
         setOverlay("size-guide");
       },
       markets,
@@ -146,7 +153,7 @@ export function StoreProvider({
       chooseCountry,
       switchingCountry,
     }),
-    [cart, pending, notice, add, setQuantity, overlay, sizeGuideDept, markets, market, chooseCountry, switchingCountry],
+    [cart, pending, notice, add, setQuantity, overlay, sizeGuideDept, sizeGuideSizes, markets, market, chooseCountry, switchingCountry],
   );
 
   return <StoreContext value={store}>{children}</StoreContext>;

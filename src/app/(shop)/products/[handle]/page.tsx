@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense, ViewTransition, type ReactNode } from "react";
@@ -10,9 +11,10 @@ import { ProductGrid, ProductRail } from "@/components/product-card";
 import { ProductForm } from "@/components/product-form";
 import { ProductGallery } from "@/components/product-gallery";
 import { ProductSkeleton } from "@/components/skeletons";
-import { clothLinks, deliveryPlan, deliveryThreshold, deliveryTimes } from "@/lib/catalog";
+import { clothLinks, clothSwatch, deliveryPlan, deliveryThreshold, deliveryTimes } from "@/lib/catalog";
 import { clothByName, clothOf } from "@/lib/cloths";
 import { getCountry } from "@/lib/market";
+import { cleanDescription } from "@/lib/rich-text";
 import { getProduct, getRecommendations } from "@/lib/shopify";
 import { collectionName, collections, site, siteUrl, unlistedCollections } from "@/lib/site";
 
@@ -91,7 +93,9 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
     deliveryPlan(),
   ]);
 
-  const clothKey = (clothByName(product.clothFields?.name) ?? clothOf(product))?.key;
+  // The cloth set on the product in Shopify, else the one its name or type says. Not its tags: they
+  // carry loose search words ("kente" on an Ankara dress), and a wrong cloth is worse than none.
+  const clothKey = (clothByName(product.clothFields?.name) ?? clothOf({ title: product.title, productType: product.productType }))?.key;
   const cloth = cloths.find((c) => c.key === clothKey);
   // Most pieces are printed in a cloth's pattern rather than made of the woven or dyed cloth itself,
   // so they don't take its technique or care. Only a cloth set on the product in Shopify says otherwise.
@@ -111,17 +115,25 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
   const panels: ({ title: string; body: ReactNode } | false | null | undefined | "")[] = [
     product.descriptionHtml && {
       title: "Description",
-      body: <div className="[&_p+p]:mt-3" dangerouslySetInnerHTML={{ __html: product.descriptionHtml }} />,
+      // Cleaned first: descriptions pasted from elsewhere bring styles and markup that break the page.
+      body: (
+        <div
+          className="[&_a]:underline-offset-4 [&_li]:ml-5 [&_li]:list-disc [&_ol>li]:list-decimal [&_p+p]:mt-3 [&_ul]:my-3"
+          dangerouslySetInnerHTML={{ __html: cleanDescription(product.descriptionHtml) }}
+        />
+      ),
     },
     care && { title: "Fabric and care", body: care },
     (product.fit || product.model) && { title: "Size and fit", body: [product.fit, product.model].filter(Boolean).join(" ") },
     {
       title: "Delivery and returns",
-      body: `UK delivery in ${times.uk}, complimentary over ${threshold.label}. International rates are shown at checkout. Unworn ready-to-ship pieces can be returned within ${site.returnDays} days. Made-to-order pieces are made to your size before they’re sent, so allow for the making time as well, and they can only be returned if faulty.`,
+      body: `UK delivery in ${times.uk}, free over ${threshold.label}. International rates are shown at checkout. Unworn ready-to-ship pieces can be returned within ${site.returnDays} days. Made-to-order pieces are made to your size before they’re sent, so allow for the making time as well, and they can only be returned if faulty.`,
     },
   ];
 
   const about = product.clothFields?.about ?? cloth?.about ?? cloth?.caption;
+  // A real photo of the cloth from Fabric & lace, where the shop sells it; the drawn pattern otherwise.
+  const swatch = cloth && about ? await clothSwatch(cloth.key) : null;
   const terms = printed
     ? [
         { name: "This piece", note: `Printed in a ${cloth.name.toLowerCase()} pattern. The original cloth is ${cloth.technique.toLowerCase()}.` },
@@ -228,7 +240,13 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
         <section aria-labelledby="about-cloth" className="bg-stone md:mt-[120px]">
           <div className="flex flex-col gap-4 px-4 py-14 md:page-x md:flex-row md:flex-wrap md:items-center md:gap-x-16 md:gap-y-12 md:py-24">
             <div className="mb-2 h-[268px] overflow-hidden bg-indigo md:mb-0 md:aspect-[4/3] md:h-auto md:min-w-0 md:flex-[1_1_440px]">
-              <ClothSwatch cloth={cloth.key} />
+              {swatch ? (
+                <span className="relative block size-full">
+                  <Image src={swatch.image.url} alt="" fill sizes="(min-width: 768px) 45vw, 100vw" className="scale-[1.6] object-cover" />
+                </span>
+              ) : (
+                <ClothSwatch cloth={cloth.key} />
+              )}
             </div>
             <div className="flex min-w-0 flex-col items-start gap-4 md:max-w-[540px] md:flex-[1_1_400px] md:gap-5">
               <span className="text-[11px] tracking-[0.16em] text-ink-2 uppercase md:text-[12px]">About the cloth</span>
