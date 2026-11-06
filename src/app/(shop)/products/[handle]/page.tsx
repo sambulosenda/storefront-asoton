@@ -216,7 +216,7 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
           />
 
           <ul className="flex flex-col gap-1.5 border-t border-line pt-4 text-[13px] text-ink-2 md:gap-2">
-            <li>Complimentary UK delivery on orders over {threshold.label}</li>
+            <li>Free UK delivery on orders over {threshold.label}</li>
             <li>Returns within {site.returnDays} days on ready-to-ship pieces</li>
           </ul>
 

@@ -38,7 +38,7 @@ export function MobileMenu({
             <CloseIcon />
           </button>
           <Link href="/" onClick={close} className="font-display text-[22px] font-medium tracking-[0.01em] whitespace-nowrap no-underline">
-            {site.brand}
+            {site.name}
           </Link>
           <div className="flex justify-end">
             <button

@@ -75,7 +75,7 @@ async function Hero() {
           </>
         )}
         <div className="absolute bottom-[clamp(24px,4vw,56px)] left-[clamp(16px,4vw,48px)] flex flex-col gap-4 pr-4">
-          <span className="text-[12px] tracking-[0.16em] text-[#C5C9D8] uppercase">{campaign?.label ?? site.brand}</span>
+          <span className="text-[12px] tracking-[0.16em] text-indigo-soft uppercase">{campaign?.label ?? site.name}</span>
           <h1 className="font-display text-[clamp(56px,9vw,136px)] leading-[0.9] tracking-[-0.02em]">
             {campaign?.headline ?? "Lookbook"}
           </h1>

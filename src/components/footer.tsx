@@ -60,7 +60,7 @@ export function Footer() {
       <div className="flex flex-col gap-8 px-4 pt-12 pb-10 md:hidden">
         <div className="flex flex-col gap-2.5">
           <Logo dark className="h-[51px] w-auto self-start" />
-          <p className="text-[14px] text-night-text">{site.tagline}</p>
+          <p className="text-[14px] text-pretty text-night-text">{site.tagline}</p>
         </div>
         <div className="border-t border-night-line">
           {footerNav.map((group) => {
@@ -94,7 +94,7 @@ export function Footer() {
         <div className="flex flex-col gap-3 text-[12px] text-night-text">
           <LegalLinks className="gap-x-5 gap-y-2" />
           <span>
-            © {year} {site.brand} ({site.company})
+            © {year} {site.company}
           </span>
         </div>
       </div>
@@ -104,7 +104,7 @@ export function Footer() {
         <div className="flex flex-wrap justify-between gap-12">
           <div className="flex max-w-[340px] flex-[1_1_260px] flex-col gap-4">
             <Logo dark className="h-[56px] w-auto self-start" />
-            <p className="text-[14px] leading-[1.6] text-night-text">{site.tagline}</p>
+            <p className="text-[14px] leading-[1.6] text-pretty text-night-text">{site.tagline}</p>
           </div>
           <div className="grid flex-[2_1_520px] grid-cols-[repeat(auto-fit,minmax(min(150px,100%),1fr))] gap-10">
             {footerNav.map((group) => (
@@ -123,7 +123,7 @@ export function Footer() {
         </div>
         <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3 border-t border-night-line pt-6 text-[12px] text-night-text">
           <span>
-            © {year} {site.brand} ({site.company})
+            © {year} {site.company}
           </span>
           <LegalLinks className="gap-x-6 gap-y-2" />
           <PaymentMarks />
@@ -155,7 +155,7 @@ export function CompactFooter() {
           </button>
         </div>
         <span>
-          © {year} {site.brand} ({site.company}) · <MarketLabel />
+          © {year} {site.company} · <MarketLabel />
         </span>
       </div>
     </footer>
@@ -168,7 +168,7 @@ export function MinimalFooter() {
     <footer className="bg-ink text-night-text">
       <div className="page-x flex flex-wrap justify-between gap-x-8 gap-y-3 py-6 text-[12px]">
         <span>
-          © {year} {site.brand} ({site.company})
+          © {year} {site.company}
         </span>
         <span>
           <MarketLabel />

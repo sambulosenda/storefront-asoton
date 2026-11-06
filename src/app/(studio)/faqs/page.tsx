@@ -98,7 +98,7 @@ export default async function FaqsPage() {
         },
         {
           q: "How do I send a return?",
-          answer: `Email ${site.email} or use the contact form on our Help page with your order number and the pieces you’re sending back. Then send them, packed securely, to ${site.brand}, ${site.address}, United Kingdom, by a tracked service. Unless the item is faulty or wrong, the cost of returning it is yours.`,
+          answer: `Email ${site.email} or use the contact form on our Help page with your order number and the pieces you’re sending back. Then send them, packed securely, to ${site.company}, ${site.address}, United Kingdom, by a tracked service. Unless the item is faulty or wrong, the cost of returning it is yours.`,
           link: { label: "Contact us", href: "/help#contact" },
         },
         {
@@ -142,7 +142,7 @@ export default async function FaqsPage() {
       faqs: [
         {
           q: "Who are you?",
-          answer: `${site.brand} is run by ${site.company}, a company in the United Kingdom. We sell contemporary African clothing for women, men and kids.`,
+          answer: `${site.name} is run by ${site.company}, a company in the United Kingdom. We sell contemporary African clothing for women, men and kids.`,
           link: { label: "Our story", href: "/story" },
         },
         {

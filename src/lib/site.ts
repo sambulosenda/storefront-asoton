@@ -8,7 +8,10 @@ export const siteUrl = (
 ).replace(/\/$/, "");
 
 export const site = {
+  /** The shop's long-standing name: page titles, search results, structured data and metadata. */
   brand: "African Clothing Store",
+  /** The name shoppers see on the page, as on the logo. */
+  name: "JT Aphrique",
   /** The company behind the shop, for the footer and the Our story page. */
   company: "JT Aphrique Ltd.",
   tagline: "Contemporary African clothing for women, men and kids.",
@@ -153,7 +156,7 @@ export const popularSearches = ["Ankara", "Dashiki", "Kente", "Maxi dress", "Emb
 
 /** Copy for the Our story page. The founder quote shows only once both fields are filled in. */
 export const story = {
-  opening: `${site.brand} (${site.company}) began in the UK in 2010, with a simple aim: to show the heritage, beauty and diversity of African design through African-inspired clothing. Today we make contemporary clothing for women, men and kids in Ankara, kente and dashiki prints and embroidered cloth.`,
+  opening: `${site.name} (${site.company}) began in the UK in 2010, with a simple aim: to show the heritage, beauty and diversity of African design through African-inspired clothing. Today we make contemporary clothing for women, men and kids in Ankara, kente and dashiki prints and embroidered cloth.`,
   makers:
     "Every collection is made with skilled artisans, textile weavers and master tailors. We source good cottons, rich brocades and wax prints, and check every garment before it leaves us.",
   quote: "",

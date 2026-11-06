@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-06T00:00:00Z",
+  "title": "Design System: African Clothing Store",
+  "extensions": {
+    "colorMeta": {
+      "adire-indigo": { "role": "primary", "displayName": "Adire Indigo", "canonical": "#1e2a55", "tonalRamp": ["#0c1124", "#141c3b", "#1e2a55", "#34427a", "#56639b", "#8590bb", "#b9c0da", "#e6e9f3"] },
+      "laterite-clay": { "role": "secondary", "displayName": "Laterite Clay", "canonical": "#6e4430", "tonalRamp": ["#2a1810", "#46291c", "#6e4430", "#8d5f48", "#ab8069", "#c7a592", "#dfcabd", "#f3ebe6"] },
+      "charcoal-ink": { "role": "neutral", "displayName": "Charcoal Ink", "canonical": "#141310", "tonalRamp": ["#141310", "#2b2925", "#3a3732", "#57534c", "#8a857c", "#b5b0a6", "#d8d4cc", "#f5f4f1"] },
+      "raw-cotton": { "role": "neutral", "displayName": "Raw Cotton", "canonical": "#f5f4f1" },
+      "sand-stone": { "role": "neutral", "displayName": "Sand Stone", "canonical": "#e8e5df", "tonalRamp": ["#cfcac1", "#d8d4cc", "#dcd8d0", "#e1ddd6", "#e2dfd8", "#e8e5df", "#efede9", "#f5f4f1"] },
+      "error-red": { "role": "neutral", "displayName": "Error Red", "canonical": "#8c2f23" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Home hero headline; editorial openers at smaller clamps." },
+      "headline": { "displayName": "Headline", "purpose": "Section headings." },
+      "title": { "displayName": "Title", "purpose": "Editorial block headings, prose h2, search field." },
+      "body": { "displayName": "Body", "purpose": "Running text; prose at 1.7 line height, max 720px." },
+      "body-small": { "displayName": "Body small", "purpose": "Product names, prices, colour names, help text." },
+      "label": { "displayName": "Label", "purpose": "Uppercase section labels, table heads, buttons at 13px." }
+    },
+    "shadows": [
+      { "name": "menu-lift", "value": "0 12px 32px -16px rgba(20,19,16,0.35)", "purpose": "Sort dropdown." },
+      { "name": "drawer-edge", "value": "-24px 0 48px -24px rgba(20,19,16,0.35)", "purpose": "Right drawer from md." },
+      { "name": "swatch-ring", "value": "inset 0 0 0 1px rgba(20,19,16,0.12)", "purpose": "Edge on pale colour swatches." }
+    ],
+    "motion": [
+      { "name": "ease-out-soft", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "The shop's one easing." },
+      { "name": "duration-quick", "value": "180ms", "purpose": "Taps." },
+      { "name": "duration-medium", "value": "420ms", "purpose": "Drawers, hovers, dialogs." },
+      { "name": "duration-slow", "value": "900ms", "purpose": "Photos arriving, hero lines rising, photo zoom." }
+    ],
+    "breakpoints": [
+      { "name": "md", "value": "48rem" },
+      { "name": "nav", "value": "80rem" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Ink Button", "kind": "button", "refersTo": "button-ink",
+      "description": "Primary action: add to bag, hero shop buttons.",
+      "html": "<button class=\"ds-btn-ink\">Shop women</button>",
+      "css": ".ds-btn-ink { display:inline-flex; align-items:center; justify-content:center; height:52px; padding:0 32px; background:var(--color-ink,#141310); color:var(--color-paper,#f5f4f1); border:0; border-radius:0; font-family:var(--font-sans,'Hanken Grotesk',sans-serif); font-size:13px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; cursor:pointer; transition:background 180ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-ink:hover { background:var(--color-indigo,#1e2a55); } .ds-btn-ink:focus-visible { outline:2px solid var(--color-indigo,#1e2a55); outline-offset:3px; }"
+    },
+    {
+      "name": "Outline Button", "kind": "button", "refersTo": "button-outline",
+      "description": "Secondary action beside an ink button.",
+      "html": "<button class=\"ds-btn-outline\">Shop men</button>",
+      "css": ".ds-btn-outline { display:inline-flex; align-items:center; justify-content:center; height:52px; padding:0 32px; background:transparent; color:var(--color-ink,#141310); border:1px solid var(--color-ink,#141310); border-radius:0; font-family:var(--font-sans,'Hanken Grotesk',sans-serif); font-size:13px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; cursor:pointer; transition:background 180ms cubic-bezier(0.22,1,0.36,1), color 180ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-outline:hover { background:var(--color-ink,#141310); color:var(--color-paper,#f5f4f1); } .ds-btn-outline:focus-visible { outline:2px solid var(--color-indigo,#1e2a55); outline-offset:3px; }"
+    },
+    {
+      "name": "Underline Email Field", "kind": "input", "refersTo": "input-underline",
+      "description": "Newsletter and contact fields: label above, single bottom rule.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Email address</span><input class=\"ds-input\" type=\"email\" placeholder=\"you@example.com\"></label>",
+      "css": ".ds-field { display:flex; flex-direction:column; gap:6px; font-family:var(--font-sans,'Hanken Grotesk',sans-serif); } .ds-field-label { font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:var(--color-ink-2,#57534c); } .ds-input { height:52px; background:transparent; border:0; border-bottom:1px solid var(--color-ink,#141310); border-radius:0; font:inherit; font-size:16px; color:var(--color-ink,#141310); } .ds-input::placeholder { color:var(--color-muted,#8a857c); } .ds-input:focus { outline:none; } .ds-input:focus-visible { outline:2px solid var(--color-indigo,#1e2a55); outline-offset:3px; }"
+    },
+    {
+      "name": "Size Chips", "kind": "chip", "refersTo": "chip-size",
+      "description": "Size picker on the product page: default, selected, sold out.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip\">S</button><button class=\"ds-chip ds-chip-on\" aria-pressed=\"true\">M</button><button class=\"ds-chip ds-chip-out\">L</button></div>",
+      "css": ".ds-chips { display:flex; gap:8px; font-family:var(--font-sans,'Hanken Grotesk',sans-serif); } .ds-chip { height:48px; min-width:48px; padding:0 16px; background:transparent; border:1px solid var(--color-line,#d8d4cc); border-radius:0; font-size:14px; color:var(--color-ink,#141310); cursor:pointer; transition:border-color 180ms cubic-bezier(0.22,1,0.36,1); } .ds-chip:hover { border-color:var(--color-ink,#141310); } .ds-chip:focus-visible { outline:2px solid var(--color-indigo,#1e2a55); outline-offset:3px; } .ds-chip-on { background:var(--color-ink,#141310); border-color:var(--color-ink,#141310); color:var(--color-paper,#f5f4f1); } .ds-chip-out { border-color:var(--color-line-soft,#e2dfd8); color:var(--color-ink-2,#57534c); text-decoration:line-through; }"
+    },
+    {
+      "name": "Product Card", "kind": "card", "refersTo": "product-card-image",
+      "description": "3:4 photo on sand stone, name, colour and price below, swatches.",
+      "html": "<a class=\"ds-card\" href=\"#\"><div class=\"ds-card-photo\"><span class=\"ds-card-badge\">New</span></div><div class=\"ds-card-meta\"><span class=\"ds-card-name\">Ankara wrap dress</span><span class=\"ds-card-price\">£85.00</span></div><span class=\"ds-card-colour\">Indigo</span><span class=\"ds-swatches\"><i style=\"background:#1e2a55\"></i><i style=\"background:#c58b2b\"></i></span></a>",
+      "css": ".ds-card { display:flex; flex-direction:column; gap:10px; width:240px; color:var(--color-ink,#141310); text-decoration:none; font-family:var(--font-sans,'Hanken Grotesk',sans-serif); } .ds-card-photo { position:relative; aspect-ratio:3/4; background:var(--color-stone,#e8e5df); overflow:hidden; transition:transform 900ms cubic-bezier(0.22,1,0.36,1); } .ds-card:hover .ds-card-photo { transform:scale(1.03); } .ds-card-badge { position:absolute; top:8px; left:8px; padding:2px 6px; background:rgb(245 244 241 / 0.9); font-size:11px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; } .ds-card-meta { display:flex; justify-content:space-between; gap:16px; font-size:15px; } .ds-card-name { font-weight:500; } .ds-card-colour { margin-top:-8px; font-size:13px; color:var(--color-ink-2,#57534c); } .ds-swatches { display:flex; gap:6px; } .ds-swatches i { width:10px; height:10px; border-radius:9999px; box-shadow:inset 0 0 0 1px rgba(20,19,16,0.15); } .ds-card:focus-visible { outline:2px solid var(--color-indigo,#1e2a55); outline-offset:3px; }"
+    },
+    {
+      "name": "Header with Announcement", "kind": "nav", "refersTo": null,
+      "description": "Ink announcement bar over a cotton header with centred logo and text links.",
+      "html": "<div class=\"ds-announce\">Complimentary UK delivery on orders over £50</div><nav class=\"ds-nav\"><a href=\"#\">New in</a><a href=\"#\">Women</a><span class=\"ds-logo\">African Clothing Store</span><a href=\"#\">Men</a><a href=\"#\">Kids</a></nav>",
+      "css": ".ds-announce { background:var(--color-ink,#141310); color:var(--color-paper,#f5f4f1); min-height:40px; display:flex; align-items:center; justify-content:center; font-family:var(--font-sans,'Hanken Grotesk',sans-serif); font-size:12px; letter-spacing:0.06em; } .ds-nav { display:flex; align-items:center; justify-content:center; gap:28px; height:64px; background:var(--color-paper,#f5f4f1); border-bottom:1px solid var(--color-line,#d8d4cc); font-family:var(--font-sans,'Hanken Grotesk',sans-serif); font-size:13px; } .ds-nav a { color:var(--color-ink,#141310); text-decoration:none; transition:color 180ms cubic-bezier(0.22,1,0.36,1); } .ds-nav a:hover { color:var(--color-indigo,#1e2a55); } .ds-nav a:focus-visible { outline:2px solid var(--color-indigo,#1e2a55); outline-offset:3px; } .ds-logo { font-family:var(--font-display,'Bodoni Moda',serif); font-size:22px; }"
+    },
+    {
+      "name": "Shop by Cloth Band", "kind": "custom", "refersTo": null,
+      "description": "Signature full-bleed indigo band naming each cloth.",
+      "html": "<section class=\"ds-cloth\"><ul><li><a href=\"#\">Ankara <em>wax print</em></a></li><li><a href=\"#\">Kente</a></li><li><a href=\"#\">Adire</a></li></ul></section>",
+      "css": ".ds-cloth { background:var(--color-indigo,#1e2a55); color:var(--color-paper,#f5f4f1); padding:48px; } .ds-cloth-label { margin:0 0 20px; font-family:var(--font-sans,'Hanken Grotesk',sans-serif); font-size:12px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; } .ds-cloth ul { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; } .ds-cloth a { color:var(--color-paper,#f5f4f1); text-decoration:none; font-family:var(--font-display,'Bodoni Moda',serif); font-size:40px; line-height:1.1; } .ds-cloth a:hover { text-decoration:underline; } .ds-cloth a:focus-visible { outline:2px solid var(--color-paper,#f5f4f1); outline-offset:3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Cloth Speaks",
+    "overview": "The cloth is the loudest thing on every page. Ankara, kente, adire and embroidered cloth bring the pattern and the saturated colour; the interface around them is raw cotton, sand and charcoal ink, and stays out of the way. The look is a high-end tailor's shop: a quiet room, good light, the garments hung where you can see them.\n\nThe type holds that balance. Bodoni Moda, a high-contrast serif with a true italic, sets headlines with editorial confidence. Hanken Grotesk does the work: names, prices, delivery facts, labels. Corners are square, surfaces are flat, and lines are hairline seams. A single cool accent, Adire Indigo, named after the Yoruba indigo-dyed cloth, marks interaction and one band of the home page. Motion is slow and soft, like cloth settling, and switches off for anyone who asks for less motion.\n\nThe density is generous on editorial surfaces (hero, cloth band, story) and tight and orderly where people shop (grids, filters, product form).",
+    "keyCharacteristics": [
+      "Neutral, warm ground; photography and cloth supply all pattern and strong colour.",
+      "Bodoni Moda display over Hanken Grotesk working text.",
+      "Square corners, hairline borders, flat surfaces.",
+      "One accent, Adire Indigo, used sparingly.",
+      "Uppercase, wide-tracked labels and buttons.",
+      "One easing, three speeds; all motion off under reduced motion."
+    ],
+    "rules": [
+      { "name": "The Cloth Carries Colour Rule", "body": "Saturated colour and pattern come from the photographs and the cloth. Interface chrome (buttons, panels, badges, borders) stays in the cotton, sand and ink neutrals. Never print a pattern or a bright fill into the UI itself.", "section": "colors" },
+      { "name": "The One Indigo Rule", "body": "Adire Indigo is the only accent. It marks interaction (hover, focus) and appears as a ground once per page at most. Don't add a second accent hue.", "section": "colors" },
+      { "name": "The Italic Word Rule", "body": "A campaign headline may set one word or phrase in Bodoni italic (the campaign's italic_word). One per headline, never a whole line.", "section": "typography" },
+      { "name": "The Serif Speaks, Sans Works Rule", "body": "Bodoni Moda is for headings and the search field only. Prices, sizes, delivery dates, buttons and labels are always Hanken Grotesk.", "section": "typography" },
+      { "name": "The Flat Floor Rule", "body": "Cards, panels and buttons have no shadow at rest or on hover. A shadow means \"this floats above the page\" and nothing else.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do let photography and cloth bring the colour; keep chrome in Raw Cotton, Sand Stone and Charcoal Ink.",
+      "Do set headings in Bodoni Moda and every price, size, date and label in Hanken Grotesk.",
+      "Do keep every corner square except colour swatches.",
+      "Do use Adire Indigo only for hover, focus and at most one ground per page.",
+      "Do use the shop's one easing and three durations for any new motion, and make sure it switches off under reduced motion.",
+      "Do keep product photos 3:4 on Sand Stone."
+    ],
+    "donts": [
+      "Don't print African patterns, kente stripes or bright fills into buttons, borders, backgrounds or badges; the cloth in the photos already does this.",
+      "Don't add rounded corners, pill buttons or card shadows.",
+      "Don't introduce a second accent colour.",
+      "Don't set body text, prices or buttons in the serif.",
+      "Don't animate text on scroll; only photos ease in.",
+      "Don't put a small label or eyebrow above a heading; the heading carries itself (a campaign's own label is the exception)."
+    ]
+  }
+}

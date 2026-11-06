@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ViewTransition } from "react";
 import { ProductVisual } from "@/components/cloth";
 import { QuickAdd } from "@/components/quick-add";
+import { clothOf } from "@/lib/cloths";
 import { colourLine, formatMoney, isColourOption } from "@/lib/format";
 import type { Product } from "@/lib/shopify/types";
 
@@ -30,6 +31,10 @@ export function ProductCard({
 }) {
   const badge = badgeFor(product);
   const colour = colourLine(product.options);
+  // The cloth leads the card's second line: the shop names what every piece is cut from. Only the
+  // title and type decide it, as tags carry loose search words that would name the wrong cloth.
+  const cloth = clothOf({ title: product.title, productType: product.productType })?.name ?? null;
+  const detail = [cloth, colour].filter(Boolean).join(" · ");
   const price = formatMoney(product.priceRange.minVariantPrice);
 
   const second = product.cardImages?.nodes?.[1] ?? null;
@@ -76,14 +81,15 @@ export function ProductCard({
           <div className="flex flex-col gap-0.5 md:flex-row md:items-baseline md:justify-between md:gap-4">
             <div className="flex flex-col gap-0.5">
               <span className="text-[14px] leading-[1.35] font-medium md:text-[15px] md:leading-normal">{product.title}</span>
-              {colour && <span className="hidden text-[13px] text-ink-2 md:block">{colour}</span>}
+              {cloth && <span className="text-[13px] text-ink-2 md:hidden">{cloth}</span>}
+              {detail && <span className="hidden text-[13px] text-ink-2 md:block">{detail}</span>}
             </div>
             <span className="text-[13px] whitespace-nowrap text-ink-2 md:text-[15px] md:text-ink">{price}</span>
           </div>
         ) : (
           <div className="flex flex-col gap-0.5">
             <span className="text-[14px] font-medium">{product.title}</span>
-            <span className="text-[13px] text-ink-2">{colour ? `${colour} · ${price}` : price}</span>
+            <span className="text-[13px] text-ink-2">{[detail, price].filter(Boolean).join(" · ")}</span>
           </div>
         )}
         {swatches.length > 1 && (

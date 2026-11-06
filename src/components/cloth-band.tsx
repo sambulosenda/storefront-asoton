@@ -30,11 +30,10 @@ export function ClothBand({ cloths }: { cloths: StockedCloth[] }) {
       {/* Phones: one preview, then a list of links. */}
       <div className="px-4 py-16 md:hidden">
         <div className="flex flex-col gap-3.5">
-          <span className="text-[11px] tracking-[0.16em] text-[#C5C9D8] uppercase">Shop by cloth</span>
           <h2 className="font-display text-[40px] leading-[1.05] tracking-[-0.01em]">
             {heading}
           </h2>
-          <p className="leading-[1.6] text-[#C5C9D8]">{intro}</p>
+          <p className="leading-[1.6] text-indigo-soft">{intro}</p>
         </div>
         <Link
           href={`/products/${first.product.handle}`}
@@ -43,7 +42,7 @@ export function ClothBand({ cloths }: { cloths: StockedCloth[] }) {
         >
           <ProductVisual product={first.product} image={first.product.featuredImage} sizes="100vw" drawingWidth="66%" />
         </Link>
-        <p className="mt-3 mb-6 text-[13px] leading-[1.6] text-[#C5C9D8]">
+        <p className="mt-3 mb-6 text-[13px] leading-[1.6] text-indigo-soft">
           Shown: {first.product.title}. {first.caption}
         </p>
         <ul className={`border-t ${LINE}`}>
@@ -52,7 +51,7 @@ export function ClothBand({ cloths }: { cloths: StockedCloth[] }) {
               <Link href={cloth.href} className="flex min-h-[72px] items-center justify-between gap-3 text-paper no-underline hover:text-paper">
                 <span className="flex flex-col">
                   <span className="font-display text-[26px] leading-[1.15]">{cloth.name}</span>
-                  <span className="text-[13px] text-[#C5C9D8]">
+                  <span className="text-[13px] text-indigo-soft">
                     {cloth.technique} · {cloth.country}
                   </span>
                 </span>
@@ -67,23 +66,21 @@ export function ClothBand({ cloths }: { cloths: StockedCloth[] }) {
       <div className="page-x hidden flex-wrap items-start gap-16 py-[120px] md:flex">
         <div className="flex min-w-0 flex-[6_1_480px] flex-col gap-12">
           <div className="flex max-w-[560px] flex-col gap-5">
-            <span className="text-[12px] tracking-[0.16em] text-[#C5C9D8] uppercase">Shop by cloth</span>
             <h2 className="font-display text-[clamp(44px,4.4vw,64px)] leading-[1.02] tracking-[-0.01em]">
               {heading}
             </h2>
-            <p className="text-[17px] leading-[1.6] text-[#C5C9D8]">{intro}</p>
+            <p className="text-[17px] leading-[1.6] text-indigo-soft">{intro}</p>
           </div>
           <ul className={`border-t ${LINE}`}>
             {cloths.map((cloth, i) => (
               <li key={cloth.key} className={`border-b ${LINE}`}>
-                <button
-                  type="button"
-                  aria-pressed={i === active}
-                  onClick={() => setActive(i)}
+                {/* Pointing at a cloth previews it; clicking goes to its pieces. */}
+                <Link
+                  href={cloth.href}
                   onMouseEnter={() => setActive(i)}
                   onFocus={() => setActive(i)}
-                  className={`grid w-full cursor-pointer grid-cols-[44px_minmax(0,1fr)_auto] items-baseline gap-4 py-[22px] text-left ${
-                    i === active ? "text-paper" : "text-[#9AA1BC]"
+                  className={`grid w-full grid-cols-[44px_minmax(0,1fr)_auto] items-baseline gap-4 py-[22px] text-left no-underline transition-colors duration-(--duration-quick) hover:text-paper ${
+                    i === active ? "text-paper" : "text-indigo-dim"
                   }`}
                 >
                   <span className="text-[12px] tracking-[0.12em]">{String(i + 1).padStart(2, "0")}</span>
@@ -92,7 +89,7 @@ export function ClothBand({ cloths }: { cloths: StockedCloth[] }) {
                     <span className="text-[14px]">{cloth.technique}</span>
                   </span>
                   <span className="text-right text-[13px] tracking-[0.04em]">{cloth.origin}</span>
-                </button>
+                </Link>
               </li>
             ))}
           </ul>
@@ -110,12 +107,12 @@ export function ClothBand({ cloths }: { cloths: StockedCloth[] }) {
               drawingWidth="66%"
             />
             {/* The chip keeps the name readable on a white product photo. */}
-            <span className="absolute bottom-4 left-5 bg-stone/85 px-1.5 py-0.5 text-[12px] tracking-[0.06em]">
+            <span className="absolute bottom-4 left-5 bg-stone/85 px-1.5 py-0.5 text-[12px]">
               {current.product.title}
             </span>
           </Link>
           <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-4">
-            <p aria-live="polite" className="max-w-[400px] flex-[1_1_260px] text-[14px] leading-[1.6] text-[#C5C9D8]">
+            <p aria-live="polite" className="max-w-[400px] flex-[1_1_260px] text-[14px] leading-[1.6] text-indigo-soft">
               {current.caption}
             </p>
             <Link
