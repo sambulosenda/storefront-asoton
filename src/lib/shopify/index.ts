@@ -442,7 +442,11 @@ function parseRating(value: string | undefined) {
   }
 }
 
-export async function getRecommendations(productId: string, country?: string): Promise<Product[]> {
+/**
+ * Pieces to show under a product. Pairings set in Shopify's Search & Discovery app when there are
+ * any (`pairings: true`); otherwise Shopify's look-alikes, which aren't things to wear with it.
+ */
+export async function getRecommendations(productId: string, country?: string): Promise<{ products: Product[]; pairings: boolean }> {
   "use cache";
   cacheTag("products");
 
@@ -459,7 +463,8 @@ export async function getRecommendations(productId: string, country?: string): P
       country,
     });
     let products = complementary.productRecommendations ?? [];
-    if (products.length === 0) {
+    const pairings = products.length > 0;
+    if (!pairings) {
       const related = await shopifyFetch<{ productRecommendations: Product[] | null }>(query, {
         productId,
         intent: "RELATED",
@@ -468,11 +473,11 @@ export async function getRecommendations(productId: string, country?: string): P
       products = related.productRecommendations ?? [];
     }
     cacheLife("hours");
-    return products.slice(0, 4);
+    return { products: products.slice(0, 4), pairings };
   } catch (error) {
     console.error(error);
     cacheLife("minutes");
-    return [];
+    return { products: [], pairings: false };
   }
 }
 

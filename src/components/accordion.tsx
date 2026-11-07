@@ -3,9 +3,9 @@
 import { useId, useState, type ReactNode } from "react";
 import { MinusIcon, PlusIcon } from "@/components/icons";
 
-/** Product detail panels. The first is open to start with. */
+/** Product detail panels, all closed to start with. */
 export function Accordion({ panels }: { panels: { title: string; body: ReactNode }[] }) {
-  const [open, setOpen] = useState<number | null>(0);
+  const [open, setOpen] = useState<number | null>(null);
   const id = useId();
 
   return (
