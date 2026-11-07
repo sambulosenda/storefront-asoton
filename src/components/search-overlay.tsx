@@ -56,14 +56,18 @@ export function SearchOverlay() {
 function SearchPanel({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<{ q: string; data: PredictiveResults } | null>(null);
+  // The answer for one query: its results, or that the search failed. Older answers are ignored.
+  const [results, setResults] = useState<{ q: string; data: PredictiveResults | null } | null>(null);
   const q = query.trim();
 
   useEffect(() => {
     if (!q) return;
     let live = true;
     const timer = setTimeout(() => {
-      searchAction(q).then((data) => live && setResults({ q, data }), () => {});
+      searchAction(q).then(
+        (data) => live && setResults({ q, data }),
+        () => live && setResults({ q, data: null }),
+      );
     }, 180);
     return () => {
       live = false;
@@ -71,7 +75,11 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
     };
   }, [q]);
 
-  const data = q && results?.q === q ? results.data : null;
+  // Typed → waiting for the answer to this query → results, no results, or failed.
+  const answered = q !== "" && results?.q === q;
+  const searching = q !== "" && !answered;
+  const failed = answered && results.data === null;
+  const data = answered ? results.data : null;
   const found = data && (data.products.length > 0 || data.queries.length > 0 || data.collections.length > 0);
   const resultsHref = `/search?q=${encodeURIComponent(q)}`;
 
@@ -119,6 +127,18 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
         <div className="flex flex-col gap-4 px-4 pt-6 pb-8 md:px-12 md:pt-8 md:pb-12">
           <h2 className="label-caps text-ink-2">Popular searches</h2>
           <PopularSearches onPick={(term) => setQuery(term.toLowerCase())} />
+        </div>
+      )}
+
+      {searching && (
+        <p role="status" className="px-4 pt-6 pb-8 text-[15px] text-ink-2 md:px-12 md:pt-8">
+          Searching…
+        </p>
+      )}
+
+      {failed && (
+        <div role="alert" className="flex max-w-[760px] flex-col gap-3 px-4 pt-8 pb-10 md:px-12 md:pt-10 md:pb-12">
+          <p className="leading-[1.6]">Suggestions aren’t loading. Check your connection, or press Enter to see every result.</p>
         </div>
       )}
 

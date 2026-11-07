@@ -15,6 +15,16 @@ import type { Image, ProductDetail } from "@/lib/shopify/types";
 
 type Option = ProductDetail["options"][number];
 
+/** Where add to bag is up to. Only one at a time: never adding with an old message still showing. */
+type Phase =
+  | { kind: "idle" }
+  | { kind: "prompt"; text: string }
+  | { kind: "adding" }
+  | { kind: "added"; text: string }
+  | { kind: "error"; text: string };
+
+const IDLE: Phase = { kind: "idle" };
+
 /** Colour, size, add to bag, back-in-stock and wishlist. */
 export function ProductForm({
   product,
@@ -43,8 +53,8 @@ export function ProductForm({
     initial[o.name] = firstAvailable?.selectedOptions.find((s) => s.name === o.name)?.value ?? o.optionValues[0].name;
   }
   const [selection, setSelection] = useState(initial);
-  const [status, setStatus] = useState<{ kind: "prompt" | "added" | "error"; text: string } | null>(null);
-  const [adding, setAdding] = useState(false);
+  const [phase, setPhase] = useState<Phase>(IDLE);
+  const adding = phase.kind === "adding";
   const [toast, setToast] = useState<string | null>(null);
 
   const matches = (values: Record<string, string>) =>
@@ -81,7 +91,8 @@ export function ProductForm({
 
   const pick = (name: string, value: string) => {
     setSelection((s) => ({ ...s, [name]: value }));
-    setStatus(null);
+    // A new choice clears the message, but not an add already on its way.
+    setPhase((p) => (p.kind === "adding" ? p : IDLE));
   };
 
   useEffect(() => {
@@ -91,48 +102,51 @@ export function ProductForm({
   }, [toast]);
 
   const addToBag = async () => {
+    if (adding) return;
     if (!variant) {
-      setStatus({ kind: "prompt", text: `Choose a ${sizeOption ? "size" : "option"} to continue.` });
+      setPhase({ kind: "prompt", text: `Choose a ${sizeOption ? "size" : "option"} to continue.` });
       // Take the shopper to the sizes, and keyboard focus with them.
       const group = sizesRef.current;
       group?.scrollIntoView({ behavior: "smooth", block: "center" });
       group?.querySelector<HTMLButtonElement>("button:not([aria-pressed='true'])")?.focus({ preventScroll: true });
       return;
     }
-    setAdding(true);
-    setStatus(null);
+    setPhase({ kind: "adding" });
     const failed = "We couldn’t add this to your bag. Check your connection and try again.";
     let result: Awaited<ReturnType<typeof add>>;
     try {
       result = await add(variant.id);
     } catch {
       result = { cart: null, error: failed };
-    } finally {
-      setAdding(false);
     }
     if (result.error || !result.cart) {
-      setStatus({ kind: "error", text: result.error ?? failed });
+      setPhase({ kind: "error", text: result.error ?? failed });
       return;
     }
     const label = variantLabel(variant.selectedOptions);
-    setStatus({
+    setPhase({
       kind: "added",
       text: size && colourOption ? `${sizeName(size)} in ${selection[colourOption.name]} added to your bag.` : `${product.title} added to your bag.`,
     });
     setToast([product.title, label].filter(Boolean).join(" · "));
   };
 
-  const ctaLabel = adding
-    ? "Adding…"
-    : status?.kind === "error"
-      ? "Try again"
-      : status?.kind === "added"
-        ? "Added to bag"
-        : unavailable
-          ? "Unavailable"
-          : variant || !sizeOption
-            ? "Add to bag"
-            : "Select a size";
+  const ctaLabel = (() => {
+    switch (phase.kind) {
+      case "adding":
+        return "Adding…";
+      case "error":
+        return "Try again";
+      case "added":
+        return "Added to bag";
+      case "idle":
+      case "prompt":
+        if (unavailable) return "Unavailable";
+        return variant || !sizeOption ? "Add to bag" : "Select a size";
+    }
+  })();
+  const message = phase.kind === "prompt" || phase.kind === "added" || phase.kind === "error" ? phase : null;
+  const alarming = phase.kind === "prompt" || phase.kind === "error";
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
@@ -183,7 +197,7 @@ export function ProductForm({
           <div className="flex items-center justify-between gap-4 md:items-baseline">
             <span
               id={`${id}-size`}
-              className={`text-[11px] font-semibold tracking-[0.14em] uppercase md:text-[12px] ${status?.kind === "prompt" ? "text-error" : ""}`}
+              className={`text-[11px] font-semibold tracking-[0.14em] uppercase md:text-[12px] ${phase.kind === "prompt" ? "text-error" : ""}`}
             >
               {sizes.some((s) => s.full.startsWith("UK ")) ? "Size (UK)" : "Size"}
             </span>
@@ -280,10 +294,10 @@ export function ProductForm({
         )}
         <p
           role="status"
-          className={`flex min-h-5 items-start gap-2.5 text-[13px] ${status?.kind === "prompt" || status?.kind === "error" ? "text-error" : ""}`}
+          className={`flex min-h-5 items-start gap-2.5 text-[13px] ${alarming ? "text-error" : ""}`}
         >
-          {status?.kind === "error" && <AlertIcon size={18} className="mt-px flex-none" />}
-          {status?.text}
+          {phase.kind === "error" && <AlertIcon size={18} className="mt-px flex-none" />}
+          {message?.text}
         </p>
         {product.availableForSale && !soldOut && <SecureCheckout />}
       </div>

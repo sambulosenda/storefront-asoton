@@ -45,7 +45,7 @@ export function MarketSheet() {
 }
 
 function MarketList({ onClose }: { onClose: () => void }) {
-  const { markets, market, chooseCountry, switchingCountry } = useStore();
+  const { markets, market, chooseCountry, switchingCountry, countryError } = useStore();
   return (
     <div className="flex max-h-dvh flex-col md:max-h-[calc(100dvh-180px)]">
       <div className="flex items-center justify-between gap-4 border-b border-line py-4 pr-2 pl-4 md:py-5 md:pr-6 md:pl-10">
@@ -59,6 +59,11 @@ function MarketList({ onClose }: { onClose: () => void }) {
       <p className="px-4 pt-5 text-[14px] leading-[1.6] text-ink-2 md:px-10">
         Prices, delivery and checkout follow the country you choose.
       </p>
+      {countryError && (
+        <p role="alert" className="mx-4 mt-4 bg-stone px-4 py-3 text-[14px] text-error md:mx-10">
+          {countryError}
+        </p>
+      )}
       <ul aria-busy={switchingCountry} className="overflow-y-auto px-4 pt-3 pb-8 md:px-10">
         {markets.map((m) => {
           const current = m.isoCode === market?.isoCode;
