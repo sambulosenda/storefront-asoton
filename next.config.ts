@@ -29,12 +29,41 @@ const nextConfig: NextConfig = {
       { source: "/pages/african-clothing-track-order", destination: "/help#delivery", permanent: true },
       { source: "/pages/african-clothing-refund-policy", destination: "/help#returns", permanent: true },
       { source: "/pages/african-clothing-privacy-policy", destination: "/policies/privacy-policy", permanent: true },
+      // Older addresses the Shopify site itself still redirected to the pages above.
+      ...[
+        ["/pages/avada-faqs", "/faqs"],
+        ["/pages/about-us", "/story"],
+        ["/pages/contact-us", "/help#contact"],
+        ["/pages/shipping-delivery", "/help#delivery"],
+        ["/pages/order-tracking", "/help#delivery"],
+        ["/pages/refund-and-returns-policy", "/help#returns"],
+        ["/pages/refund_returns", "/help#returns"],
+        ["/pages/privacy-policy", "/policies/privacy-policy"],
+        ["/pages/privacy-policy-2-2", "/policies/privacy-policy"],
+        ["/pages/data-sharing-opt-out", "/policies/privacy-policy"],
+        ["/pages/african-clothing-privacy-choices", "/policies/privacy-policy"],
+        ["/pages/home", "/"],
+        ["/pages/african-clothing-home-store", "/"],
+        ["/pages/shop", "/collections/all"],
+        ["/pages/shop-2", "/collections/all"],
+        ["/pages/fashion-2", "/collections/all"],
+        ["/pages/fashion-3", "/collections/all"],
+        ["/pages/african-fashion-2-collection", "/collections/all"],
+        ["/pages/african-fashion-3-collection", "/collections/all"],
+        // From the shop's site before Shopify (WooCommerce), still linked from elsewhere.
+        ["/product/chidike-patchwork-trousers", "/products/unisex-african-patchwork-cargo-trousers-boho-wide-leg-festival-pants"],
+        ["/product/:slug", "/collections/all"],
+        ["/product-category/:path*", "/collections/all"],
+      ].map(([source, destination]) => ({ source, destination, permanent: true })),
+      // Old product and collection handles that Shopify redirected are followed on those pages (src/lib/old-links.ts),
+      // only once nothing lives at the old address, as Shopify did. The old blog's posts (theme filler, such as a
+      // coffee table guide) aren't brought over, so their addresses are a plain 404.
       { source: "/collections/:collection/products/:product", destination: "/products/:product", permanent: true },
       { source: "/cart", destination: "/", permanent: false },
-      // What only Shopify serves (accounts, orders, checkout, the blog, and old pages with no match
+      // What only Shopify serves (accounts, orders, checkout, and old pages with no match
       // here, such as the terms) goes back to Shopify, which sends it on to the store's primary domain.
       ...(shopifyDomain
-        ? ["/account/:path*", "/account", "/orders/:path*", "/checkouts/:path*", "/cart/c/:path*", "/blogs/:path*", "/apps/:path*", "/pages/:page"].map(
+        ? ["/account/:path*", "/account", "/orders/:path*", "/checkouts/:path*", "/cart/c/:path*", "/apps/:path*", "/pages/:page"].map(
             (source) => ({ source, destination: `https://${shopifyDomain}${source}`, permanent: false }),
           )
         : []),

@@ -183,6 +183,10 @@ export async function getCollection({
           handle
           title
           description
+          seo {
+            title
+            description
+          }
           image {
             ...ImageFields
           }
@@ -231,7 +235,7 @@ export async function getCollection({
     const c = data.collection;
     if (!c) return null;
     return {
-      collection: { id: c.id, handle: c.handle, title: c.title, description: c.description, image: c.image },
+      collection: { id: c.id, handle: c.handle, title: c.title, description: c.description, seo: c.seo, image: c.image },
       products: c.products.nodes,
       filters: c.products.filters,
       pageInfo: c.products.pageInfo,

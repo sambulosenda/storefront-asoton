@@ -11,7 +11,7 @@ import { SizeGuide } from "@/components/size-guide";
 import { StoreProvider } from "@/components/store-provider";
 import { deliveryPlan, deliveryThreshold, departmentMenu, homeFeature, menuCloths, stockedOccasions } from "@/lib/catalog";
 import { accountUrl, getMarkets } from "@/lib/shopify";
-import { collectionPath, moreNav, site, siteUrl } from "@/lib/site";
+import { collectionPath, indexable, moreNav, site, siteUrl } from "@/lib/site";
 import "./globals.css";
 
 const bodoni = Bodoni_Moda({
@@ -33,6 +33,8 @@ export const metadata: Metadata = {
   description: site.description,
   openGraph: { siteName: site.brand, type: "website", locale: "en_GB" },
   twitter: { card: "summary_large_image" },
+  // Until the real address is set, this copy stays out of search results so it can't compete with the live shop.
+  ...(indexable ? {} : { robots: { index: false, follow: false } }),
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
