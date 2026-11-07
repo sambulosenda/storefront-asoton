@@ -199,7 +199,9 @@ export function ProductForm({
             ref={sizesRef}
             role="group"
             aria-labelledby={`${id}-size`}
-            style={{ "--cols": Math.min(sizes.length, 8) } as CSSProperties}
+            // At least four columns, so a piece in two sizes has chips the width of its neighbours', not
+            // two wide bars; up to eight on wide screens, so a long run of sizes stays on one row.
+            style={{ "--cols": Math.max(4, Math.min(sizes.length, 8)) } as CSSProperties}
             className={compact ? "grid grid-cols-4 gap-2 md:grid-cols-[repeat(var(--cols),minmax(0,1fr))]" : "flex flex-wrap gap-2"}
           >
             {sizes.map((s) => {
