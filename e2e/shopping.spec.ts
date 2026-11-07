@@ -99,12 +99,13 @@ test("a collection filters and sorts through the URL", async ({ page, isMobile }
 
 test("adding to the bag, changing quantity and removing", async ({ page }) => {
   await page.goto("/products/adire-wrap-dress");
-  const add = page.getByRole("button", { name: "Select a size" });
+  // On phones the pinned bar can repeat the button, depending on scroll; the one under the sizes is first.
+  const add = page.getByRole("button", { name: "Select a size" }).first();
   await add.click();
   await expect(page.getByText("Choose a size to continue.")).toBeVisible();
 
   await page.getByRole("button", { name: "UK 10", exact: true }).click();
-  await page.getByRole("button", { name: "Add to bag" }).click();
+  await page.getByRole("button", { name: "Add to bag" }).first().click();
   await expect(page.getByText("UK 10 in Indigo added to your bag.")).toBeVisible();
 
   await page.getByRole("button", { name: /^Bag,? \(?1/ }).filter({ visible: true }).click();
