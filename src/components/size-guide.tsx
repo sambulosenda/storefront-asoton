@@ -4,14 +4,13 @@ import Link from "next/link";
 import { useState } from "react";
 import { CloseIcon } from "@/components/icons";
 import { Sheet } from "@/components/sheet";
-import { useStore } from "@/components/store-provider";
+import { type SizeGuideSizes, useStore } from "@/components/store-provider";
 
 // Body measurements in centimetres, from the shop size guide.
 const CHARTS = {
   women: {
     sizeHead: "UK size",
     firstHead: "Bust",
-    highlight: "UK 10",
     rows: [
       ["UK 6", 78, 60, 86],
       ["UK 8", 82, 64, 90],
@@ -24,6 +23,7 @@ const CHARTS = {
     ],
     fits: [
       { style: "Wrap dresses", note: "Adjustable at the waist. Choose by bust." },
+      { style: "Tops and blouses", note: "Choose by bust." },
       { style: "Boubous and kaftans", note: "Cut loose. Take your usual size, or one down for a closer fit." },
       { style: "Two-piece sets", note: "Top and wrapper are sized together. Choose by your larger measurement." },
     ],
@@ -31,7 +31,6 @@ const CHARTS = {
   men: {
     sizeHead: "Size",
     firstHead: "Chest",
-    highlight: "M",
     rows: [
       ["S", 94, 80, 96],
       ["M", 100, 86, 102],
@@ -51,19 +50,31 @@ const CHARTS = {
 const toInches = (cm: number) => Math.round((cm / 2.54) * 2) / 2;
 
 export function SizeGuide() {
-  const { overlay, close, sizeGuideDept } = useStore();
+  const { overlay, close, sizeGuideDept, sizeGuideSizes } = useStore();
   return (
     <Sheet open={overlay === "size-guide"} onClose={close} placement="center" className="md:mt-10 md:w-[880px] md:max-h-[min(820px,calc(100dvh-80px))]" aria-labelledby="sg-title">
-      <SizeGuideBody initialDept={sizeGuideDept} onClose={close} />
+      <SizeGuideBody key={`${sizeGuideDept}-${sizeGuideSizes.chosen ?? ""}`} initialDept={sizeGuideDept} sizes={sizeGuideSizes} onClose={close} />
     </Sheet>
   );
 }
 
-export function SizeGuideBody({ initialDept, onClose }: { initialDept: "women" | "men"; onClose?: () => void }) {
+export function SizeGuideBody({
+  initialDept,
+  sizes = {},
+  onClose,
+}: {
+  initialDept: "women" | "men";
+  sizes?: SizeGuideSizes;
+  onClose?: () => void;
+}) {
   const [dept, setDept] = useState(initialDept);
   const [unit, setUnit] = useState<"cm" | "in">("cm");
   const chart = CHARTS[dept];
   const value = (cm: number) => (unit === "cm" ? cm : toInches(cm));
+  // From a product page: shade the size chosen, and grey out the sizes this piece doesn't come in
+  // (only when the piece's sizes are on this chart, so a men's piece doesn't grey out the women's chart).
+  const rowNames: string[] = chart.rows.map((r) => r[0]);
+  const offered = sizes.offered?.filter((s) => rowNames.includes(s)) ?? [];
 
   return (
     <div className="flex flex-col">
@@ -113,7 +124,9 @@ export function SizeGuideBody({ initialDept, onClose }: { initialDept: "women" |
 
         <div className="flex flex-col">
           <p id="sg-note" className="mb-3 text-[13px] text-ink-2">
-            Body measurements in {unit === "cm" ? "centimetres" : "inches"}. Each product page also lists that garment’s own measurements.
+            Body measurements in {unit === "cm" ? "centimetres" : "inches"}.
+            {sizes.chosen && rowNames.includes(sizes.chosen) && ` Your size, ${sizes.chosen}, is shaded.`}
+            {offered.length > 0 && " Sizes this piece doesn’t come in are greyed out."}
           </p>
           <table aria-describedby="sg-note" className="w-full table-fixed border-collapse text-left text-[15px] tabular-nums">
             <thead>
@@ -134,7 +147,12 @@ export function SizeGuideBody({ initialDept, onClose }: { initialDept: "women" |
             </thead>
             <tbody>
               {chart.rows.map(([size, a, b, c]) => (
-                <tr key={size} className={`h-11 border-b border-line ${size === chart.highlight ? "bg-stone" : ""}`}>
+                <tr
+                  key={size}
+                  className={`h-11 border-b border-line ${size === sizes.chosen ? "bg-stone" : ""} ${
+                    offered.length > 0 && !offered.includes(size) ? "text-muted" : ""
+                  }`}
+                >
                   <th scope="row" className="px-3 font-medium">
                     {size}
                   </th>

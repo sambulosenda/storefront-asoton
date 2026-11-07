@@ -14,10 +14,10 @@ export function AnnouncementBar({ threshold }: { threshold: string }) {
     <div className="bg-ink text-paper">
       {/* Phones: one short centred line. */}
       <div className="flex min-h-9 items-center justify-center px-4 text-[11px] tracking-[0.06em] md:hidden">
-        Complimentary UK delivery over {threshold}
+        Free UK delivery over {threshold}
       </div>
       <div className="page-x hidden min-h-10 flex-wrap items-center justify-between gap-x-6 text-[12px] tracking-[0.06em] md:flex">
-        <span className="py-2.5">Complimentary UK delivery on orders over {threshold}</span>
+        <span className="py-2.5">Free UK delivery on orders over {threshold}</span>
         <MarketButton className="min-h-10 text-[12px] tracking-[0.06em] text-paper" />
       </div>
     </div>

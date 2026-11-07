@@ -17,7 +17,7 @@ export function Logo({ className, tagline = true, dark = false }: { className?: 
     <svg
       viewBox={tagline ? "0 0 240 51" : "0 0 240 34"}
       role="img"
-      aria-label={site.brand}
+      aria-label={site.name}
       className={className}
       fill="currentColor"
     >

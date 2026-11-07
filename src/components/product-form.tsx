@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useId, useState, useSyncExternalStore, type CSSProperties } from "react";
+import { useActionState, useEffect, useId, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { variantLabel } from "@/components/cart-drawer";
 import { ProductVisual } from "@/components/cloth";
 import { SecureCheckout } from "@/components/payment-marks";
@@ -9,7 +9,7 @@ import { useStore } from "@/components/store-provider";
 import { notifyAction } from "@/lib/actions";
 import { swatchColour } from "@/lib/filters";
 import { formatMoney, isColourOption, isSizeOption } from "@/lib/format";
-import { arrivalDate, isPurchaseOption, makeDays, purchaseKind, sentenceCase, type DeliveryPlan } from "@/lib/purchase";
+import { arrivalDate, cutoffNote, isPurchaseOption, makeDays, purchaseKind, sentenceCase, type DeliveryPlan } from "@/lib/purchase";
 import { sizeName, sortedSizes } from "@/lib/sizes";
 import type { Image, ProductDetail } from "@/lib/shopify/types";
 
@@ -56,6 +56,18 @@ export function ProductForm({
   const price = variant?.price ?? product.priceRange.minVariantPrice;
   const size = sizeOption ? selection[sizeOption.name] : undefined;
   const soldOut = variant ? !variant.availableForSale : false;
+  // Phones: a bar pinned to the bottom while the add-to-bag button is off screen.
+  const buyRef = useRef<HTMLDivElement>(null);
+  const sizesRef = useRef<HTMLDivElement>(null);
+  const [buyInView, setBuyInView] = useState(true);
+  useEffect(() => {
+    const el = buyRef.current;
+    if (!el) return;
+    const watch = new IntersectionObserver(([entry]) => setBuyInView(entry.isIntersecting));
+    watch.observe(el);
+    return () => watch.disconnect();
+    // The button is swapped for the sold-out form and back, so watch whichever is there now.
+  }, [soldOut]);
   // Buttons show the short UK size in size order; the value Shopify holds still picks the variant.
   const sizes = sizeOption ? sortedSizes(sizeOption.optionValues.map((v) => v.name)) : [];
   const chosen = sizes.find((s) => s.value === size);
@@ -81,6 +93,10 @@ export function ProductForm({
   const addToBag = async () => {
     if (!variant) {
       setStatus({ kind: "prompt", text: `Choose a ${sizeOption ? "size" : "option"} to continue.` });
+      // Take the shopper to the sizes, and keyboard focus with them.
+      const group = sizesRef.current;
+      group?.scrollIntoView({ behavior: "smooth", block: "center" });
+      group?.querySelector<HTMLButtonElement>("button:not([aria-pressed='true'])")?.focus({ preventScroll: true });
       return;
     }
     setAdding(true);
@@ -173,13 +189,14 @@ export function ProductForm({
             </span>
             <button
               type="button"
-              onClick={() => openSizeGuide(dept)}
+              onClick={() => openSizeGuide(dept, { chosen: chosen?.full, offered: sizes.map((s) => s.full) })}
               className="inline-flex min-h-11 cursor-pointer items-center text-[13px] underline underline-offset-4 md:min-h-0 md:py-2"
             >
               Size guide
             </button>
           </div>
           <div
+            ref={sizesRef}
             role="group"
             aria-labelledby={`${id}-size`}
             style={{ "--cols": Math.min(sizes.length, 8) } as CSSProperties}
@@ -247,7 +264,7 @@ export function ProductForm({
         {soldOut && variant ? (
           <NotifyPanel key={variant.id} label={size ? sizeName(size) : product.title} piece={product.title} handle={product.handle} option={variant.title} />
         ) : (
-          <div className="flex gap-2">
+          <div ref={buyRef} className="flex gap-2">
             <button
               type="button"
               onClick={addToBag}
@@ -268,6 +285,18 @@ export function ProductForm({
         </p>
         {product.availableForSale && !soldOut && <SecureCheckout />}
       </div>
+
+      {!buyInView && !toast && product.availableForSale && !soldOut && (
+        <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-4 border-t border-line bg-paper px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] md:hidden">
+          <div className="flex min-w-0 flex-1 flex-col">
+            <span className="text-[15px]">{formatMoney(price)}</span>
+            <span className="truncate text-[13px] text-ink-2">{chosen ? chosen.full : product.title}</span>
+          </div>
+          <button type="button" onClick={addToBag} disabled={adding || unavailable} className="btn btn-ink h-12 flex-none px-6 disabled:opacity-60">
+            {ctaLabel}
+          </button>
+        </div>
+      )}
 
       {toast && (
         <div className="fixed inset-x-4 bottom-4 z-30 flex items-center gap-4 bg-ink p-4 text-paper md:hidden">
@@ -320,7 +349,14 @@ function PurchaseChoice({
     const title = kind === "ready" ? "Ready to ship" : kind === "made" ? "Made to order" : sentenceCase(v.name);
     const line = kind === "ready" ? delivery.dispatchLine : kind === "made" ? `Made to your size in ${makeDays(v.name)} days` : null;
     const arrives = now && kind !== "other" ? arrivalDate(kind, v.name, delivery, now) : null;
-    return { value: v.name, title, line, arrives: arrives && (kind === "made" ? `Arrives about ${arrives}` : `Arrives ${arrives}`) };
+    return {
+      value: v.name,
+      title,
+      line,
+      arrives: arrives && (kind === "made" ? `Arrives about ${arrives}` : `Arrives ${arrives}`),
+      // Said where the choice is made, not only in the delivery panel further down.
+      terms: kind === "made" ? "Made for you, so returns only if faulty" : kind === "ready" && now ? cutoffNote(delivery, now) : null,
+    };
   });
   const body = (c: (typeof cards)[number]) => (
     <>
@@ -328,6 +364,7 @@ function PurchaseChoice({
       {c.line && <span className="text-[13px] text-ink-2">{c.line}</span>}
       {/* Kept as a line so the card doesn't grow once the date arrives. */}
       <span className="min-h-5 text-[13px] text-ink-2">{c.arrives}</span>
+      {c.terms && <span className="text-[13px] text-ink-2">{c.terms}</span>}
     </>
   );
 

@@ -81,7 +81,7 @@ export function CartDrawer({
             )}
             {remaining === null && (
               <div className="flex-none border-b border-line px-4 py-3.5 text-[13px] md:px-8 md:py-5">
-                Complimentary UK delivery on orders over {thresholdLabel}.
+                Free UK delivery on orders over {thresholdLabel}.
               </div>
             )}
 

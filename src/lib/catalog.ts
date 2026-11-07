@@ -124,8 +124,10 @@ export async function stockedCloths(): Promise<StockedCloth[]> {
  */
 export async function homeFeature() {
   const [campaign, newIn] = await Promise.all([getHomeCampaign(), getCollectionOrAll({ handle: collections.newIn, first: 24 })]);
-  // African pieces with a photo, then other pieces with a photo, then the rest; New in's order within each.
-  const rank = (p: Product) => (p.featuredImage ? (isAfricanPiece(p) ? 0 : 1) : 2);
+  // Pieces with a photo whose name says their cloth (so the hero can name it), then other African
+  // pieces with a photo, then other pieces with a photo, then the rest; New in's order within each.
+  const rank = (p: Product) =>
+    !p.featuredImage ? 3 : clothOf({ title: p.title, productType: p.productType }) ? 0 : isAfricanPiece(p) ? 1 : 2;
   const products = [...newIn.products].sort((x, y) => rank(x) - rank(y)).slice(0, 4);
   return { campaign, collection: newIn.collection, products };
 }
@@ -160,6 +162,23 @@ export async function departmentImage(dept: Department): Promise<Image | null> {
   }
   const search = departments[handle]?.imageSearch;
   return search ? firstPhoto((await searchProducts({ query: search, first: 4 })).products) : null;
+}
+
+/** A home tile's picture for a collection that isn't a department: its first African piece with a photo, else its first photo. */
+export async function collectionImage(handle: string): Promise<Image | null> {
+  const page = await getCollection({ handle, first: 24 });
+  if (!page) return null;
+  return page.products.find((p) => p.featuredImage && isAfricanPiece(p))?.featuredImage ?? firstPhoto(page.products);
+}
+
+/**
+ * A close-up of a cloth for the home hero: the photo of a Fabric & lace piece of that cloth, so the
+ * swatch beside a garment is the real cloth it is cut from. Null when the shop sells none of it.
+ */
+export async function clothSwatch(key: Cloth["key"]): Promise<{ image: Image; handle: string } | null> {
+  const page = await getCollection({ handle: collections.fabric, first: 48 });
+  const piece = page?.products.find((p) => p.featuredImage && clothOf({ title: p.title, productType: p.productType })?.key === key);
+  return piece?.featuredImage ? { image: piece.featuredImage, handle: piece.handle } : null;
 }
 
 /** The free UK delivery amount: the shop metafield, else the "delivery_rules" entry, else the placeholder. */

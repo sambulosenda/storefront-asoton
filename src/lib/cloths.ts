@@ -113,6 +113,19 @@ export function clothOf(product: { title: string; productType?: string; tags?: s
   return clothFor(product.title) ?? clothFor([product.productType, ...(product.tags ?? [])].join(" "));
 }
 
+/**
+ * How a card or the home hero names a piece's cloth, from its title and type (tags name the wrong
+ * cloth too often). A piece printed in a woven or dyed cloth's pattern, such as a "Kente Print" gown,
+ * is named as a print and given no origin: the product page reads it the same way, and the real cloth
+ * (handwoven kente, say) keeps its name and place. Wax print is a print already.
+ */
+export function pieceCloth(product: { title: string; productType?: string }): { name: string; origin: string | null } | null {
+  const cloth = clothOf({ title: product.title, productType: product.productType });
+  if (!cloth) return null;
+  const printed = cloth.key !== "wax" && (/\bprint/i.test(product.title) || !clothOf({ title: product.title }));
+  return printed ? { name: `${cloth.name} print`, origin: null } : { name: cloth.name, origin: cloth.country };
+}
+
 export function clothByName(name: string | null | undefined): Cloth | null {
   if (!name) return null;
   return clothFor(name);
