@@ -126,6 +126,32 @@ export function pieceCloth(product: { title: string; productType?: string }): { 
   return printed ? { name: `${cloth.name} print`, origin: null } : { name: cloth.name, origin: cloth.country };
 }
 
+// A description's spec lines ("Pattern: All over African Kente print / geometric"), up to the next label.
+const specLine = (labels: string) =>
+  new RegExp(`\\b(?:${labels})\\s*:\\s*(.{0,90}?)(?=\\s+[A-Z][\\w /&]{1,24}:|\\.\\s|$)`, "g");
+const MATERIAL_LINE = specLine("Material(?:\\s*/\\s*Fabric)?|Fabric");
+const PATTERN_LINE = specLine("Pattern(?: Type)?|Print");
+
+/**
+ * The cloth a description's spec lines name, for pieces whose title doesn't. Only those lines: the
+ * rest of a description offers other cloths ("choose a different Ankara fabric") and other pieces.
+ * Named as the material, the piece is made of it; named as the pattern, it's a print of it.
+ * Null when the lines name no cloth or more than one.
+ */
+export function clothInDescription(description: string): { cloth: Cloth; printed: boolean } | null {
+  const named = (re: RegExp) => {
+    const text = [...description.matchAll(re)].map((m) => m[1]).join(" ");
+    const keys = [...new Set(CLOTH_WORDS.filter(([, word]) => word.test(text)).map(([key]) => key))];
+    return keys.length === 1 ? CLOTHS.find((c) => c.key === keys[0])! : keys.length ? undefined : null;
+  };
+  const material = named(MATERIAL_LINE);
+  const pattern = named(PATTERN_LINE);
+  if (material === undefined || pattern === undefined) return null;
+  if (material && pattern && material.key !== pattern.key) return null;
+  if (material) return { cloth: material, printed: false };
+  return pattern ? { cloth: pattern, printed: pattern.key !== "wax" } : null;
+}
+
 export function clothByName(name: string | null | undefined): Cloth | null {
   if (!name) return null;
   return clothFor(name);

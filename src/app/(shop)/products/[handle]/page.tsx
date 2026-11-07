@@ -12,7 +12,7 @@ import { ProductForm } from "@/components/product-form";
 import { ProductGallery } from "@/components/product-gallery";
 import { ProductSkeleton } from "@/components/skeletons";
 import { clothLinks, clothSwatch, deliveryPlan, deliveryThreshold, deliveryTimes } from "@/lib/catalog";
-import { clothByName, clothOf } from "@/lib/cloths";
+import { clothByName, clothInDescription, clothOf } from "@/lib/cloths";
 import { getCountry } from "@/lib/market";
 import { movedProducts } from "@/lib/old-links";
 import { cleanDescription } from "@/lib/rich-text";
@@ -96,14 +96,20 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
     deliveryPlan(),
   ]);
 
-  // The cloth set on the product in Shopify, else the one its name or type says. Not its tags: they
-  // carry loose search words ("kente" on an Ankara dress), and a wrong cloth is worse than none.
-  const clothKey = (clothByName(product.clothFields?.name) ?? clothOf({ title: product.title, productType: product.productType }))?.key;
+  // The cloth set on the product in Shopify, else the one its name or type says, else the one its
+  // description's material or pattern line names. Not its tags: they carry loose search words
+  // ("kente" on an Ankara dress), and a wrong cloth is worse than none.
+  const set = clothByName(product.clothFields?.name);
+  const titled = set ? null : clothOf({ title: product.title, productType: product.productType });
+  const described = set || titled ? null : clothInDescription(product.description);
+  const clothKey = (set ?? titled ?? described?.cloth)?.key;
   const cloth = cloths.find((c) => c.key === clothKey);
   // Most pieces are printed in a cloth's pattern rather than made of the woven or dyed cloth itself,
-  // so they don't take its technique or care. Only a cloth set on the product in Shopify says otherwise.
+  // so they don't take its technique or care. A cloth set in Shopify, or named as the material, says otherwise.
   const printed =
-    !!cloth && cloth.key !== "wax" && !clothByName(product.clothFields?.name) && (/\bprint/i.test(product.title) || !clothOf({ title: product.title }));
+    !!cloth &&
+    cloth.key !== "wax" &&
+    (titled ? /\bprint/i.test(product.title) || !clothOf({ title: product.title }) : !!described?.printed);
   const dept = product.collections.some((c) => c.handle === collections.men || c.handle === "men") ? "men" : "women";
   const department = DEPARTMENTS.map((d) => product.collections.find((c) => c.handle === d)).find(Boolean);
   // After the department, one more collection (such as the cloth), but never a stand-in or retired one.
