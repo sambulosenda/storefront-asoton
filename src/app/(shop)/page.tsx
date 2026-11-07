@@ -390,8 +390,10 @@ function HeroPiece({ product: p, swatch }: { product: Product; swatch: { image: 
     <nav aria-label="In the picture" className="px-4 md:px-0">
       <div className="md:mx-auto md:max-w-[min(100%,calc((100svh-260px)*0.8))]">
         <div className="relative">
+          {/* Named here: without a photo the piece is a drawing, which has no text of its own. */}
           <Link
             href={`/products/${p.handle}`}
+            aria-label={p.title}
             style={{ "--i": 2 } as CSSProperties}
             className="rise group relative isolate flex aspect-[4/5] items-center justify-center overflow-hidden bg-stone no-underline"
           >
