@@ -79,8 +79,8 @@ export default function ProductPage({ params }: PageProps<"/products/[handle]">)
 }
 
 const DEPARTMENTS: string[] = [collections.women, collections.men, collections.kids, collections.unisex];
-// Collections that aren't a place to browse: the home page's, New in, and old ones kept while rules change.
-const HIDDEN_CRUMB = /^(new-in|new-arrivals|all|review)$|old-rules/;
+// Collections that aren't a place to browse: the home page's, New in, seasonal sales, and old ones kept while rules change.
+const HIDDEN_CRUMB = /^(new-in|new-arrivals|all|review|sale)$|old-rules|black-friday|cyber-monday|christmas|boxing-day/;
 const hiddenCrumb = (handle: string) => HIDDEN_CRUMB.test(handle) || unlistedCollections.includes(handle);
 
 async function Product({ params }: { params: Promise<{ handle: string }> }) {
@@ -88,7 +88,7 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
   const product = await getProduct(handle, country);
   if (!product) gone(handle);
 
-  const [recommendations, cloths, threshold, times, plan] = await Promise.all([
+  const [{ products: recommendations, pairings }, cloths, threshold, times, plan] = await Promise.all([
     getRecommendations(product.id, country),
     clothLinks(),
     deliveryThreshold(),
@@ -114,7 +114,10 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
       .slice(0, 1),
   ].map((c) => ({ handle: c.handle, title: collectionName(c.handle, c.title) }));
 
-  const care = product.care ?? (printed ? null : cloth?.care);
+  // Care set in Shopify first. A description that gives its own care keeps the cloth's general care
+  // from contradicting it, so the panel only shows it for pieces whose description says nothing.
+  const describesCare = /\b(hand[- ]wash|machine[- ]wash|dry[- ]clean|wash(ed)? (cold|warm|at|on|inside))/i.test(product.description);
+  const care = product.care ?? (printed || describesCare ? null : cloth?.care);
   const panels: ({ title: string; body: ReactNode } | false | null | undefined | "")[] = [
     product.descriptionHtml && {
       title: "Description",
@@ -329,7 +332,7 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
             id="wear-with"
             className="mx-4 mb-5 font-display text-[32px] leading-none md:mx-0 md:mb-8 md:text-[clamp(36px,3.4vw,48px)] md:tracking-[-0.01em]"
           >
-            Wear it with
+            {pairings ? "Wear it with" : "You might also like"}
           </h2>
           <div className="md:hidden">
             <ProductRail products={recommendations} />

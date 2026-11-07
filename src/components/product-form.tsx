@@ -299,7 +299,7 @@ export function ProductForm({
       )}
 
       {toast && (
-        <div className="fixed inset-x-4 bottom-4 z-30 flex items-center gap-4 bg-ink p-4 text-paper md:hidden">
+        <div className="fixed inset-x-4 bottom-4 z-30 flex items-center gap-4 bg-ink p-4 text-paper md:inset-x-auto md:right-6 md:bottom-6 md:w-[400px]">
           <div className="relative flex h-16 w-12 flex-none items-center justify-center overflow-hidden bg-stone">
             <ProductVisual product={product} image={product.featuredImage as Image | null} sizes="48px" drawingWidth="84%" />
           </div>

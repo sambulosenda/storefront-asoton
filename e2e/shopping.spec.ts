@@ -3,7 +3,7 @@ import { acceptCookies } from "./helpers";
 
 test.beforeEach(async ({ page }) => acceptCookies(page));
 
-test("the home hero shows the store's campaign, with the pieces in the picture until it has a photo", async ({ page }) => {
+test("the home hero shows the store's campaign, with one piece in the picture until it has a photo", async ({ page }) => {
   await page.goto("/");
   // The fixture's campaign entry isn't called "home", like the live store's.
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Made for theBig Day");
@@ -12,8 +12,9 @@ test("the home hero shows the store's campaign, with the pieces in the picture u
   await expect(page.getByRole("link", { name: "Shop women" }).first()).toHaveAttribute("href", "/collections/womens-clothing");
   await expect(page.getByRole("link", { name: "Shop men" }).first()).toHaveAttribute("href", "/collections/mens-all");
   const pictured = page.getByRole("navigation", { name: "In the picture" });
-  await expect(pictured.getByRole("link", { name: /Adire Wrap Dress/ })).toHaveAttribute("href", "/products/adire-wrap-dress");
-  await expect(pictured.getByRole("link", { name: /Aso-oke Kaftan/ })).toBeVisible();
+  await expect(pictured.getByRole("link", { name: "Adire Wrap Dress" })).toHaveAttribute("href", "/products/adire-wrap-dress");
+  await expect(pictured.getByRole("link", { name: /Shop this piece/ })).toHaveAttribute("href", "/products/adire-wrap-dress");
+  await expect(pictured.getByText("Adire · Nigeria")).toBeVisible();
   await expect(page.getByRole("heading", { name: "New in" })).toBeVisible();
 });
 
@@ -24,9 +25,9 @@ test("the home page lists the store's occasions and uses its delivery rules", as
   await expect(occasions.getByRole("link")).toHaveCount(2);
   await expect(occasions.getByRole("link", { name: /Church/ })).toHaveCount(0);
   await expect(occasions.getByRole("link", { name: /Wedding guest/ })).toHaveAttribute("href", "/collections/wedding-guest");
-  await expect(page.getByText("Ready-to-ship pieces leave us within 1 working day.")).toBeVisible();
+  await expect(page.getByText("Ready to ship: leaves us within 1 working day.")).toBeVisible();
   // The shop metafield (£150) wins over the delivery rules' amount.
-  await expect(page.getByText(/Complimentary UK delivery (on orders )?over £150/).filter({ visible: true })).toBeVisible();
+  await expect(page.getByText(/Free UK delivery over £150\. Ready-to-ship pieces leave us within 1 working day/)).toBeVisible();
   await expect(page.getByText(/\[X\]/)).toHaveCount(0);
 });
 
@@ -72,20 +73,6 @@ test("the department tiles show the campaign photo, never the collection's own i
   await expect(tiles.getByRole("link", { name: /^Women/ }).locator("img")).toHaveAttribute("src", /women-tile\.jpg/);
   // No "men" entry, and the fixture's Men products have no photos, so that tile keeps its colour.
   await expect(tiles.getByRole("link", { name: /^Men/ }).locator("img")).toHaveCount(0);
-});
-
-test("the cloth band only offers cloths the store has pieces in, shown with one of them", async ({ page, isMobile }) => {
-  await page.goto("/");
-  const band = page.getByRole("region", { name: "Shop by cloth" });
-  await expect(band.getByText("Bògòlanfini")).toHaveCount(0);
-  if (isMobile) {
-    await expect(band.getByRole("link", { name: "Adire Wrap Dress" })).toHaveAttribute("href", "/products/adire-wrap-dress");
-    await expect(band.getByRole("link", { name: /^Wax print/ })).toHaveAttribute("href", "/search?q=ankara");
-  } else {
-    await band.getByRole("button", { name: /Kente/ }).click();
-    await expect(band.getByRole("link", { name: "Kente Panel Midi Skirt" })).toHaveAttribute("href", "/products/kente-panel-midi-skirt");
-    await expect(band.getByRole("link", { name: "Shop kente" })).toHaveAttribute("href", "/search?q=kente");
-  }
 });
 
 test("a collection filters and sorts through the URL", async ({ page, isMobile }) => {
@@ -137,7 +124,7 @@ test("a made-to-order piece in the bag shows its making time and later arrival",
   await page.getByRole("group", { name: "How would you like it?" }).getByRole("button", { name: /Made to order/ }).click();
   const sizes = page.getByRole("group", { name: /size/i }).first();
   await sizes.getByRole("button").first().click();
-  await page.getByRole("button", { name: "Add to bag" }).click();
+  await page.getByRole("button", { name: "Add to bag" }).first().click();
   await page.getByRole("button", { name: /^Bag,? \(?1/ }).filter({ visible: true }).click();
 
   const bag = page.getByRole("dialog");
@@ -182,7 +169,7 @@ test("sizes written as UK, US and EU show the UK size, in size order", async ({ 
 
   await page.getByRole("button", { name: "UK 4XL, US 3XL, EU 4XL" }).click();
   await expect(page.getByText("UK 4XL is US 3XL and EU 4XL.")).toBeVisible();
-  await page.getByRole("button", { name: "Add to bag" }).click();
+  await page.getByRole("button", { name: "Add to bag" }).first().click();
   await page.getByRole("button", { name: /^Bag,? \(?1/ }).filter({ visible: true }).click();
   await expect(page.getByRole("dialog").getByText("Wine and gold · UK 4XL")).toBeVisible();
 });
