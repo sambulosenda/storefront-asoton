@@ -7,6 +7,7 @@ import type {
   CollectionPage,
   Filter,
   Image,
+  MenuItem,
   MenuLink,
   PredictiveResults,
   Product,
@@ -591,6 +592,38 @@ export async function getMenu(handle: string): Promise<MenuLink[]> {
       const href = item.resource?.handle ? `/collections/${item.resource.handle}` : toPath(item.url);
       return href ? [{ title: item.title, href }] : [];
     });
+  } catch (error) {
+    console.error(error);
+    cacheLife("minutes");
+    return [];
+  }
+}
+
+type RawMenuItem = { title: string; url: string | null; resource: { handle?: string } | null; items?: RawMenuItem[] };
+
+const menuItemFields = `title url resource { ... on Collection { handle } }`;
+
+/** A Shopify menu with its nesting kept (Shopify allows three levels), as site paths. */
+export async function getMenuTree(handle: string): Promise<MenuItem[]> {
+  "use cache";
+  cacheTag("menus");
+
+  try {
+    const data = await shopifyFetch<{ menu: { items: RawMenuItem[] } | null }>(
+      `query MenuTree($handle: String!) {
+        menu(handle: $handle) {
+          items { ${menuItemFields} items { ${menuItemFields} items { ${menuItemFields} } } }
+        }
+      }`,
+      { handle },
+    );
+    cacheLife("hours");
+    const toItem = (item: RawMenuItem): MenuItem => ({
+      title: item.title,
+      href: item.resource?.handle ? `/collections/${item.resource.handle}` : toPath(item.url),
+      items: (item.items ?? []).map(toItem),
+    });
+    return (data.menu?.items ?? []).map(toItem);
   } catch (error) {
     console.error(error);
     cacheLife("minutes");

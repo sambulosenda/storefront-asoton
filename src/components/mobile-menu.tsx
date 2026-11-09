@@ -7,12 +7,10 @@ import { MarketButton } from "@/components/market-selector";
 import { BagIcon, CloseIcon, MinusIcon, PlusIcon } from "@/components/icons";
 import { Sheet } from "@/components/sheet";
 import { useStore } from "@/components/store-provider";
-import type { Image as ShopifyImage, MenuLink } from "@/lib/shopify/types";
+import type { MenuRow } from "@/lib/catalog";
+import type { Image as ShopifyImage } from "@/lib/shopify/types";
 import { site } from "@/lib/site";
 
-export type MenuGroup = { label: string; links: MenuLink[] };
-/** A row in the menu: a group that opens to its links, or a single link. */
-export type MenuRow = MenuGroup | { label: string; href: string };
 export type MenuPromo = { label: string; title: string; href: string; image: ShopifyImage | null };
 
 /** The full-screen menu on phones, and a left drawer on tablets where the nav doesn't fit. */
@@ -57,7 +55,7 @@ export function MobileMenu({
 
         <nav aria-label="Main" className="min-h-0 flex-auto overflow-y-auto px-4 pt-2 pb-6" onClick={(e) => (e.target as HTMLElement).closest("a") && close()}>
           {rows.map((group) => {
-            if (!("links" in group))
+            if (!("sections" in group))
               return (
                 <Link key={group.href} href={group.href} className={big}>
                   {group.label}
@@ -76,15 +74,27 @@ export function MobileMenu({
                   {isOpen ? <MinusIcon /> : <PlusIcon />}
                 </button>
                 {isOpen && (
-                  <ul className="pb-4">
-                    {group.links.map((link) => (
-                      <li key={link.href + link.title}>
-                        <Link href={link.href} className="flex min-h-11 items-center no-underline">
-                          {link.title}
-                        </Link>
-                      </li>
+                  <div className="pb-4">
+                    {group.href && (
+                      <Link href={group.href} className="flex min-h-11 items-center no-underline">
+                        Shop all
+                      </Link>
+                    )}
+                    {group.sections.map((section, i) => (
+                      <div key={section.label ?? i} className={section.label ? "pt-3" : undefined}>
+                        {section.label && <h3 className="text-[11px] tracking-[0.14em] text-ink-2 uppercase">{section.label}</h3>}
+                        <ul>
+                          {section.links.map((link) => (
+                            <li key={link.href + link.title}>
+                              <Link href={link.href} className="flex min-h-11 items-center no-underline">
+                                {link.title}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 )}
               </div>
             );

@@ -13,9 +13,11 @@ import {
   getFreeDeliveryThreshold,
   getHomeCampaign,
   getMenu,
+  getMenuTree,
   getOccasions,
   searchProducts,
   type Image,
+  type MenuItem,
   type MenuLink,
   type Product,
 } from "@/lib/shopify";
@@ -238,12 +240,37 @@ export async function stockedOccasions() {
   return occasions.filter((_, i) => stocked[i]);
 }
 
+/** Links under a heading in a menu group; a null label shows the links without one. */
+export type MenuSection = { label: string | null; links: MenuLink[] };
+/** A row in the menu: a single link, or a group that opens to its sections. */
+export type MenuRow = { label: string; href: string } | { label: string; href: string | null; sections: MenuSection[] };
+
+/** Shopify menu titles typed in capitals ("FABRIC & LACE") read as sentence case ("Fabric & lace"). */
+function menuTitle(title: string) {
+  const t = title.trim();
+  return t === t.toUpperCase() ? t.charAt(0) + t.slice(1).toLowerCase() : t;
+}
+
+const linksOf = (items: MenuItem[]): MenuLink[] =>
+  items.flatMap((i) => (i.href ? [{ title: menuTitle(i.title), href: i.href }] : []));
+
 /**
- * The cloths for the menu: every "cloth" entry in Shopify with a collection (Ankara, Kente, Dashiki,
- * Embroidered), else the design cloths the store has pieces in.
+ * The phone menu, from Shopify's "main-menu" (Content → Menus). A top item with children opens to
+ * them; its third-level items sit under their parent's name as a heading. Headings with nothing
+ * under them are left out, and a heading that only repeats its department's name is dropped.
  */
-export async function menuCloths(): Promise<MenuLink[]> {
-  const entries = (await getCloths()).filter((e) => e.collectionHandle);
-  if (entries.length > 0) return entries.map((e) => ({ title: e.name, href: `/collections/${e.collectionHandle}` }));
-  return (await stockedCloths()).map((c) => ({ title: c.name, href: c.href }));
+export async function mainMenu(): Promise<MenuRow[]> {
+  return (await getMenuTree("main-menu")).flatMap((top): MenuRow[] => {
+    const label = menuTitle(top.title);
+    const nested = top.items.some((c) => c.items.length > 0);
+    const sections = nested
+      ? top.items.flatMap((c) => {
+          const links = linksOf(c.items);
+          const heading = menuTitle(c.title);
+          return links.length > 0 ? [{ label: heading.toLowerCase() === label.toLowerCase() ? null : heading, links }] : [];
+        })
+      : [{ label: null, links: linksOf(top.items) }].filter((s) => s.links.length > 0);
+    if (sections.length > 0) return [{ label, href: top.href, sections }];
+    return top.href ? [{ label, href: top.href }] : [];
+  });
 }

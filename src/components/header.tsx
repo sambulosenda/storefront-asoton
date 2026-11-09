@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Suspense } from "react";
+import { DesktopNav } from "@/components/desktop-nav";
 import { AccountIcon, BagIcon, MenuIcon, SearchIcon } from "@/components/icons";
 import { Logo } from "@/components/logo";
 import { MarketButton } from "@/components/market-selector";
 import { useStore } from "@/components/store-provider";
-import { nav } from "@/lib/site";
+import type { MenuRow } from "@/lib/catalog";
+import { collectionPath, nav } from "@/lib/site";
 
 export function AnnouncementBar({ threshold }: { threshold: string }) {
   return (
@@ -24,9 +24,11 @@ export function AnnouncementBar({ threshold }: { threshold: string }) {
   );
 }
 
-export function Header({ accountUrl, minimal = false }: { accountUrl: string | null; minimal?: boolean }) {
+export function Header({ accountUrl, menu = [], minimal = false }: { accountUrl: string | null; menu?: MenuRow[]; minimal?: boolean }) {
   const { cart, open } = useStore();
   const count = cart?.totalQuantity ?? 0;
+  // The desktop row: New in, then the store's main menu (Home is the logo). Without one, the shop's own links.
+  const navRows: MenuRow[] = menu.length > 0 ? [{ label: "New in", href: collectionPath("newIn") }, ...menu.filter((r) => r.href !== "/")] : nav;
 
   return (
     <header className="border-b border-line bg-paper">
@@ -60,12 +62,11 @@ export function Header({ accountUrl, minimal = false }: { accountUrl: string | n
 
       {/* Tablet and desktop */}
       <div className="page-x hidden h-[84px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-6 md:grid">
-        <Suspense fallback={<NavLinks current={null} />}>
-          <PrimaryNav />
-        </Suspense>
-        <button type="button" aria-label="Open menu" onClick={() => open("menu")} className="inline-flex size-11 items-center justify-start nav:hidden">
-          <MenuIcon />
-        </button>
+        <div>
+          <button type="button" aria-label="Open menu" onClick={() => open("menu")} className="inline-flex size-11 items-center justify-start nav:hidden">
+            <MenuIcon />
+          </button>
+        </div>
         <Link href="/" className="block no-underline">
           <Logo className="h-10 w-auto xl:h-[46px]" />
         </Link>
@@ -87,31 +88,7 @@ export function Header({ accountUrl, minimal = false }: { accountUrl: string | n
           </button>
         </div>
       </div>
+      <DesktopNav rows={navRows} />
     </header>
-  );
-}
-
-/** The page you're on is underlined. Its own boundary, as the path is only known at request time. */
-function PrimaryNav() {
-  return <NavLinks current={usePathname()} />;
-}
-
-function NavLinks({ current }: { current: string | null }) {
-  return (
-    <nav aria-label="Primary" className="hidden gap-5 text-[12px] tracking-[0.08em] uppercase nav:flex min-[90rem]:gap-7 min-[90rem]:text-[13px] min-[90rem]:tracking-[0.1em]">
-      {nav.map((item) => {
-        const isCurrent = current === item.href;
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            aria-current={isCurrent ? "page" : undefined}
-            className={`py-3 ${isCurrent ? "underline underline-offset-8" : "no-underline"}`}
-          >
-            {item.label}
-          </Link>
-        );
-      })}
-    </nav>
   );
 }

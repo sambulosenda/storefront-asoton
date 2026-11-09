@@ -166,7 +166,8 @@ test("sizes written as UK, US and EU show the UK size, in size order", async ({ 
   await page.goto("/products/aso-oke-agbada-set");
   const sizes = page.getByRole("group", { name: "Size (UK)" }).getByRole("button");
   await expect(sizes).toHaveText(["S", "M", "L", "XL", "XXL", "4XL"]);
-  await expect(page.getByText("Sizes are UK. Choose one to see its US and EU size.")).toBeVisible();
+  // The streamed page briefly holds a hidden copy before it swaps in, so only the visible one counts.
+  await expect(page.getByText("Sizes are UK. Choose one to see its US and EU size.").filter({ visible: true })).toBeVisible();
 
   await page.getByRole("button", { name: "UK 4XL, US 3XL, EU 4XL" }).click();
   await expect(page.getByText("UK 4XL is US 3XL and EU 4XL.")).toBeVisible();
@@ -197,16 +198,22 @@ test("choosing another country switches prices and keeps the bag", async ({ page
   await expect(page.getByRole("button", { name: /United States · USD/ }).first()).toBeAttached();
 });
 
-test("the phone menu follows the design's order, with occasions and the store's cloths", async ({ page, isMobile }) => {
+test("the phone menu follows the store's main menu, with its headings", async ({ page, isMobile }) => {
   test.skip(!isMobile, "The menu is phone-only");
   await page.goto("/");
   await page.getByRole("button", { name: "Open menu" }).filter({ visible: true }).click();
   const menu = page.getByRole("navigation", { name: "Main" });
   const rows = menu.locator(":scope > a:not(:has(span)), :scope > div > button");
-  await expect(rows).toHaveText(["Women", "Men", "Kids", "New in", "Unisex", "Accessories", "Gifts", "Fabric & lace", "Custom made", "Occasions", "Shop by cloth"]);
-  await menu.getByRole("button", { name: "Occasions" }).click();
-  await expect(menu.getByRole("link", { name: "Wedding guest" })).toHaveAttribute("href", "/collections/wedding-guest");
-  await expect(menu.getByRole("link", { name: "Church" })).toHaveCount(0);
+  await expect(rows).toHaveText(["Home", "Shop", "Women", "Men", "Kids", "Fabric & lace"]);
+  await menu.getByRole("button", { name: "Women" }).click();
+  await expect(menu.getByRole("heading", { name: "Italian wears" })).toBeVisible();
+  await expect(menu.getByRole("link", { name: "Every Day Dresses" })).toHaveAttribute("href", "/collections/every-day-dresses");
+  // An empty heading (Beauty) is left out.
+  await expect(menu.getByText("Beauty", { exact: true })).toHaveCount(0);
+  await menu.getByRole("button", { name: "Kids" }).click();
+  // A heading that repeats its department's name is dropped.
+  await expect(menu.getByRole("heading", { name: "Kids" })).toHaveCount(0);
+  await expect(menu.getByRole("link", { name: "Girls" })).toHaveAttribute("href", "/collections/girls");
 });
 
 test("a sub-category sits under its department, with its chip selected", async ({ page }) => {

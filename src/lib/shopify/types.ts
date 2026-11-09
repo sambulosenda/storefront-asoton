@@ -84,6 +84,9 @@ export type SortKey = "featured" | "best-selling" | "newest" | "price-asc" | "pr
 
 export type MenuLink = { title: string; href: string };
 
+/** An item of a nested Shopify menu: a link (href null when it points nowhere on the site) with its children. */
+export type MenuItem = { title: string; href: string | null; items: MenuItem[] };
+
 export type ClothEntry = {
   handle: string;
   name: string;
