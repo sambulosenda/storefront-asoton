@@ -96,6 +96,10 @@ async function Collection({
   const department = departments[handle];
   const title = page.collection ? collectionName(handle, page.collection.title) : (standIns[handle] ?? titleFromHandle(handle));
   const intro = page.collection?.description || department?.intro;
+  // A long description (the store's SEO copy) gives the top its first sentence and goes in full at
+  // the foot of the page, where it's still there for search engines but out of the shopper's way.
+  const lead = intro && intro.length > 180 ? (intro.match(/^.+?[.!?](?=\s|$)/)?.[0] ?? intro) : intro;
+  const more = intro && lead !== intro ? intro : null;
   const path = `/collections/${handle}`;
   // The editorial block only shows once its campaign metaobject exists in Shopify.
   const editorial = campaign?.headline
@@ -153,7 +157,7 @@ async function Collection({
           <h1 className="font-display text-[56px] leading-[0.95] tracking-[-0.02em] md:text-[clamp(64px,8vw,120px)] md:leading-[0.9]">
             {title}
           </h1>
-          {intro && <p className="max-w-[440px] text-[15px] leading-[1.55] text-ink-2 md:text-[16px] md:leading-[1.6]">{intro}</p>}
+          {lead && <p className="line-clamp-3 max-w-[440px] text-[15px] leading-[1.55] text-ink-2 md:text-[16px] md:leading-[1.6]">{lead}</p>}
         </div>
       </section>
 
@@ -169,6 +173,17 @@ async function Collection({
         editorial={editorial && <Editorial content={editorial} />}
         handle={handle}
       />
+
+      {more && (
+        <section aria-labelledby="about-collection" className="page-x pb-16 md:pb-24">
+          <div className="max-w-[720px] border-t border-line pt-8">
+            <h2 id="about-collection" className="pb-3 text-[12px] font-semibold tracking-[0.14em] uppercase">
+              About {title.toLowerCase()}
+            </h2>
+            <p className="text-[15px] leading-[1.65] text-ink-2">{more}</p>
+          </div>
+        </section>
+      )}
     </>
   );
 }

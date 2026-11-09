@@ -2,19 +2,16 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense, type CSSProperties } from "react";
-import { ProductVisual } from "@/components/cloth";
 import { ArrowRight } from "@/components/icons";
 import { JsonLd } from "@/components/json-ld";
 import { Newsletter } from "@/components/newsletter";
 import { ProductGrid, ProductRail } from "@/components/product-card";
 import { GridSkeleton } from "@/components/skeletons";
-import { clothSwatch, collectionImage, deliveryThreshold, deliveryTimes, departmentImage, homeFeature, isAfricanPiece, stockedOccasions } from "@/lib/catalog";
-import { clothOf, pieceCloth } from "@/lib/cloths";
+import { collectionImage, deliveryThreshold, deliveryTimes, departmentImage, homeFeature, homePromos, isAfricanPiece, stockedOccasions } from "@/lib/catalog";
 import { formatMoney } from "@/lib/format";
 import { getCountry } from "@/lib/market";
 import { getCollectionOrAll } from "@/lib/shopify";
 import { collectionPath, collections, nav, site, siteUrl } from "@/lib/site";
-import type { Product } from "@/lib/shopify/types";
 
 // The four ways into the shop. Fabric & lace sits beside the clothes: the cloth is what the shop knows.
 const TILES = [
@@ -75,13 +72,15 @@ export default async function HomePage() {
   const pictured = [...(campaign?.products.length ? campaign.products : products)].sort(
     (a, b) => Number(!a.featuredImage) - Number(!b.featuredImage),
   );
-  // The editorial hero pins a swatch of its piece's cloth beside it: the real cloth, from Fabric &
-  // lace. Not for a piece printed in a cloth's pattern, which a swatch of the woven cloth would misname.
-  const heroPiece = image ? null : (pictured[0] ?? null);
-  const heroClothKey = heroPiece && pieceCloth(heroPiece)?.origin ? clothOf({ title: heroPiece.title, productType: heroPiece.productType })?.key : undefined;
-  const swatch = heroClothKey ? await clothSwatch(heroClothKey) : null;
+  // Without a campaign photo the hero is still a photo: the pictured pieces' own, three across on
+  // wide screens and the first alone on phones.
+  const photos = image ? [] : pictured.flatMap((p) => (p.featuredImage ? [p.featuredImage] : [])).slice(0, 3);
   // The pieces the hero shows, so New in doesn't show them again right below.
-  const inHero = pictured.slice(0, image ? 3 : 1).map((p) => p.handle);
+  const inHero = pictured.slice(0, 3).map((p) => p.handle);
+  const promos = await homePromos({
+    hrefs: TILES.map((t) => t.href),
+    images: [image, mobileImage, ...photos].flatMap((i) => (i ? [i.url] : [])),
+  });
 
   const ctas = [
     { label: "Shop women", href: campaign?.women ? `/collections/${campaign.women}` : collectionPath("women"), primary: true },
@@ -90,22 +89,18 @@ export default async function HomePage() {
   // An older campaign entry with its own button keeps it, in place of "Shop women".
   if (campaign?.cta) ctas[0] = { label: campaign.cta, href: campaign.link ?? ctas[0].href, primary: true };
 
-  const copy = (dark: boolean) => (
-    <div className="flex max-w-[720px] flex-col gap-4 md:gap-6">
+  // The copy sits over the photo, in light type on the scrims.
+  const copy = (
+    <div className="flex max-w-[720px] flex-col gap-3.5 md:gap-6">
       {label && <span className="rise text-[11px] tracking-[0.18em] uppercase md:text-[12px]">{label}</span>}
       <h1
         id="hero-title"
         style={{ "--i": 1 } as CSSProperties}
-        className={`rise font-display leading-[0.94] tracking-[-0.025em] text-balance ${
-          dark ? "text-[60px] md:text-[clamp(52px,7.2vw,104px)]" : "text-[52px] md:text-[clamp(56px,6vw,96px)]"
-        }`}
+        className="rise font-display text-[48px] leading-[0.94] tracking-[-0.025em] text-balance md:text-[clamp(52px,7.2vw,104px)]"
       >
         <Headline text={headline} italic={italic} />
       </h1>
-      <p
-        style={{ "--i": 2 } as CSSProperties}
-        className={`rise max-w-[460px] text-[15px] leading-[1.6] text-pretty md:text-[17px] ${dark ? "text-paper/90" : "text-ink-2"}`}
-      >
+      <p style={{ "--i": 2 } as CSSProperties} className="rise max-w-[460px] text-[15px] leading-[1.6] text-pretty text-paper/90 md:text-[17px]">
         {body}
       </p>
       <div style={{ "--i": 3 } as CSSProperties} className="rise grid grid-cols-2 gap-2 pt-1.5 md:flex md:flex-wrap md:gap-3 md:pt-2">
@@ -114,36 +109,12 @@ export default async function HomePage() {
             key={cta.label}
             href={cta.href}
             className={`inline-flex h-[52px] items-center justify-center px-3 text-[13px] font-semibold tracking-[0.14em] uppercase no-underline transition-colors duration-(--duration-quick) md:min-w-[184px] md:px-7 ${
-              dark
-                ? cta.primary
-                  ? "bg-paper text-ink hover:text-ink"
-                  : "border border-paper text-paper hover:text-paper"
-                : cta.primary
-                  ? "bg-ink text-paper hover:bg-indigo hover:text-paper"
-                  : "border border-ink text-ink hover:bg-ink hover:text-paper"
+              cta.primary ? "bg-paper text-ink hover:text-ink" : "border border-paper text-paper hover:bg-paper hover:text-ink"
             }`}
           >
             {cta.label}
           </Link>
         ))}
-      </div>
-      {/* The two ways to buy and how long each takes, where people decide, not at the foot of the page. */}
-      <div
-        style={{ "--i": 4 } as CSSProperties}
-        className={`rise flex flex-col gap-1.5 border-t pt-4 text-[14px] ${dark ? "border-paper/32 text-paper/90" : "border-line text-ink-2"}`}
-      >
-        <p>
-          <span className={dark ? "text-paper" : "text-ink"}>Ready to ship</span>: leaves us within {times.dispatch}.
-        </p>
-        <p>
-          <span className={dark ? "text-paper" : "text-ink"}>Made to order</span>: in your size, in 14 days.
-        </p>
-        <Link
-          href="/help#delivery"
-          className={`self-start underline-offset-4 ${dark ? "text-paper hover:text-paper" : "text-ink-2"}`}
-        >
-          Delivery and returns
-        </Link>
       </div>
     </div>
   );
@@ -163,67 +134,129 @@ export default async function HomePage() {
     <>
       <JsonLd data={organization} />
       <JsonLd data={website} />
-      {image ? (
-        <section
-          aria-labelledby="hero-title"
-          className="relative h-[min(808px,calc(100svh-97px))] min-h-[600px] overflow-hidden bg-clay text-paper md:h-[clamp(600px,56vw,860px)] md:max-h-none"
-        >
-          <Image
-            src={mobileImage!.url}
-            alt={mobileImage!.altText ?? ""}
-            fill
-            preload
-            sizes="100vw"
-            className="object-cover md:hidden"
-            style={{ objectPosition: focus }}
-          />
-          <Image
-            src={image.url}
-            alt={image.altText ?? ""}
-            fill
-            preload
-            sizes="100vw"
-            className="hidden object-cover md:block"
-            style={{ objectPosition: focus }}
-          />
-          {/* Scrims keep the type readable on any photo. */}
-          <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[190px] bg-linear-to-b from-ink/55 via-ink/12 via-70% to-transparent md:h-[260px]" />
-          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[66%] bg-linear-to-t from-ink/66 via-ink/18 via-55% to-transparent md:h-[64%]" />
-          <div aria-hidden="true" className="absolute inset-y-0 left-0 hidden w-[58%] bg-linear-to-r from-ink/30 to-transparent md:block" />
-          <div className="on-dark absolute inset-x-0 bottom-0 flex flex-col gap-8 px-4 pb-6 md:page-x md:flex-row md:flex-wrap md:items-end md:justify-between md:pb-16">
-            {copy(true)}
-            {pictured.length > 0 && (
-              <nav aria-label="In the picture" className="hidden w-[380px] max-w-full flex-col gap-0.5 lg:flex">
-                <span className="pb-1.5 text-[11px] tracking-[0.16em] uppercase">In the picture</span>
-                {pictured.slice(0, 3).map((p) => (
-                  <Link
-                    key={p.handle}
-                    href={`/products/${p.handle}`}
-                    className="flex min-h-11 items-center gap-3 border-t border-paper/32 text-[15px] text-paper no-underline hover:text-paper"
-                  >
-                    <span className="min-w-0 flex-auto">{p.title}</span>
-                    <span className="text-[14px] whitespace-nowrap text-paper/85">{formatMoney(p.priceRange.minVariantPrice)}</span>
-                    <ArrowRight size={16} />
-                  </Link>
-                ))}
-              </nav>
-            )}
-          </div>
-        </section>
-      ) : (
-        // Until a campaign photo exists: the line beside one piece, large, on the sand ground.
-        <section
-          aria-labelledby="hero-title"
-          className="overflow-hidden pt-6 pb-10 md:page-x md:grid md:min-h-[min(820px,calc(100svh-97px))] md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-center md:gap-x-[clamp(32px,5vw,96px)] md:py-12"
-        >
-          <div className="px-4 pb-6 md:px-0 md:pb-0">{copy(false)}</div>
-          {chips("pb-8")}
-          {heroPiece && <HeroPiece product={heroPiece} swatch={swatch} />}
+      <section
+        aria-labelledby="hero-title"
+        className="relative h-[min(760px,calc(100svh-97px))] min-h-[560px] overflow-hidden bg-clay text-paper md:h-[clamp(600px,56vw,860px)]"
+      >
+        {image ? (
+          <>
+            <Image
+              src={mobileImage!.url}
+              alt={mobileImage!.altText ?? ""}
+              fill
+              preload
+              sizes="100vw"
+              className="object-cover md:hidden"
+              style={{ objectPosition: focus }}
+            />
+            <Image
+              src={image.url}
+              alt={image.altText ?? ""}
+              fill
+              preload
+              sizes="100vw"
+              className="hidden object-cover md:block"
+              style={{ objectPosition: focus }}
+            />
+          </>
+        ) : (
+          photos.length > 0 && (
+            // The pieces' own photos side by side, edge to edge; faces sit high in a product shot.
+            <div className="absolute inset-0 grid md:grid-cols-(--cols)" style={{ "--cols": `repeat(${photos.length}, minmax(0, 1fr))` } as CSSProperties}>
+              {photos.map((photo, i) => (
+                <div key={photo.url} className={`relative ${i > 0 ? "hidden md:block" : ""}`}>
+                  <Image
+                    src={photo.url}
+                    alt={photo.altText ?? ""}
+                    fill
+                    preload={i === 0}
+                    sizes={`(min-width: 768px) ${Math.round(100 / photos.length)}vw, 100vw`}
+                    className="object-cover object-[50%_18%]"
+                  />
+                </div>
+              ))}
+            </div>
+          )
+        )}
+        {/* Scrims keep the type readable on any photo. */}
+        <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[150px] bg-linear-to-b from-ink/40 to-transparent md:h-[220px]" />
+        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[72%] bg-linear-to-t from-ink/78 via-ink/30 via-55% to-transparent md:h-[64%] md:from-ink/70" />
+        <div aria-hidden="true" className="absolute inset-y-0 left-0 hidden w-[58%] bg-linear-to-r from-ink/36 to-transparent md:block" />
+        <div className="on-dark absolute inset-x-0 bottom-0 flex flex-col gap-8 px-4 pb-6 md:page-x md:flex-row md:flex-wrap md:items-end md:justify-between md:pb-16">
+          {copy}
+          {pictured.length > 0 && (
+            <nav aria-label="In the picture" className="hidden w-[380px] max-w-full flex-col gap-0.5 lg:flex">
+              <span className="pb-1.5 text-[11px] tracking-[0.16em] uppercase">In the picture</span>
+              {pictured.slice(0, 3).map((p) => (
+                <Link
+                  key={p.handle}
+                  href={`/products/${p.handle}`}
+                  className="flex min-h-11 items-center gap-3 border-t border-paper/32 text-[15px] text-paper no-underline hover:text-paper"
+                >
+                  <span className="min-w-0 flex-auto">{p.title}</span>
+                  <span className="text-[14px] whitespace-nowrap text-paper/85">{formatMoney(p.priceRange.minVariantPrice)}</span>
+                  <ArrowRight size={16} />
+                </Link>
+              ))}
+            </nav>
+          )}
+        </div>
+      </section>
+
+      {/* How buying works, in one line under the hero, where people decide. */}
+      <ul aria-label="Delivery and returns" className="grid grid-cols-3 border-b border-line md:page-x">
+        {[
+          { lead: "Ready to ship", rest: times.dispatch, href: "/help#delivery" },
+          { lead: "Made to order", rest: "your size in 14 days", href: "/help#delivery" },
+          { lead: `${site.returnDays}-day returns`, rest: "on ready to ship", href: "/help#returns" },
+        ].map((item) => (
+          <li key={item.lead} className="border-line not-first:border-l md:border-l-0">
+            <Link
+              href={item.href}
+              className="flex h-full flex-col items-center justify-center gap-0.5 px-2 py-3 text-center text-[12px] leading-[1.35] no-underline md:flex-row md:gap-1.5 md:py-4 md:text-[14px]"
+            >
+              <span className="font-semibold">{item.lead}</span>
+              <span className="text-ink-2">{item.rest}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      {chips("pt-6 pb-8")}
+
+      {/* Smaller banners under the hero: the rest of the shop, or the "promo" campaign entries. */}
+      {promos.length > 0 && (
+        <section aria-label="More to shop" className="pb-16 md:page-x md:pt-12 md:pb-0">
+          <ul
+            style={{ "--cols": `repeat(${promos.length}, minmax(0, 1fr))` } as CSSProperties}
+            className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 [scrollbar-width:none] md:grid md:grid-cols-(--cols) md:gap-6 md:overflow-visible md:px-0"
+          >
+            {promos.map((promo) => (
+              <li key={promo.href + promo.title} className="w-[78%] flex-none snap-start md:w-auto">
+                <Link href={promo.href} className="group flex flex-col gap-3 no-underline">
+                  <span className={`relative block aspect-[4/5] overflow-hidden bg-stone ${promos.length < 3 ? "md:aspect-[4/3]" : "md:aspect-[5/4]"}`}>
+                    <Image
+                      src={promo.image.url}
+                      alt=""
+                      fill
+                      sizes={`(min-width: 768px) ${Math.round(100 / promos.length)}vw, 78vw`}
+                      className="object-cover object-[50%_30%] transition-transform duration-(--duration-slow) ease-(--ease-out-soft) group-hover:scale-[1.03]"
+                    />
+                  </span>
+                  <span className="flex flex-col gap-1">
+                    <span className="font-display text-[26px] leading-none md:text-[32px]">{promo.title}</span>
+                    {promo.blurb && <span className="text-[14px] text-ink-2">{promo.blurb}</span>}
+                    <span className="mt-1.5 inline-flex items-center gap-2 self-start border-b border-ink pb-1 text-[12px] tracking-[0.12em] uppercase">
+                      Shop now
+                      <ArrowRight size={14} />
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
-
-      {/* Under a campaign photo the chips follow the hero; the editorial hero holds them under its copy. */}
-      {image && chips("pt-6 pb-10")}
 
       {/* New in: prices follow the shopper's country, so this part renders per request. */}
       <Suspense
@@ -377,68 +410,6 @@ async function NewIn({ exclude }: { exclude: string[] }) {
       </div>
       <ProductGrid products={products} tight className="hidden md:grid" />
     </section>
-  );
-}
-
-/**
- * The editorial hero's one piece, large on the sand ground, with a swatch of its cloth pinned to the
- * corner of the photo: the garment and the cloth it is cut from, side by side.
- */
-function HeroPiece({ product: p, swatch }: { product: Product; swatch: { image: { url: string }; handle: string } | null }) {
-  const cloth = pieceCloth(p);
-  return (
-    <nav aria-label="In the picture" className="px-4 md:px-0">
-      <div className="md:mx-auto md:max-w-[min(100%,calc((100svh-260px)*0.8))]">
-        <div className="relative">
-          {/* Named here: without a photo the piece is a drawing, which has no text of its own. */}
-          <Link
-            href={`/products/${p.handle}`}
-            aria-label={p.title}
-            style={{ "--i": 2 } as CSSProperties}
-            className="rise group relative isolate flex aspect-[4/5] items-center justify-center overflow-hidden bg-stone no-underline"
-          >
-            {/* The blend stays inside the frame: a photo shot on white takes on the sand ground. */}
-            <span className="absolute inset-0 mix-blend-multiply transition-transform duration-(--duration-slow) ease-(--ease-out-soft) group-hover:scale-[1.03]">
-              <ProductVisual product={p} image={p.featuredImage} priority sizes="(min-width: 768px) 45vw, 100vw" />
-            </span>
-          </Link>
-          {swatch && cloth && (
-            <Link
-              href={`/products/${swatch.handle}`}
-              style={{ "--i": 4 } as CSSProperties}
-              className="rise group absolute bottom-3 left-3 flex w-[38%] flex-col bg-paper p-1.5 text-ink no-underline hover:text-ink md:bottom-[8%] md:-left-[14%] md:w-[42%] md:p-2"
-            >
-              {/* Cropped close so the weave or print fills the swatch, not the folded bolt. */}
-              <span className="relative block aspect-square overflow-hidden bg-stone">
-                <Image
-                  src={swatch.image.url}
-                  alt=""
-                  fill
-                  sizes="(min-width: 768px) 18vw, 38vw"
-                  className="scale-[1.9] object-cover transition-transform duration-(--duration-slow) ease-(--ease-out-soft) group-hover:scale-[2.05]"
-                />
-              </span>
-              <span className="flex flex-col gap-0.5 px-1 pt-2 pb-1 md:px-1.5 md:pt-3 md:pb-1.5">
-                <span className="font-display text-[18px] leading-none md:text-[26px]">{cloth.name}</span>
-                <span className="text-[11px] text-ink-2 md:text-[13px]">{cloth.origin}</span>
-              </span>
-            </Link>
-          )}
-        </div>
-        <div className="flex items-baseline justify-between gap-4 pt-3 text-[14px] md:text-[15px]">
-          <span className="flex min-w-0 flex-col gap-0.5">
-            <span className="font-medium">{p.title}</span>
-            {/* With a swatch the cloth is named on it; without one, here. */}
-            {!(swatch && cloth) && cloth && <span className="text-ink-2">{[cloth.name, cloth.origin].filter(Boolean).join(" · ")}</span>}
-          </span>
-          <Link href={`/products/${p.handle}`} className="inline-flex items-center gap-2 whitespace-nowrap no-underline">
-            {formatMoney(p.priceRange.minVariantPrice)}
-            <span className="underline underline-offset-4">Shop this piece</span>
-            <ArrowRight size={14} />
-          </Link>
-        </div>
-      </div>
-    </nav>
   );
 }
 

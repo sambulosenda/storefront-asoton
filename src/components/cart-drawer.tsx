@@ -34,7 +34,7 @@ export function CartDrawer({
   thresholdLabel: string;
   delivery: DeliveryPlan;
 }) {
-  const { cart, overlay, close, notice } = useStore();
+  const { cart, cartStatus, loadCart, overlay, close, notice } = useStore();
   const lines = cart?.lines ?? [];
   // Arrival dates depend on today, so they're worked out in the browser.
   const minute = useSyncExternalStore(noSubscribe, currentMinute, noMinute);
@@ -55,14 +55,25 @@ export function CartDrawer({
       <div className="flex h-full flex-col">
         <div className="flex h-[60px] flex-none items-center justify-between gap-4 border-b border-line pr-2 pl-4 md:h-auto md:py-[18px] md:pr-5 md:pl-8">
           <h2 id="bag-title" className="flex items-baseline gap-2 font-display text-[24px] leading-[1.2] md:gap-2.5 md:text-[28px]">
-            Your bag <span className="font-sans text-[14px] text-ink-2">({count})</span>
+            Your bag {cartStatus === "ready" && <span className="font-sans text-[14px] text-ink-2">({count})</span>}
           </h2>
           <button type="button" aria-label="Close bag" onClick={close} className="inline-flex size-11 items-center justify-center">
             <CloseIcon />
           </button>
         </div>
 
-        {lines.length > 0 ? (
+        {cartStatus === "loading" && lines.length === 0 ? (
+          <p role="status" className="flex flex-1 items-center justify-center p-6 text-[15px] text-ink-2">
+            Loading your bag…
+          </p>
+        ) : cartStatus === "failed" && lines.length === 0 ? (
+          <div role="alert" className="flex flex-1 flex-col items-center justify-center gap-3.5 p-6 text-center md:gap-4 md:p-8">
+            <p className="max-w-[300px] text-[15px] leading-[1.6]">We couldn’t load your bag. Check your connection and try again.</p>
+            <button type="button" onClick={loadCart} className="btn btn-outline mt-2 self-stretch md:self-auto">
+              Try again
+            </button>
+          </div>
+        ) : lines.length > 0 ? (
           <>
             {remaining !== null && (
               <div className="flex flex-none flex-col gap-2 border-b border-line px-4 py-3.5 md:gap-2.5 md:px-8 md:py-5">
@@ -141,7 +152,9 @@ export function CartDrawer({
 }
 
 function CartLineRow({ line, delivery, now }: { line: CartLine; delivery: DeliveryPlan; now: Date | null }) {
-  const { setQuantity, close } = useStore();
+  const { setQuantity, pending, close } = useStore();
+  // Not `disabled`: that would drop keyboard focus mid-save. setQuantity ignores clicks while one saves.
+  const busy = pending || undefined;
   const { merchandise } = line;
   const href = `/products/${merchandise.product.handle}`;
   const purchase = lineDelivery(merchandise.selectedOptions);
@@ -183,6 +196,7 @@ function CartLineRow({ line, delivery, now }: { line: CartLine; delivery: Delive
             <button
               type="button"
               aria-label="Decrease quantity"
+              aria-disabled={busy}
               onClick={() => setQuantity(line.id, line.quantity - 1)}
               className="inline-flex size-11 items-center justify-center"
             >
@@ -194,6 +208,7 @@ function CartLineRow({ line, delivery, now }: { line: CartLine; delivery: Delive
             <button
               type="button"
               aria-label="Increase quantity"
+              aria-disabled={busy}
               onClick={() => setQuantity(line.id, line.quantity + 1)}
               className="inline-flex size-11 items-center justify-center"
             >
@@ -202,6 +217,7 @@ function CartLineRow({ line, delivery, now }: { line: CartLine; delivery: Delive
           </div>
           <button
             type="button"
+            aria-disabled={busy}
             onClick={() => setQuantity(line.id, 0)}
             className="min-h-11 cursor-pointer text-[13px] text-ink-2 underline underline-offset-4"
           >

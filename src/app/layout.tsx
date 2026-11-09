@@ -5,13 +5,13 @@ import { CartDrawer } from "@/components/cart-drawer";
 import { ClothPatterns } from "@/components/cloth";
 import { CookieConsent } from "@/components/cookie-consent";
 import { MarketSheet } from "@/components/market-selector";
-import { MobileMenu, type MenuRow } from "@/components/mobile-menu";
+import { MobileMenu } from "@/components/mobile-menu";
 import { SearchOverlay } from "@/components/search-overlay";
 import { SizeGuide } from "@/components/size-guide";
 import { StoreProvider } from "@/components/store-provider";
-import { deliveryPlan, deliveryThreshold, departmentMenu, homeFeature, menuCloths, stockedOccasions } from "@/lib/catalog";
+import { deliveryPlan, deliveryThreshold, mainMenu, menuPromo } from "@/lib/catalog";
 import { accountUrl, getMarkets } from "@/lib/shopify";
-import { collectionPath, indexable, moreNav, site, siteUrl } from "@/lib/site";
+import { indexable, menuRows, site, siteUrl } from "@/lib/site";
 import "./globals.css";
 
 const bodoni = Bodoni_Moda({
@@ -38,46 +38,13 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const [threshold, women, men, kids, cloths, occasions, markets, feature, plan] = await Promise.all([
+  const [threshold, menu, markets, promo, plan] = await Promise.all([
     deliveryThreshold(),
-    departmentMenu("women"),
-    departmentMenu("men"),
-    departmentMenu("kids"),
-    menuCloths(),
-    stockedOccasions(),
+    mainMenu(),
     getMarkets(),
-    homeFeature(),
+    menuPromo(),
     deliveryPlan(),
   ]);
-  // The menu's promo tile follows the home hero: the campaign if there is one, else the newest piece.
-  const [newest] = feature.products;
-  const promo = feature.campaign?.headline
-    ? {
-        label: feature.campaign.label ?? "New in",
-        title: feature.campaign.headline,
-        href: collectionPath("newIn"),
-        image: feature.campaign.image ?? newest?.featuredImage ?? null,
-      }
-    : newest
-      ? { label: "New in", title: newest.title, href: `/products/${newest.handle}`, image: newest.featuredImage }
-      : null;
-  // In the design's order: the departments, the single links, then occasions and cloths.
-  const menuRows: MenuRow[] = [
-    { label: "Women", links: [{ title: "All women", href: collectionPath("women") }, ...women] },
-    { label: "Men", links: [{ title: "All men", href: collectionPath("men") }, ...men] },
-    { label: "Kids", links: [{ title: "All kids", href: collectionPath("kids") }, ...kids] },
-    { label: "New in", href: collectionPath("newIn") },
-    { label: "Unisex", href: collectionPath("unisex") },
-    { label: "Accessories", href: collectionPath("accessories") },
-    { label: "Gifts", href: collectionPath("gifts") },
-    ...moreNav.map(({ label, href }) => ({ label, href })),
-    {
-      label: "Occasions",
-      links: occasions.map((o) => ({ title: o.name, href: o.collection ? `/collections/${o.collection}` : `/search?q=${encodeURIComponent(o.name)}` })),
-    },
-    { label: "Shop by cloth", links: cloths },
-  ];
-  const rows = menuRows.filter((row) => !("links" in row) || row.links.length > 0);
 
   return (
     <html lang="en-GB" className={`${bodoni.variable} ${hanken.variable}`}>
@@ -87,7 +54,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           {children}
           <CartDrawer threshold={threshold.amount} thresholdLabel={threshold.label} delivery={plan} />
           <SearchOverlay />
-          <MobileMenu rows={rows} accountUrl={accountUrl} promo={promo} />
+          <MobileMenu rows={menuRows(menu)} accountUrl={accountUrl} promo={promo} />
           <SizeGuide />
           <MarketSheet />
         </StoreProvider>

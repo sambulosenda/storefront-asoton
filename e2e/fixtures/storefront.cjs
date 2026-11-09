@@ -156,6 +156,24 @@ function respond(query, vars) {
       const items = { women: ["Dresses", "Two-piece sets", "Kaftans and boubous", "Tops and skirts", "Headwraps"], men: ["Kaftans", "Agbada", "Shirts", "Trousers", "Sets", "Caps and stoles"] }[vars.handle];
       return { menu: items ? { items: items.map((t) => ({ title: t, url: `https://x/collections/${handleOf(t)}`, resource: { handle: `${vars.handle}-${handleOf(t)}` } })) } : null };
     }
+    // A cut-down "main-menu" shaped like the live store's: capitalised top items, headings over
+    // links, an empty heading (Beauty) and a heading that repeats its department (Kids).
+    case "MenuTree": {
+      if (vars.handle !== "main-menu") return { menu: null };
+      const link = (title, handle, items = []) => ({ title, url: `https://x/collections/${handle}`, resource: { handle }, items });
+      return { menu: { items: [
+        { title: "HOME", url: "https://x/", resource: null, items: [] },
+        { title: "SHOP", url: "https://x/collections/all", resource: null, items: [] },
+        link("WOMEN", "womens-clothing", [
+          link("DRESSES", "women-dresses", [link("Every Day Dresses", "every-day-dresses"), link("Night Out Dresses", "night-out-dresses")]),
+          link("ITALIAN WEARS", "italian-dress", [link("Blouses", "blouses")]),
+          link("BEAUTY", "beauty"),
+        ]),
+        link("MEN", "mens-all", [link("JACKETS", "jackets", [link("African Print Blazers", "african-print-blazers")])]),
+        link("KIDS", "kids", [link("KIDS", "kids", [link("Boys", "boys"), link("Girls", "girls")])]),
+        link("FABRIC & LACE", "fabric-lace", [link("FABRIC & LACE", "fabric-lace", [link("Kente", "kente")])]),
+      ] } };
+    }
     case "Cloths": return { metaobjects: { nodes: [] } };
     case "Looks": return { metaobjects: { nodes: [] } };
     // A "women" entry with only a photo: it sets the home page's Women tile.
@@ -163,6 +181,7 @@ function respond(query, vars) {
       { key: "desktop_image", value: "gid", reference: { image: { url: "https://cdn.shopify.com/s/files/fixture/women-tile.jpg", altText: null, width: 1200, height: 1500 } }, references: null },
     ] } : null };
     // Like the live store: a campaign entry that isn't called "home" and has no photos yet.
+    case "PromoCampaigns": return { metaobjects: { nodes: [] } };
     case "HomeCampaign": return { metaobjects: { nodes: [{ handle: "made-for-the-big-day", fields: [
       { key: "label", value: "African ready-to-wear", reference: null, references: null },
       { key: "headline", value: "Made for the Big Day", reference: null, references: null },

@@ -6,6 +6,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
   useTransition,
@@ -30,8 +31,15 @@ function readCountry() {
   return document.cookie.match(/(?:^|; )country=([A-Z]{2})/)?.[1] ?? null;
 }
 
+/** "loading" until the first fetch of the bag answers; "failed" if it never reached the server. */
+export type CartStatus = "loading" | "ready" | "failed";
+
+const NETWORK_ERROR = "We couldn’t update your bag. Check your connection and try again.";
+
 type Store = {
   cart: Cart | null;
+  cartStatus: CartStatus;
+  loadCart: () => void;
   /** True while a quantity change is saving. */
   pending: boolean;
   notice: string | null;
@@ -50,6 +58,8 @@ type Store = {
   chooseCountry: (code: string) => void;
   /** True while the shop switches to another country. */
   switchingCountry: boolean;
+  /** Set when a country switch failed, shown in the country list. */
+  countryError: string | null;
 };
 
 const StoreContext = createContext<Store | null>(null);
@@ -70,6 +80,10 @@ export function StoreProvider({
   defaultMarket: Market | null;
 }) {
   const [cart, setCart] = useState<Cart | null>(null);
+  const [cartStatus, setCartStatus] = useState<CartStatus>("loading");
+  const [countryError, setCountryError] = useState<string | null>(null);
+  // One quantity change saves at a time, so replies can't land out of order or roll back onto each other.
+  const saving = useRef(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [overlay, setOverlay] = useState<Overlay>(null);
   const [sizeGuideDept, setSizeGuideDept] = useState<"women" | "men">("women");
@@ -79,18 +93,36 @@ export function StoreProvider({
   const code = useSyncExternalStore(subscribeCountry, readCountry, () => null);
   const market = markets.find((m) => m.isoCode === code) ?? defaultMarket;
 
-  useEffect(() => {
-    getCart().then(setCart, () => {});
+  const fetchCart = useCallback(() => {
+    getCart().then(
+      (c) => {
+        setCart(c);
+        setCartStatus("ready");
+      },
+      () => setCartStatus("failed"),
+    );
   }, []);
+
+  useEffect(fetchCart, [fetchCart]);
+
+  const loadCart = useCallback(() => {
+    setCartStatus("loading");
+    fetchCart();
+  }, [fetchCart]);
 
   const add = useCallback(async (variantId: string) => {
     const result = await addToCart(variantId);
-    if (result.cart) setCart(result.cart);
+    if (result.cart) {
+      setCart(result.cart);
+      setCartStatus("ready");
+    }
     return result;
   }, []);
 
   const setQuantity = useCallback(
     (lineId: string, quantity: number) => {
+      if (saving.current) return;
+      saving.current = true;
       const previous = cart;
       // Update the bag first, then roll back if Shopify refuses.
       setCart((c) =>
@@ -104,7 +136,15 @@ export function StoreProvider({
       );
       setNotice(null);
       startTransition(async () => {
-        const result = await updateCartLine(lineId, quantity);
+        let result: CartResult;
+        try {
+          result = await updateCartLine(lineId, quantity);
+        } catch {
+          // The request never reached the server (offline, or a deploy changed the action).
+          result = { cart: null, error: NETWORK_ERROR };
+        } finally {
+          saving.current = false;
+        }
         if (result.cart) {
           setCart(result.cart);
           const line = result.cart.lines.find((l) => l.id === lineId);
@@ -122,18 +162,34 @@ export function StoreProvider({
   );
 
   const chooseCountry = useCallback((next: string) => {
+    setCountryError(null);
     startSwitching(async () => {
+      const failed = () => {
+        setCountryError("We couldn’t change your country. Check your connection and try again.");
+        setOverlay("market");
+      };
       // Setting the cookie in the action re-renders the page with the new prices.
-      const result = await setCountry(next);
-      if (!result.ok) return;
+      let result: { ok: boolean };
+      try {
+        result = await setCountry(next);
+      } catch {
+        return failed();
+      }
+      if (!result.ok) return failed();
       window.dispatchEvent(new Event(COUNTRY_EVENT));
-      setCart(await getCart());
+      try {
+        setCart(await getCart());
+      } catch {
+        // The bag was moved on the server; it shows the new prices on the next load.
+      }
     });
   }, []);
 
   const store = useMemo<Store>(
     () => ({
       cart,
+      cartStatus,
+      loadCart,
       pending,
       notice,
       add,
@@ -152,8 +208,25 @@ export function StoreProvider({
       market,
       chooseCountry,
       switchingCountry,
+      countryError,
     }),
-    [cart, pending, notice, add, setQuantity, overlay, sizeGuideDept, sizeGuideSizes, markets, market, chooseCountry, switchingCountry],
+    [
+      cart,
+      cartStatus,
+      loadCart,
+      pending,
+      notice,
+      add,
+      setQuantity,
+      overlay,
+      sizeGuideDept,
+      sizeGuideSizes,
+      markets,
+      market,
+      chooseCountry,
+      switchingCountry,
+      countryError,
+    ],
   );
 
   return <StoreContext value={store}>{children}</StoreContext>;

@@ -1,6 +1,8 @@
 // Shop-wide copy and settings. Contact details, delivery times and the returns policy follow
 // the shop's current site, africanclothingstore.co.uk, which this storefront replaces.
 
+import type { MenuRow } from "@/lib/catalog";
+
 /** The public address of the shop, for the sitemap and links shared elsewhere. Set SITE_URL in production. */
 export const siteUrl = (
   process.env.SITE_URL ??
@@ -104,6 +106,15 @@ export const nav = [
   { label: "Accessories", href: collectionPath("accessories") },
   { label: "Gifts", href: collectionPath("gifts") },
 ];
+
+/**
+ * The menu's rows: New in, then the store's main menu without Home (the logo goes home). Without a
+ * main menu, the shop's own links.
+ */
+export function menuRows(menu: MenuRow[]): MenuRow[] {
+  if (menu.length === 0) return [...nav, ...moreNav];
+  return [{ label: "New in", href: collectionPath("newIn") }, ...menu.filter((r) => r.href !== "/" && r.label !== "New in")];
+}
 
 /** Shop links that only fit in the phone menu and the footer. */
 export const moreNav = [

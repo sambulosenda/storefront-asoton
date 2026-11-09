@@ -3,7 +3,7 @@ import { acceptCookies } from "./helpers";
 
 test.beforeEach(async ({ page }) => acceptCookies(page));
 
-test("the home hero shows the store's campaign, with one piece in the picture until it has a photo", async ({ page }) => {
+test("the home hero shows the store's campaign over the pictured pieces' photos until it has its own", async ({ page }) => {
   await page.goto("/");
   // The fixture's campaign entry isn't called "home", like the live store's.
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Made for theBig Day");
@@ -11,10 +11,8 @@ test("the home hero shows the store's campaign, with one piece in the picture un
   await expect(page.getByText("African ready-to-wear")).toBeVisible();
   await expect(page.getByRole("link", { name: "Shop women" }).first()).toHaveAttribute("href", "/collections/womens-clothing");
   await expect(page.getByRole("link", { name: "Shop men" }).first()).toHaveAttribute("href", "/collections/mens-all");
-  const pictured = page.getByRole("navigation", { name: "In the picture" });
-  await expect(pictured.getByRole("link", { name: "Adire Wrap Dress" })).toHaveAttribute("href", "/products/adire-wrap-dress");
-  await expect(pictured.getByRole("link", { name: /Shop this piece/ })).toHaveAttribute("href", "/products/adire-wrap-dress");
-  await expect(pictured.getByText("Adire · Nigeria")).toBeVisible();
+  // Listed beside the copy on wide screens only.
+  await expect(page.locator('nav[aria-label="In the picture"] a[href="/products/adire-wrap-dress"]')).toHaveCount(1);
   await expect(page.getByRole("heading", { name: "New in" })).toBeVisible();
 });
 
@@ -25,7 +23,7 @@ test("the home page lists the store's occasions and uses its delivery rules", as
   await expect(occasions.getByRole("link")).toHaveCount(2);
   await expect(occasions.getByRole("link", { name: /Church/ })).toHaveCount(0);
   await expect(occasions.getByRole("link", { name: /Wedding guest/ })).toHaveAttribute("href", "/collections/wedding-guest");
-  await expect(page.getByText("Ready to ship: leaves us within 1 working day.")).toBeVisible();
+  await expect(page.getByRole("list", { name: "Delivery and returns" }).getByRole("link", { name: /Ready to ship\s*1 working day/ })).toBeVisible();
   // The shop metafield (£150) wins over the delivery rules' amount.
   await expect(page.getByText(/Free UK delivery over £150\. Ready-to-ship pieces leave us within 1 working day/)).toBeVisible();
   await expect(page.getByText(/\[X\]/)).toHaveCount(0);
@@ -166,7 +164,8 @@ test("sizes written as UK, US and EU show the UK size, in size order", async ({ 
   await page.goto("/products/aso-oke-agbada-set");
   const sizes = page.getByRole("group", { name: "Size (UK)" }).getByRole("button");
   await expect(sizes).toHaveText(["S", "M", "L", "XL", "XXL", "4XL"]);
-  await expect(page.getByText("Sizes are UK. Choose one to see its US and EU size.")).toBeVisible();
+  // The streamed page briefly holds a hidden copy before it swaps in, so only the visible one counts.
+  await expect(page.getByText("Sizes are UK. Choose one to see its US and EU size.").filter({ visible: true })).toBeVisible();
 
   await page.getByRole("button", { name: "UK 4XL, US 3XL, EU 4XL" }).click();
   await expect(page.getByText("UK 4XL is US 3XL and EU 4XL.")).toBeVisible();
@@ -197,16 +196,47 @@ test("choosing another country switches prices and keeps the bag", async ({ page
   await expect(page.getByRole("button", { name: /United States · USD/ }).first()).toBeAttached();
 });
 
-test("the phone menu follows the design's order, with occasions and the store's cloths", async ({ page, isMobile }) => {
+test("the phone menu follows the store's main menu, drilling into departments and headings", async ({ page, isMobile }) => {
   test.skip(!isMobile, "The menu is phone-only");
   await page.goto("/");
   await page.getByRole("button", { name: "Open menu" }).filter({ visible: true }).click();
   const menu = page.getByRole("navigation", { name: "Main" });
-  const rows = menu.locator(":scope > a:not(:has(span)), :scope > div > button");
-  await expect(rows).toHaveText(["Women", "Men", "Kids", "New in", "Unisex", "Accessories", "Gifts", "Fabric & lace", "Custom made", "Occasions", "Shop by cloth"]);
-  await menu.getByRole("button", { name: "Occasions" }).click();
-  await expect(menu.getByRole("link", { name: "Wedding guest" })).toHaveAttribute("href", "/collections/wedding-guest");
-  await expect(menu.getByRole("link", { name: "Church" })).toHaveCount(0);
+  // Search comes first; Home is the logo, so the rows start with New in.
+  await expect(menu.getByRole("button", { name: /Search/ })).toBeVisible();
+  const rows = menu.locator(":scope > a, :scope > button");
+  await expect(rows).toHaveText(["New in", "Shop", "Women", "Men", "Kids", "Fabric & lace"]);
+
+  await menu.getByRole("button", { name: "Women" }).click();
+  await expect(menu.getByRole("heading", { name: "Women" })).toBeFocused();
+  await expect(menu.getByRole("link", { name: "Shop all women" })).toHaveAttribute("href", "/collections/womens-clothing");
+  await expect(menu.getByRole("link", { name: "Bestsellers" })).toHaveAttribute("href", "/collections/womens-clothing?sort=best-selling");
+  // Headings open their own screen; an empty heading (Beauty) is left out.
+  await expect(menu.getByRole("button", { name: "Beauty" })).toHaveCount(0);
+  await menu.getByRole("button", { name: "Dresses" }).click();
+  await expect(menu.getByRole("link", { name: "Shop all dresses" })).toHaveAttribute("href", "/collections/women-dresses");
+  // Labels read in sentence case, and the heading's own collection isn't repeated as a link.
+  await expect(menu.getByRole("link", { name: "Every day dresses" })).toHaveAttribute("href", "/collections/every-day-dresses");
+
+  await menu.getByRole("button", { name: "Women" }).click();
+  await menu.getByRole("button", { name: "Menu" }).click();
+  // A heading that repeats its department is dropped, so Kids opens straight to its links.
+  await menu.getByRole("button", { name: "Kids" }).click();
+  await expect(menu.getByRole("link", { name: "Girls" })).toHaveAttribute("href", "/collections/girls");
+});
+
+test("on a computer, a department opens a panel of its headings", async ({ page, isMobile }) => {
+  test.skip(isMobile, "The panel is desktop-only");
+  await page.goto("/");
+  const nav = page.getByRole("navigation", { name: "Primary" });
+  // Home is the logo, so the row starts with New in.
+  await expect(nav.getByRole("link").first()).toHaveText("New in");
+  await nav.getByRole("link", { name: "Women", exact: true }).hover();
+  await expect(nav.getByRole("link", { name: /Shop all women/ }).first()).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Italian wear" })).toHaveAttribute("href", "/collections/italian-dress");
+  await expect(nav.getByRole("link", { name: "Blouses" })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "New in" }).nth(1)).toHaveAttribute("href", "/collections/womens-clothing?sort=newest");
+  await page.keyboard.press("Escape");
+  await expect(nav.getByRole("link", { name: "Blouses" })).toHaveCount(0);
 });
 
 test("a sub-category sits under its department, with its chip selected", async ({ page }) => {
