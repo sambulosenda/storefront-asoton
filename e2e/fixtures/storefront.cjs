@@ -165,7 +165,7 @@ function respond(query, vars) {
         { title: "HOME", url: "https://x/", resource: null, items: [] },
         { title: "SHOP", url: "https://x/collections/all", resource: null, items: [] },
         link("WOMEN", "womens-clothing", [
-          link("DRESSES", "dresses", [link("Every Day Dresses", "every-day-dresses"), link("Night Out Dresses", "night-out-dresses")]),
+          link("DRESSES", "women-dresses", [link("Every Day Dresses", "every-day-dresses"), link("Night Out Dresses", "night-out-dresses")]),
           link("ITALIAN WEARS", "italian-dress", [link("Blouses", "blouses")]),
           link("BEAUTY", "beauty"),
         ]),

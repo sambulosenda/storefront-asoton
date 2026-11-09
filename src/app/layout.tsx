@@ -9,9 +9,9 @@ import { MobileMenu } from "@/components/mobile-menu";
 import { SearchOverlay } from "@/components/search-overlay";
 import { SizeGuide } from "@/components/size-guide";
 import { StoreProvider } from "@/components/store-provider";
-import { deliveryPlan, deliveryThreshold, homeFeature, mainMenu } from "@/lib/catalog";
+import { deliveryPlan, deliveryThreshold, mainMenu, menuPromo } from "@/lib/catalog";
 import { accountUrl, getMarkets } from "@/lib/shopify";
-import { collectionPath, indexable, moreNav, nav, site, siteUrl } from "@/lib/site";
+import { indexable, menuRows, site, siteUrl } from "@/lib/site";
 import "./globals.css";
 
 const bodoni = Bodoni_Moda({
@@ -38,27 +38,13 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const [threshold, menu, markets, feature, plan] = await Promise.all([
+  const [threshold, menu, markets, promo, plan] = await Promise.all([
     deliveryThreshold(),
     mainMenu(),
     getMarkets(),
-    homeFeature(),
+    menuPromo(),
     deliveryPlan(),
   ]);
-  // The menu's promo tile follows the home hero: the campaign if there is one, else the newest piece.
-  const [newest] = feature.products;
-  const promo = feature.campaign?.headline
-    ? {
-        label: feature.campaign.label ?? "New in",
-        title: feature.campaign.headline,
-        href: collectionPath("newIn"),
-        image: feature.campaign.image ?? newest?.featuredImage ?? null,
-      }
-    : newest
-      ? { label: "New in", title: newest.title, href: `/products/${newest.handle}`, image: newest.featuredImage }
-      : null;
-  // The menu is Shopify's "main-menu"; until it loads, the shop's own department links stand in.
-  const rows = menu.length > 0 ? menu : [...nav, ...moreNav];
 
   return (
     <html lang="en-GB" className={`${bodoni.variable} ${hanken.variable}`}>
@@ -68,7 +54,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           {children}
           <CartDrawer threshold={threshold.amount} thresholdLabel={threshold.label} delivery={plan} />
           <SearchOverlay />
-          <MobileMenu rows={rows} accountUrl={accountUrl} promo={promo} />
+          <MobileMenu rows={menuRows(menu)} accountUrl={accountUrl} promo={promo} />
           <SizeGuide />
           <MarketSheet />
         </StoreProvider>

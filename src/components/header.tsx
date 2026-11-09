@@ -6,8 +6,8 @@ import { AccountIcon, BagIcon, MenuIcon, SearchIcon } from "@/components/icons";
 import { Logo } from "@/components/logo";
 import { MarketButton } from "@/components/market-selector";
 import { useStore } from "@/components/store-provider";
-import type { MenuRow } from "@/lib/catalog";
-import { collectionPath, nav } from "@/lib/site";
+import type { MenuPromo, MenuRow } from "@/lib/catalog";
+import { menuRows } from "@/lib/site";
 
 export function AnnouncementBar({ threshold }: { threshold: string }) {
   return (
@@ -24,11 +24,19 @@ export function AnnouncementBar({ threshold }: { threshold: string }) {
   );
 }
 
-export function Header({ accountUrl, menu = [], minimal = false }: { accountUrl: string | null; menu?: MenuRow[]; minimal?: boolean }) {
+export function Header({
+  accountUrl,
+  menu = [],
+  promo = null,
+  minimal = false,
+}: {
+  accountUrl: string | null;
+  menu?: MenuRow[];
+  promo?: MenuPromo | null;
+  minimal?: boolean;
+}) {
   const { cart, open } = useStore();
   const count = cart?.totalQuantity ?? 0;
-  // The desktop row: New in, then the store's main menu (Home is the logo). Without one, the shop's own links.
-  const navRows: MenuRow[] = menu.length > 0 ? [{ label: "New in", href: collectionPath("newIn") }, ...menu.filter((r) => r.href !== "/")] : nav;
 
   return (
     <header className="border-b border-line bg-paper">
@@ -88,7 +96,7 @@ export function Header({ accountUrl, menu = [], minimal = false }: { accountUrl:
           </button>
         </div>
       </div>
-      <DesktopNav rows={navRows} />
+      <DesktopNav rows={menuRows(menu)} promo={promo} />
     </header>
   );
 }
