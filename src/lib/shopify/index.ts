@@ -817,12 +817,40 @@ export async function getHomeCampaign(): Promise<Campaign | null> {
     );
     cacheLife("hours");
     const nodes = data.metaobjects.nodes;
-    const node = nodes.find((n) => n.handle === "home") ?? nodes.find((n) => !PAGE_CAMPAIGNS.includes(n.handle));
+    const node = nodes.find((n) => n.handle === "home") ?? nodes.find((n) => !PAGE_CAMPAIGNS.includes(n.handle) && !n.handle.startsWith("promo"));
     return node ? toCampaign(node) : null;
   } catch (error) {
     console.error(error);
     cacheLife("minutes");
     return null;
+  }
+}
+
+/** The home page's promo banners: campaign entries whose handle starts "promo" ("promo-1", "promo-2"), in handle order. */
+export async function getPromoCampaigns(): Promise<Campaign[]> {
+  "use cache";
+  cacheTag("metaobjects");
+
+  try {
+    const data = await shopifyFetch<{ metaobjects: { nodes: CampaignNode[] } }>(
+      `${fragments}
+      query PromoCampaigns {
+        metaobjects(type: "campaign", first: 20) {
+          nodes {
+            ${campaignFields}
+          }
+        }
+      }`,
+    );
+    cacheLife("hours");
+    return data.metaobjects.nodes
+      .filter((n) => n.handle.startsWith("promo"))
+      .sort((a, b) => a.handle.localeCompare(b.handle))
+      .map(toCampaign);
+  } catch (error) {
+    console.error(error);
+    cacheLife("minutes");
+    return [];
   }
 }
 

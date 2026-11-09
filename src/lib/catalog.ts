@@ -15,6 +15,7 @@ import {
   getMenu,
   getMenuTree,
   getOccasions,
+  getPromoCampaigns,
   searchProducts,
   type Image,
   type MenuLink,
@@ -374,6 +375,36 @@ async function menuPhotos(group: MenuGroup): Promise<Image[]> {
   const rest = products.filter((p) => p.featuredImage && !isAfricanPiece(p));
   return [campaign?.image, ...[...african, ...rest].map((p) => p.featuredImage)].filter((img): img is Image => !!img);
 }
+
+export type HomePromo = { title: string; blurb: string | null; href: string; image: Image };
+
+/**
+ * The banners under the home hero. "promo" campaign entries set them (headline, label as the line
+ * under it, link, photo); without them, the main menu's departments that the home page's own
+ * department tiles leave out (Accessories, Gifts…), each with its photo and first headings.
+ */
+export async function homePromos(skip: { hrefs: string[]; images: string[] }): Promise<HomePromo[]> {
+  const [campaigns, menu] = await Promise.all([getPromoCampaigns(), mainMenu()]);
+  const set = campaigns.flatMap((c) =>
+    c.image && c.headline ? [{ title: c.headline, blurb: c.body ?? c.label, href: c.link ?? collectionPathOf("newIn"), image: c.image }] : [],
+  );
+  if (set.length) return set.slice(0, 3);
+  return menu
+    .filter((r): r is MenuGroup & { href: string; image: Image } => "sections" in r && !!r.href && !!r.image && !skip.hrefs.includes(r.href) && r.href !== "/collections/all")
+    // Not a photo the hero above already shows.
+    .filter((g) => !skip.images.includes(g.image.url))
+    .slice(0, 3)
+    .map((g) => {
+      // A heading named for a department ("Women" under Accessories) says nothing on its own.
+      const names = g.sections
+        .flatMap((s) => (s.label ? [s.label] : s.links.map((l) => l.title)))
+        .filter((name) => !/^(women|men|kids|unisex)$/i.test(name))
+        .slice(0, 3);
+      return { title: g.label, blurb: names.length ? names.join(", ") : null, href: g.href, image: g.image };
+    });
+}
+
+const collectionPathOf = (key: keyof typeof collections) => `/collections/${collections[key]}`;
 
 /** The menu's promo tile follows the home hero: the campaign if there is one, else the newest piece. */
 export async function menuPromo(): Promise<MenuPromo | null> {

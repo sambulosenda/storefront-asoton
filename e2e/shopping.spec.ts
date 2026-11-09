@@ -3,7 +3,7 @@ import { acceptCookies } from "./helpers";
 
 test.beforeEach(async ({ page }) => acceptCookies(page));
 
-test("the home hero shows the store's campaign, with one piece in the picture until it has a photo", async ({ page }) => {
+test("the home hero shows the store's campaign over the pictured pieces' photos until it has its own", async ({ page }) => {
   await page.goto("/");
   // The fixture's campaign entry isn't called "home", like the live store's.
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Made for theBig Day");
@@ -11,10 +11,8 @@ test("the home hero shows the store's campaign, with one piece in the picture un
   await expect(page.getByText("African ready-to-wear")).toBeVisible();
   await expect(page.getByRole("link", { name: "Shop women" }).first()).toHaveAttribute("href", "/collections/womens-clothing");
   await expect(page.getByRole("link", { name: "Shop men" }).first()).toHaveAttribute("href", "/collections/mens-all");
-  const pictured = page.getByRole("navigation", { name: "In the picture" });
-  await expect(pictured.getByRole("link", { name: "Adire Wrap Dress" })).toHaveAttribute("href", "/products/adire-wrap-dress");
-  await expect(pictured.getByRole("link", { name: /Shop this piece/ })).toHaveAttribute("href", "/products/adire-wrap-dress");
-  await expect(pictured.getByText("Adire · Nigeria")).toBeVisible();
+  // Listed beside the copy on wide screens only.
+  await expect(page.locator('nav[aria-label="In the picture"] a[href="/products/adire-wrap-dress"]')).toHaveCount(1);
   await expect(page.getByRole("heading", { name: "New in" })).toBeVisible();
 });
 
@@ -25,7 +23,7 @@ test("the home page lists the store's occasions and uses its delivery rules", as
   await expect(occasions.getByRole("link")).toHaveCount(2);
   await expect(occasions.getByRole("link", { name: /Church/ })).toHaveCount(0);
   await expect(occasions.getByRole("link", { name: /Wedding guest/ })).toHaveAttribute("href", "/collections/wedding-guest");
-  await expect(page.getByText("Ready to ship: leaves us within 1 working day.")).toBeVisible();
+  await expect(page.getByRole("list", { name: "Delivery and returns" }).getByRole("link", { name: /Ready to ship\s*1 working day/ })).toBeVisible();
   // The shop metafield (£150) wins over the delivery rules' amount.
   await expect(page.getByText(/Free UK delivery over £150\. Ready-to-ship pieces leave us within 1 working day/)).toBeVisible();
   await expect(page.getByText(/\[X\]/)).toHaveCount(0);

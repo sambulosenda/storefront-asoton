@@ -181,6 +181,7 @@ function respond(query, vars) {
       { key: "desktop_image", value: "gid", reference: { image: { url: "https://cdn.shopify.com/s/files/fixture/women-tile.jpg", altText: null, width: 1200, height: 1500 } }, references: null },
     ] } : null };
     // Like the live store: a campaign entry that isn't called "home" and has no photos yet.
+    case "PromoCampaigns": return { metaobjects: { nodes: [] } };
     case "HomeCampaign": return { metaobjects: { nodes: [{ handle: "made-for-the-big-day", fields: [
       { key: "label", value: "African ready-to-wear", reference: null, references: null },
       { key: "headline", value: "Made for the Big Day", reference: null, references: null },
