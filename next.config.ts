@@ -4,6 +4,8 @@ const shopifyDomain = process.env.SHOPIFY_STORE_DOMAIN;
 
 const nextConfig: NextConfig = {
   images: {
+    loader: "custom",
+    loaderFile: "./src/lib/image-loader.ts",
     remotePatterns: [{ protocol: "https", hostname: "cdn.shopify.com" }],
   },
   cacheComponents: true,
