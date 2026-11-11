@@ -120,10 +120,16 @@ export function ProductGrid({
   products,
   wide = false,
   tight = false,
+  lead = false,
   className = "",
 }: {
   products: Product[];
   wide?: boolean;
+  /**
+   * The grid that opens a page: its first photos load straight away. Any other grid is further down,
+   * or hidden on phones behind a rail, and loading its photos early only slows the ones on screen.
+   */
+  lead?: boolean;
   /** 40px rows (home, product page) instead of the collection's 48px. */
   tight?: boolean;
   className?: string;
@@ -140,7 +146,7 @@ export function ProductGrid({
         <ProductCard
           key={product.id}
           product={product}
-          priority={i < 4}
+          priority={lead && i < 4}
           sizes={wide ? "(min-width: 768px) 50vw, 50vw" : "(min-width: 768px) 25vw, 50vw"}
         />
       ))}

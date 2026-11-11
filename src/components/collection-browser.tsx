@@ -222,7 +222,7 @@ export function CollectionBrowser({
         ) : (
           <>
             <section aria-label="Products" className="page-x pt-4 md:pt-10">
-              <ProductGrid products={first} wide={wide} />
+              <ProductGrid products={first} wide={wide} lead />
             </section>
 
             {editorial}
