@@ -11,6 +11,7 @@ import { swatchColour } from "@/lib/filters";
 import { formatMoney, isColourOption, isSizeOption } from "@/lib/format";
 import { arrivalDate, cutoffNote, isPurchaseOption, makeDays, purchaseKind, sentenceCase, type DeliveryPlan } from "@/lib/purchase";
 import { sizeName, sortedSizes } from "@/lib/sizes";
+import { track } from "@/lib/track";
 import type { Image, ProductDetail } from "@/lib/shopify/types";
 
 type Option = ProductDetail["options"][number];
@@ -114,6 +115,8 @@ export function ProductForm({
     if (adding) return;
     if (!variant) {
       setPhase({ kind: "prompt", text: `Choose a ${sizeOption ? "size" : "option"} to continue.` });
+      // A shopper who pressed the button before choosing: worth knowing how often it happens.
+      track("size_needed", { handle: product.handle });
       // Take the shopper to the sizes, and keyboard focus with them.
       const group = sizesRef.current;
       group?.scrollIntoView({ behavior: "smooth", block: "center" });

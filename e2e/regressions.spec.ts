@@ -89,6 +89,56 @@ test("Google Analytics waits for analytics consent", async ({ page }) => {
   await expect.poll(disabled).toBe(true);
 });
 
+test("shopper tracking waits for analytics consent, then follows the visit", async ({ page }) => {
+  // Google Analytics follows the same consent; kept off the network here.
+  await page.route("https://www.googletagmanager.com/**", (route) => route.fulfill({ status: 200, contentType: "text/javascript", body: "" }));
+  const requests: string[] = [];
+  await page.route(/^https:\/\/eu(-assets)?\.i\.posthog\.com\//, (route) => {
+    requests.push(route.request().url());
+    return route.fulfill({ status: 200, contentType: "application/json", body: "{}" });
+  });
+  // The steps the shop records, as it records them.
+  await page.addInitScript(() => {
+    const steps: string[] = [];
+    (window as unknown as { steps: string[] }).steps = steps;
+    window.addEventListener("shop:track", (e) => steps.push((e as CustomEvent<{ event: string }>).detail.event));
+  });
+  const steps = () => page.evaluate(() => (window as unknown as { steps: string[] }).steps);
+  const openBag = async () => {
+    await page.getByRole("button", { name: /^Bag,? \(?1/ }).filter({ visible: true }).click();
+    await expect(page.getByRole("dialog").getByText("Adire Wrap Dress")).toBeVisible();
+  };
+
+  // Before an answer nothing is recorded or sent, even when the shopper presses the button early.
+  await page.goto("/products/adire-wrap-dress");
+  await expect(page.getByRole("button", { name: "Reject all" })).toBeVisible();
+  await page.waitForTimeout(500);
+  expect(requests).toHaveLength(0);
+  expect(await steps()).toEqual([]);
+
+  // A yes loads PostHog and counts the page they were already on.
+  await page.getByRole("button", { name: "Accept all" }).click();
+  await expect.poll(steps).toEqual(["product_viewed"]);
+  await expect.poll(() => requests.length).toBeGreaterThan(0);
+
+  await page.getByRole("button", { name: "Select a size" }).first().click();
+  await expect.poll(steps).toContain("size_needed");
+  await page.getByRole("button", { name: "UK 10", exact: true }).click();
+  await page.getByRole("button", { name: "Add to bag" }).first().click();
+  await expect(page.getByText("UK 10 in Indigo added to your bag.")).toBeVisible();
+  await expect.poll(steps).toContain("added_to_bag");
+  await openBag();
+  await expect.poll(steps).toContain("bag_viewed");
+  await page.keyboard.press("Escape");
+
+  // A later no stops it on the open page.
+  await page.getByRole("contentinfo").getByRole("button", { name: "Cookie settings" }).first().click();
+  await page.getByRole("button", { name: "Reject all" }).last().click();
+  const before = (await steps()).length;
+  await openBag();
+  expect(await steps()).toHaveLength(before);
+});
+
 test("the old FAQ address opens the FAQ page, with its questions for search engines", async ({ page }) => {
   await acceptCookies(page);
   await page.goto("/pages/faqs");

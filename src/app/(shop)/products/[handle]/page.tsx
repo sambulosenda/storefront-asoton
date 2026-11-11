@@ -7,6 +7,7 @@ import { Accordion } from "@/components/accordion";
 import { ClothSwatch, drawingFor } from "@/components/cloth";
 import { ArrowRight, StarIcon } from "@/components/icons";
 import { breadcrumbs, JsonLd } from "@/components/json-ld";
+import { TrackView } from "@/components/track-view";
 import { ProductGrid, ProductRail } from "@/components/product-card";
 import { ProductForm } from "@/components/product-form";
 import { ProductGallery } from "@/components/product-gallery";
@@ -215,6 +216,17 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
     <>
       <JsonLd data={jsonLd} />
       <JsonLd data={breadcrumbs(siteUrl, trail)} />
+      <TrackView
+        event="product_viewed"
+        props={{
+          handle: product.handle,
+          title: product.title,
+          price: Number(product.priceRange.minVariantPrice.amount),
+          currency: product.priceRange.minVariantPrice.currencyCode,
+          in_stock: product.availableForSale,
+          cloth: cloth?.name ?? null,
+        }}
+      />
       <nav aria-label="Breadcrumb" className="page-x hidden py-6 text-[13px] text-ink-2 md:block">
         <ol className="flex flex-wrap gap-2">
           <li>

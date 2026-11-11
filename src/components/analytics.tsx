@@ -2,6 +2,7 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import { parse, readStored, subscribe } from "@/components/cookie-consent";
+import { startTracking, stopTracking } from "@/lib/track";
 
 /** The GA4 measurement ID ("G-XXXXXXX"). Without it, nothing loads. */
 const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim();
@@ -17,12 +18,19 @@ declare global {
  * Google Analytics 4, only after the shopper says yes to analytics cookies in the cookie banner.
  * Consent Mode starts with everything denied, then follows the banner, and a later "no" switches GA off.
  * GA4's own page-change tracking counts the in-site page views.
+ *
+ * PostHog (src/lib/track.ts) follows the same answer: it loads on a yes and stops on a later no.
  */
 export function Analytics() {
   const raw = useSyncExternalStore(subscribe, readStored, () => "");
   const prefs = parse(raw);
   const analytics = !!prefs?.analytics;
   const marketing = !!prefs?.marketing;
+
+  useEffect(() => {
+    if (analytics) startTracking();
+    else stopTracking();
+  }, [analytics]);
 
   useEffect(() => {
     if (!GA_ID) return;

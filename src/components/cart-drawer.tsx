@@ -11,6 +11,7 @@ import { useStore } from "@/components/store-provider";
 import { formatMoney, isSizeOption } from "@/lib/format";
 import { arrivalDate, isPurchaseOption, lineDelivery, makeDays, type DeliveryPlan } from "@/lib/purchase";
 import { sizeName } from "@/lib/sizes";
+import { track } from "@/lib/track";
 import type { CartLine } from "@/lib/shopify/types";
 
 /** "UK 10 · Indigo". The purchase type is left out: the bag gives it its own line with a date. */
@@ -135,7 +136,11 @@ export function CartDrawer({
                   {made.length > 1 ? "they’re" : "it’s"} made.
                 </p>
               )}
-              <a href={cart?.checkoutUrl} className="btn btn-ink mt-1 h-14 md:mt-2">
+              <a
+                href={cart?.checkoutUrl}
+                onClick={() => track("checkout_started", { bag_items: count, bag_subtotal: subtotal, currency })}
+                className="btn btn-ink mt-1 h-14 md:mt-2"
+              >
                 Checkout
               </a>
               <PaymentMarks size={20} className="justify-center" />

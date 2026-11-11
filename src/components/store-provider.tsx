@@ -15,6 +15,7 @@ import {
 import { addToCart, getCart, setCountry, updateCartLine, type CartResult } from "@/lib/cart-actions";
 import type { Market } from "@/lib/shopify";
 import type { Cart } from "@/lib/shopify/types";
+import { track } from "@/lib/track";
 
 export type SizeGuideSizes = { chosen?: string; offered?: string[] };
 
@@ -43,7 +44,8 @@ type Store = {
   /** True while a quantity change is saving. */
   pending: boolean;
   notice: string | null;
-  add: (variantId: string) => Promise<CartResult>;
+  /** `from` says where the piece was added, for the shop's analytics. */
+  add: (variantId: string, from?: "product_page" | "quick_add") => Promise<CartResult>;
   setQuantity: (lineId: string, quantity: number) => void;
   overlay: Overlay;
   open: (overlay: Exclude<Overlay, null>) => void;
@@ -110,11 +112,23 @@ export function StoreProvider({
     fetchCart();
   }, [fetchCart]);
 
-  const add = useCallback(async (variantId: string) => {
+  const add = useCallback(async (variantId: string, from: "product_page" | "quick_add" = "product_page") => {
     const result = await addToCart(variantId);
     if (result.cart) {
       setCart(result.cart);
       setCartStatus("ready");
+      const line = result.cart.lines.find((l) => l.merchandise.id === variantId);
+      if (line && !result.error) {
+        track("added_to_bag", {
+          handle: line.merchandise.product.handle,
+          title: line.merchandise.product.title,
+          variant: line.merchandise.title,
+          from,
+          bag_items: result.cart.totalQuantity,
+          bag_subtotal: Number(result.cart.cost.subtotalAmount.amount),
+          currency: result.cart.cost.subtotalAmount.currencyCode,
+        });
+      }
     }
     return result;
   }, []);
@@ -195,7 +209,15 @@ export function StoreProvider({
       add,
       setQuantity,
       overlay,
-      open: setOverlay,
+      open: (next) => {
+        if (next === "cart") {
+          track("bag_viewed", {
+            bag_items: cart?.totalQuantity ?? 0,
+            bag_subtotal: Number(cart?.cost.subtotalAmount.amount ?? 0),
+          });
+        }
+        setOverlay(next);
+      },
       close: () => setOverlay(null),
       sizeGuideDept,
       sizeGuideSizes,

@@ -66,10 +66,21 @@ To switch on the emails, make a free Resend account with the shop's inbox, creat
 
 Set `NEXT_PUBLIC_GA_MEASUREMENT_ID` to the shop's Google Analytics 4 measurement ID (`G-…`, from GA4 **Admin > Data streams > Web**) and redeploy. GA4 loads only after a shopper accepts analytics cookies in the banner, using Google Consent Mode, and stops collecting if they later turn it off. It counts page views across the site; sales happen on Shopify's checkout, so connect the same GA4 property in Shopify's **Google & YouTube** app to record purchases.
 
+Set `NEXT_PUBLIC_POSTHOG_KEY` to the shop's PostHog project token (`phc_…`, from PostHog **Settings > Project**) to see where shoppers get to and where they stop. Like GA4, PostHog loads only after a shopper accepts analytics cookies, and stops if they later turn them off; before that nothing is loaded, stored or sent. It records page views, session recordings (inputs masked) and these steps, from `src/lib/track.ts`:
+
+- `product_viewed`: a product page was opened (handle, price, in stock, cloth).
+- `size_needed`: Add to bag was pressed before a size was chosen.
+- `added_to_bag`: a piece went in the bag, from its page or from a card's quick add.
+- `bag_viewed`: the bag was opened.
+- `checkout_started`: Checkout was pressed. Paying happens on Shopify's checkout, which PostHog doesn't see; compare with Shopify's orders.
+- `search_performed`: a search and how many pieces it found, so searches that find nothing show up.
+
+The project is assumed to be on PostHog's EU cloud; set `NEXT_PUBLIC_POSTHOG_HOST` if it isn't.
+
 ## Deploying to Vercel
 
 1. Sign in at [vercel.com](https://vercel.com) with GitHub and **Add New > Project**, then import `storefront-asoton`. Vercel finds Next.js on its own; keep the default build settings.
-2. Under **Environment Variables**, add `SHOPIFY_STORE_DOMAIN`, `SHOPIFY_STOREFRONT_ACCESS_TOKEN`, `SHOPIFY_STOREFRONT_API_VERSION`, `SITE_URL` (the address the site will live at, such as `https://africanclothingstore.co.uk`), `RESEND_API_KEY` and `SHOP_EMAIL` if the forms should send, and `NEXT_PUBLIC_GA_MEASUREMENT_ID` for Google Analytics.
+2. Under **Environment Variables**, add `SHOPIFY_STORE_DOMAIN`, `SHOPIFY_STOREFRONT_ACCESS_TOKEN`, `SHOPIFY_STOREFRONT_API_VERSION`, `SITE_URL` (the address the site will live at, such as `https://africanclothingstore.co.uk`), `RESEND_API_KEY` and `SHOP_EMAIL` if the forms should send, and `NEXT_PUBLIC_GA_MEASUREMENT_ID` for Google Analytics and `NEXT_PUBLIC_POSTHOG_KEY` for PostHog.
 3. Click **Deploy**. Every push to `main` deploys again, and every pull request gets its own preview link.
 4. To use your own domain, add it under **Settings > Domains** and follow the DNS steps there, then change `SITE_URL` to it and redeploy (the sitemap and robots file are built with it).
 

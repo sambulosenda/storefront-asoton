@@ -40,7 +40,7 @@ export function QuickAdd({ product }: { product: Product }) {
     setBusy(variantId);
     setError(false);
     try {
-      const result = await add(variantId);
+      const result = await add(variantId, "quick_add");
       if (result.cart && !result.error) open("cart");
       else setError(true);
     } catch {
