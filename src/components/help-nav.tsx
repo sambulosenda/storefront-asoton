@@ -14,7 +14,7 @@ const TOPICS = [
 export function HelpNav() {
   const { openSizeGuide } = useStore();
   return (
-    <nav aria-label="Help topics" className="flex flex-[0_1_220px] flex-col text-[15px] md:sticky md:top-6">
+    <nav aria-label="Help topics" className="flex flex-[0_1_220px] flex-col text-[15px] md:sticky md:top-[calc(var(--header-h)+24px)] md:transition-[top] md:duration-(--duration-quick) md:ease-(--ease-out-soft)">
       {TOPICS.map((t) => (
         <a
           key={t.href}

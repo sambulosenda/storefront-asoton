@@ -20,6 +20,7 @@ const FIRST_ROWS = 8;
 export function CollectionBrowser({
   products,
   pageInfo,
+  total = null,
   filters,
   selected,
   sort,
@@ -32,6 +33,8 @@ export function CollectionBrowser({
 }: {
   products: Product[];
   pageInfo: PageInfo;
+  /** How many pieces there are in all, under the filters in use. Left out when it isn't known. */
+  total?: number | null;
   filters: Filter[];
   selected: string[];
   sort: SortKey;
@@ -92,6 +95,9 @@ export function CollectionBrowser({
   const first = products.slice(0, FIRST_ROWS);
   const rest = [...products.slice(FIRST_ROWS), ...more.products];
   const hasFilters = filters.length > 0;
+  const shown = products.length + more.products.length;
+  // "344 pieces": the size of what the shopper is browsing, and how far "Load more" has to go.
+  const pieces = total ? `${total.toLocaleString("en-GB")} ${total === 1 ? "piece" : "pieces"}` : null;
 
   return (
     <>
@@ -113,8 +119,11 @@ export function CollectionBrowser({
         </nav>
       )}
 
-      {/* Toolbar. On phones it sits under the header, tucked 1px beneath it so their rules read as one line. */}
-      <div data-sticky-toolbar className="sticky top-[calc(var(--header-h)-1px)] z-20 bg-paper md:top-0">
+      {/* Toolbar. It sits under the header whenever the header shows, tucked 1px beneath it on phones so their rules read as one line. */}
+      <div
+        data-sticky-toolbar
+        className="sticky top-[calc(var(--header-h)-1px)] z-20 bg-paper md:top-(--header-h) md:transition-[top] md:duration-(--duration-quick) md:ease-(--ease-out-soft)"
+      >
         {/* Phones */}
         <div className={`grid border-y border-line md:hidden ${hasFilters ? "grid-cols-2" : "grid-cols-1"}`}>
           {hasFilters && (
@@ -148,6 +157,7 @@ export function CollectionBrowser({
               ))}
             </nav>
             <div className="flex flex-wrap items-center gap-x-5 gap-y-1 py-1.5">
+              {pieces && <span className="text-[14px] text-ink-2">{pieces}</span>}
               {hasFilters && (
                 <button type="button" onClick={() => setFilterOpen(true)} className="inline-flex h-11 cursor-pointer items-center gap-2 px-1 text-[14px]">
                   <FilterIcon size={18} />
@@ -222,6 +232,8 @@ export function CollectionBrowser({
         ) : (
           <>
             <section aria-label="Products" className="page-x pt-4 md:pt-10">
+              {/* Phones: the toolbar is two buttons wide, so the count sits above the first row instead. */}
+              {pieces && <p className="pb-3 text-[13px] text-ink-2 md:hidden">{pieces}</p>}
               <ProductGrid products={first} wide={wide} lead />
             </section>
 
@@ -239,6 +251,11 @@ export function CollectionBrowser({
             )}
 
             <div className="page-x flex flex-col items-center gap-4 pt-10 pb-14 md:pt-[72px] md:pb-[120px]">
+              {total !== null && total > shown && (
+                <p className="text-[13px] text-ink-2">
+                  Showing {shown} of {total.toLocaleString("en-GB")}
+                </p>
+              )}
               {more.pageInfo.hasNextPage && (
                 <button
                   type="button"

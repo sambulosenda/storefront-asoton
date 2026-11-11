@@ -113,6 +113,9 @@ function respond(query, vars) {
   market = MARKETS.find((m) => m.isoCode === vars.country) ?? MARKETS[0];
   switch (op) {
     case "Markets": return { localization: { country: marketOut(MARKETS[0]), availableCountries: MARKETS.map(marketOut) } };
+    case "CollectionCount":
+      vars.first = 250;
+    // falls through
     case "Collection": {
       // The departments go by the live store's handles for its full ranges.
       const map = { "womens-clothing": "women", "mens-all": "men" };

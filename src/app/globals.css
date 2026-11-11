@@ -98,9 +98,10 @@
 
 @layer base {
   /*
-   * On phones the header stays at the top of the screen. Its height there (61px and its rule), for
-   * whatever sticks below it and for links that jump to a section. Nothing from 48rem, where the
-   * header scrolls away with the page.
+   * The header stays at the top of the screen. Its height, for whatever sticks below it and for
+   * links that jump to a section. On phones that is always 61px and its rule. From 48rem the header
+   * slides away on the way down a page and returns on the way up, so header.tsx sets the height
+   * while it shows and 0 while it's away; 0 here covers the moment before it has.
    */
   :root {
     --header-h: 62px;
