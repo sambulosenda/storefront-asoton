@@ -26,6 +26,8 @@ export function ProductGallery({
   drawing: { garment: GarmentKey; cloth: ClothKey };
 }) {
   const [index, setIndex] = useState(0);
+  // Phones: the furthest photo worth loading. It starts as the one after the first and moves on as the shopper swipes.
+  const [upTo, setUpTo] = useState(1);
   const [viewing, setViewing] = useState<number | null>(null);
   const rail = useRef<HTMLDivElement>(null);
   const slides = images.slice(0, 8);
@@ -46,7 +48,9 @@ export function ProductGallery({
           ref={rail}
           onScroll={(e) => {
             const el = e.currentTarget;
-            setIndex(Math.round(el.scrollLeft / el.clientWidth));
+            const at = Math.round(el.scrollLeft / el.clientWidth);
+            setIndex(at);
+            setUpTo((n) => Math.max(n, at + 1));
           }}
           className="no-scrollbar flex h-full snap-x snap-mandatory overflow-x-auto"
         >
@@ -55,16 +59,19 @@ export function ProductGallery({
             <div key={image.url} className="relative h-full w-full flex-none snap-start bg-stone-2">
               <Shared handle={handle} first={false}>
                 <ZoomButton label={`Open photo ${i + 1} of ${slides.length} full screen`} onClick={() => setViewing(i)}>
-                  <Image
-                    src={image.url}
-                    alt={image.altText ?? `${title}, photo ${i + 1}`}
-                    fill
-                    loading={i === 0 ? "eager" : undefined}
-                    fetchPriority={i === 0 ? "high" : undefined}
-                    // From 48rem this carousel is hidden, yet its first photo still loads: 1vw asks for the smallest file.
-                    sizes="(min-width: 48rem) 1vw, 100vw"
-                    className="object-cover"
-                  />
+                  {/* Only the photo on screen and the next one load; a browser would otherwise fetch every slide of the carousel at once. */}
+                  {i <= upTo && (
+                    <Image
+                      src={image.url}
+                      alt={image.altText ?? `${title}, photo ${i + 1}`}
+                      fill
+                      loading={i === 0 ? "eager" : undefined}
+                      fetchPriority={i === 0 ? "high" : undefined}
+                      // From 48rem this carousel is hidden, yet its first photo still loads: 1vw asks for the smallest file.
+                      sizes="(min-width: 48rem) 1vw, 100vw"
+                      className="object-cover"
+                    />
+                  )}
                 </ZoomButton>
               </Shared>
             </div>

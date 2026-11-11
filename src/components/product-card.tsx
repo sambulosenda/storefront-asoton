@@ -60,9 +60,9 @@ export function ProductCard({
           ) : (
             photo
           )}
-          {/* A second look on hover, where there is one. */}
+          {/* A second look on hover, where there is one. Hidden outright on touch screens, which can't hover, so they don't download it. */}
           {second && product.featuredImage && (
-            <div className="absolute inset-0 opacity-0 transition-opacity duration-(--duration-medium) ease-(--ease-out-soft) group-hover:opacity-100">
+            <div className="absolute inset-0 hidden opacity-0 transition-opacity duration-(--duration-medium) ease-(--ease-out-soft) group-hover:opacity-100 [@media(hover:hover)]:block">
               <Image src={second.url} alt="" fill sizes={sizes} className="object-cover" />
             </div>
           )}
