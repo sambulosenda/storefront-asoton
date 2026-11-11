@@ -39,7 +39,8 @@ export function Header({
   const count = cart?.totalQuantity ?? 0;
 
   return (
-    <header className="border-b border-line bg-paper">
+    // Phones: the header stays at the top of the screen, so the menu, search and bag are always in reach.
+    <header className="sticky top-0 z-30 border-b border-line bg-paper md:static">
       {/* Phones */}
       <div className="grid h-[61px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-2 md:hidden">
         <div className="flex items-center">

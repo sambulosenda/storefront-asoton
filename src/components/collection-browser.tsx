@@ -113,8 +113,8 @@ export function CollectionBrowser({
         </nav>
       )}
 
-      {/* Toolbar */}
-      <div className="sticky top-0 z-20 bg-paper">
+      {/* Toolbar. On phones it sits under the header, tucked 1px beneath it so their rules read as one line. */}
+      <div data-sticky-toolbar className="sticky top-[calc(var(--header-h)-1px)] z-20 bg-paper md:top-0">
         {/* Phones */}
         <div className={`grid border-y border-line md:hidden ${hasFilters ? "grid-cols-2" : "grid-cols-1"}`}>
           {hasFilters && (

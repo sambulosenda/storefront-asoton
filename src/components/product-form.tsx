@@ -66,6 +66,15 @@ export function ProductForm({
   const price = variant?.price ?? product.priceRange.minVariantPrice;
   const size = sizeOption ? selection[sizeOption.name] : undefined;
   const soldOut = variant ? !variant.availableForSale : false;
+  // What UK delivery adds to this piece, said beside its price rather than left for checkout.
+  // The amounts are in pounds, so other currencies keep the plain line.
+  const pounds = (amount: number) => formatMoney({ amount: String(amount), currencyCode: "GBP" });
+  const deliveryNote =
+    price.currencyCode !== "GBP"
+      ? "Shipping calculated at checkout."
+      : Number(price.amount) >= delivery.freeOver
+        ? "Free UK delivery."
+        : `UK delivery ${pounds(delivery.ukRate)}, free over ${pounds(delivery.freeOver)}.`;
   // Phones: a bar pinned to the bottom while the add-to-bag button is off screen.
   const buyRef = useRef<HTMLDivElement>(null);
   const sizesRef = useRef<HTMLDivElement>(null);
@@ -155,7 +164,7 @@ export function ProductForm({
         {variant?.compareAtPrice && Number(variant.compareAtPrice.amount) > Number(price.amount) && (
           <s className="text-[15px] text-ink-2">{formatMoney(variant.compareAtPrice)}</s>
         )}
-        <span className="text-[12px] text-ink-2 md:text-[13px]">Tax included. Shipping calculated at checkout.</span>
+        <span className="text-[12px] text-ink-2 md:text-[13px]">Tax included. {deliveryNote}</span>
       </div>
 
       {colourOption && (

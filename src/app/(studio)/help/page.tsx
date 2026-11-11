@@ -34,9 +34,10 @@ const th = "label-caps border-b border-ink pb-2.5 text-left";
 
 export default async function HelpPage() {
   const [times, threshold] = await Promise.all([deliveryTimes(), deliveryThreshold()]);
-  // Shopify's delivery rules fill in the times, else the ones in site.ts. Rates are worked out at checkout.
+  // Shopify's delivery rules fill in the times, else the ones in site.ts. The UK rate is the one in site.ts,
+  // as checkout charges it; international rates are worked out at checkout.
   const deliveryRates = [
-    { service: "UK", arrives: times.uk, cost: `Shown at checkout, free over ${threshold.label}` },
+    { service: "UK", arrives: `${times.uk} after dispatch`, cost: `£${site.ukStandardRate}, free over ${threshold.label}` },
     { service: "International", arrives: times.international ?? `${site.internationalDays} working days`, cost: "Shown at checkout" },
   ];
   return (

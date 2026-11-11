@@ -30,7 +30,8 @@ export function CartDrawer({
   thresholdLabel,
   delivery,
 }: {
-  threshold: number | null;
+  /** The free UK delivery amount, in pounds. */
+  threshold: number;
   thresholdLabel: string;
   delivery: DeliveryPlan;
 }) {
@@ -48,7 +49,8 @@ export function CartDrawer({
   const count = cart?.totalQuantity ?? 0;
   const subtotal = cart ? Number(cart.cost.subtotalAmount.amount) : 0;
   const currency = cart?.cost.subtotalAmount.currencyCode ?? "GBP";
-  const remaining = threshold ? Math.max(0, threshold - subtotal) : null;
+  // The amount is in pounds, so only a bag priced in pounds can be counted towards it.
+  const remaining = currency === "GBP" ? Math.max(0, threshold - subtotal) : null;
 
   return (
     <Sheet open={overlay === "cart"} onClose={close} placement="right" aria-labelledby="bag-title">
@@ -85,7 +87,7 @@ export function CartDrawer({
                 <div aria-hidden="true" className="relative h-0.5 bg-line">
                   <div
                     className="absolute inset-y-0 left-0 bg-ink"
-                    style={{ width: `${Math.min(100, (subtotal / threshold!) * 100)}%` }}
+                    style={{ width: `${Math.min(100, (subtotal / threshold) * 100)}%` }}
                   />
                 </div>
               </div>
@@ -114,7 +116,18 @@ export function CartDrawer({
                 <span className="label-caps">Subtotal</span>
                 <span className="text-[18px]">{cart && formatMoney(cart.cost.subtotalAmount)}</span>
               </div>
-              <p className="text-[12px] text-ink-2 md:text-[13px]">Tax included. Delivery and discount codes are added at checkout.</p>
+              {/* What UK delivery adds, said here rather than left for checkout. */}
+              {remaining !== null && (
+                <div className="flex items-baseline justify-between gap-4 text-[14px]">
+                  <span>UK delivery</span>
+                  <span>{remaining > 0 ? formatMoney({ amount: String(delivery.ukRate), currencyCode: "GBP" }) : "Free"}</span>
+                </div>
+              )}
+              <p className="text-[12px] text-ink-2 md:text-[13px]">
+                {remaining !== null
+                  ? "Tax included. Other delivery options and discount codes are at checkout."
+                  : "Tax included. Delivery and discount codes are added at checkout."}
+              </p>
               {making !== null && (
                 <p className="bg-stone px-3.5 py-3 text-[13px] leading-[1.5]">
                   <strong className="font-medium">Made to order:</strong> {made.length > 1 ? "these pieces are" : "this piece is"} made to your size
