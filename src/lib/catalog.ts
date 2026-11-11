@@ -238,8 +238,10 @@ export async function deliveryTimes() {
 
 /** What the arrival dates on product pages and in the bag are worked out from. */
 export async function deliveryPlan(): Promise<DeliveryPlan> {
-  const [rules, times] = await Promise.all([getDeliveryRules(), deliveryTimes()]);
+  const [rules, times, threshold] = await Promise.all([getDeliveryRules(), deliveryTimes(), deliveryThreshold()]);
   return {
+    ukRate: Number(site.ukStandardRate),
+    freeOver: threshold.amount,
     dispatchLine: times.dispatchLine,
     dispatch: rules?.dispatchDays != null ? [rules.dispatchDays, rules.dispatchDays] : dayRange(site.dispatchDays),
     uk: rules?.ukStandardDays != null ? [rules.ukStandardDays, rules.ukStandardDays] : dayRange(site.deliveryDays),

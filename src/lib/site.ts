@@ -28,7 +28,7 @@ export const site = {
   market: "United Kingdom · GBP £",
   /** In pounds. Used until Shopify holds the amount (the shop metafield custom.free_delivery_threshold, or delivery_rules). */
   freeDeliveryThreshold: 50,
-  /** UK Standard delivery under the free threshold, as Shopify checkout charges it. For search results. */
+  /** UK Standard delivery under the free threshold, as Shopify checkout charges it. Shown by prices, in the bag and in search results. */
   ukStandardRate: "4.99",
   /** Ready-to-ship pieces. Made-to-order pieces are made first: the days in their option, else 14. */
   dispatchDays: "2 to 4",

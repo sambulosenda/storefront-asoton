@@ -36,6 +36,10 @@ export type DeliveryPlan = {
   /** "14:00": orders after this leave a working day later. */
   cutoff: string | null;
   holidays: string[];
+  /** UK standard delivery in pounds, as checkout charges it below the free amount. */
+  ukRate: number;
+  /** Orders from this amount, in pounds, get UK standard delivery free. */
+  freeOver: number;
 };
 
 /** "2 to 4" → [2, 4]; "3" → [3, 3]. */

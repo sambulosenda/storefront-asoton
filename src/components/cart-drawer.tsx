@@ -116,7 +116,18 @@ export function CartDrawer({
                 <span className="label-caps">Subtotal</span>
                 <span className="text-[18px]">{cart && formatMoney(cart.cost.subtotalAmount)}</span>
               </div>
-              <p className="text-[12px] text-ink-2 md:text-[13px]">Tax included. Delivery and discount codes are added at checkout.</p>
+              {/* What UK delivery adds, said here rather than left for checkout. */}
+              {remaining !== null && (
+                <div className="flex items-baseline justify-between gap-4 text-[14px]">
+                  <span>UK delivery</span>
+                  <span>{remaining > 0 ? formatMoney({ amount: String(delivery.ukRate), currencyCode: "GBP" }) : "Free"}</span>
+                </div>
+              )}
+              <p className="text-[12px] text-ink-2 md:text-[13px]">
+                {remaining !== null
+                  ? "Tax included. Other delivery options and discount codes are at checkout."
+                  : "Tax included. Delivery and discount codes are added at checkout."}
+              </p>
               {making !== null && (
                 <p className="bg-stone px-3.5 py-3 text-[13px] leading-[1.5]">
                   <strong className="font-medium">Made to order:</strong> {made.length > 1 ? "these pieces are" : "this piece is"} made to your size
