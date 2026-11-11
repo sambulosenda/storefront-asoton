@@ -10,7 +10,7 @@ import { movedCollections } from "@/lib/old-links";
 import { departmentMenu, parentDepartment } from "@/lib/catalog";
 import { parseFilters, parseSort } from "@/lib/filters";
 import { getCountry } from "@/lib/market";
-import { getCampaign, getCollection, getCollectionOrAll, getMenu } from "@/lib/shopify";
+import { getCampaign, getCollection, getCollectionCount, getCollectionOrAll, getMenu } from "@/lib/shopify";
 import { searchDescription, searchTitle, snippet } from "@/lib/seo";
 import { collectionName, collectionPath, collections, departmentNames, departmentOf, departments, site, siteUrl } from "@/lib/site";
 
@@ -81,12 +81,14 @@ async function Collection({
   // Sub-categories like Dresses show their department's chips and breadcrumb, with themselves selected.
   const parent = await parentDepartment(handle);
   const dept = departmentOf(handle) ?? parent;
-  const [page, menu, campaign] = await Promise.all([
+  const [page, menu, campaign, total] = await Promise.all([
     standIns[handle] ? getCollectionOrAll({ handle, sort, filters, country }) : getCollection({ handle, sort, filters, country }),
     // Departments fall back to the design's categories until their menus exist in Shopify.
     dept ? departmentMenu(dept) : getMenu(handle),
     // Department campaigns go by the department ("women"), others by the collection's handle.
     getCampaign(departmentOf(handle) ?? handle),
+    // How many pieces there are in all, so shoppers can see the size of what they're browsing.
+    standIns[handle] ? null : getCollectionCount({ handle, filters }),
   ]);
   if (!page) {
     if (movedCollections[handle]) permanentRedirect(`/collections/${movedCollections[handle]}`);
@@ -165,6 +167,7 @@ async function Collection({
         key={JSON.stringify([sort, filters, country])}
         products={page.products}
         pageInfo={page.pageInfo}
+        total={total}
         filters={page.filters}
         selected={filters}
         sort={sort}

@@ -279,6 +279,54 @@ export async function getCollection({
   }
 }
 
+/**
+ * How many pieces a collection holds, under the same filters as its page. The Storefront API gives
+ * no total, so this walks the collection 250 pieces at a time; it is cached like the collection.
+ * Null when the collection doesn't exist or Shopify can't be reached, and the page then shows no count.
+ */
+export async function getCollectionCount({ handle, filters = [] }: { handle: string; filters?: string[] }): Promise<number | null> {
+  "use cache";
+  cacheTag("products", `collection-${handle}`);
+
+  type Page = { collection: { products: { nodes: { id: string }[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } } } | null };
+  try {
+    let count = 0;
+    let after: string | null = null;
+    // 20 pages is 5,000 pieces, far beyond any collection here; the cap only stops a runaway loop.
+    for (let page = 0; page < 20; page++) {
+      const data: Page = await shopifyFetch<Page>(
+        `query CollectionCount($handle: String!, $after: String, $filters: [ProductFilter!]) {
+          collection(handle: $handle) {
+            products(first: 250, after: $after, filters: $filters) {
+              pageInfo {
+                hasNextPage
+                endCursor
+              }
+              nodes {
+                id
+              }
+            }
+          }
+        }`,
+        { handle, after, filters: filters.flatMap(parseFilter) },
+      );
+      if (!data.collection) {
+        cacheLife("hours");
+        return null;
+      }
+      count += data.collection.products.nodes.length;
+      if (!data.collection.products.pageInfo.hasNextPage) break;
+      after = data.collection.products.pageInfo.endCursor;
+    }
+    cacheLife("hours");
+    return count;
+  } catch (error) {
+    console.error(error);
+    cacheLife("minutes");
+    return null;
+  }
+}
+
 type RawCollectionPage = Collection & {
   products: {
     nodes: Product[];

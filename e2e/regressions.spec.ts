@@ -139,6 +139,28 @@ test("shopper tracking waits for analytics consent, then follows the visit", asy
   expect(await steps()).toHaveLength(before);
 });
 
+test("a collection says how many pieces it holds, and the header returns on the way back up", async ({ page, isMobile }) => {
+  await acceptCookies(page);
+  await page.goto("/collections/womens-clothing");
+  await expect(page.getByText(/^\d+ pieces$/).filter({ visible: true })).toBeVisible();
+
+  const header = page.locator("header");
+  const top = () => header.evaluate((el) => Math.round(el.getBoundingClientRect().top));
+  const bottom = () => header.evaluate((el) => Math.round(el.getBoundingClientRect().bottom));
+  await page.mouse.wheel(0, 900);
+  if (isMobile) {
+    // Phones keep it in reach the whole way down.
+    await expect.poll(top).toBe(0);
+    return;
+  }
+  // Wider screens: out of the way going down, back at the first scroll up, with the toolbar under it.
+  await expect.poll(bottom).toBeLessThanOrEqual(0);
+  await page.mouse.wheel(0, -120);
+  await expect.poll(top).toBe(0);
+  const toolbar = page.locator("[data-sticky-toolbar]");
+  await expect.poll(async () => Math.round(await toolbar.evaluate((el) => el.getBoundingClientRect().top)) - (await bottom())).toBe(0);
+});
+
 test("the old FAQ address opens the FAQ page, with its questions for search engines", async ({ page }) => {
   await acceptCookies(page);
   await page.goto("/pages/faqs");

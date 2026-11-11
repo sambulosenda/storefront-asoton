@@ -193,7 +193,7 @@ export default async function FaqsPage() {
       </div>
 
       <div className="flex flex-wrap items-start gap-x-24 gap-y-12 pt-10 md:pt-14">
-        <nav aria-label="FAQ topics" className="flex flex-[0_1_220px] flex-col text-[15px] md:sticky md:top-6">
+        <nav aria-label="FAQ topics" className="flex flex-[0_1_220px] flex-col text-[15px] md:sticky md:top-[calc(var(--header-h)+24px)] md:transition-[top] md:duration-(--duration-quick) md:ease-(--ease-out-soft)">
           {groups.map((g) => (
             <a key={g.id} href={`#${g.id}`} className="flex min-h-11 items-center border-b border-line no-underline">
               {g.title}
