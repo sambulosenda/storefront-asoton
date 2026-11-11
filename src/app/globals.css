@@ -97,6 +97,21 @@
 }
 
 @layer base {
+  /*
+   * On phones the header stays at the top of the screen. Its height there (61px and its rule), for
+   * whatever sticks below it and for links that jump to a section. Nothing from 48rem, where the
+   * header scrolls away with the page.
+   */
+  :root {
+    --header-h: 62px;
+    scroll-padding-top: var(--header-h);
+  }
+  @media (width >= 48rem) {
+    :root {
+      --header-h: 0px;
+    }
+  }
+
   body {
     background: var(--color-paper);
     color: var(--color-ink);
