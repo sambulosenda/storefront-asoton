@@ -287,7 +287,8 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
             <div className="mb-2 h-[268px] overflow-hidden bg-indigo md:mb-0 md:aspect-[4/3] md:h-auto md:min-w-0 md:flex-[1_1_440px]">
               {swatch ? (
                 <span className="relative block size-full">
-                  <Image src={swatch.image.url} alt="" fill sizes="(min-width: 768px) 45vw, 100vw" className="scale-[1.6] object-cover" />
+                  {/* A close-up of the cloth as texture, not a photo to study: half the width is plenty on a phone, at a third of the download. */}
+                  <Image src={swatch.image.url} alt="" fill sizes="(min-width: 768px) 45vw, 50vw" className="scale-[1.6] object-cover" />
                 </span>
               ) : (
                 <ClothSwatch cloth={cloth.key} />
