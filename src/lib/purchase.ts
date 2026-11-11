@@ -75,7 +75,9 @@ function dateSpan(from: Date, to: Date) {
  */
 export function arrivalDate(kind: PurchaseKind, value: string, plan: DeliveryPlan, now = new Date()) {
   const [h, m] = (plan.cutoff ?? "").split(":").map(Number);
-  const late = Number.isFinite(h) && now.getHours() * 60 + now.getMinutes() >= h * 60 + (m || 0);
+  // Only a shop with a cutoff has "late" orders. Without the check an unset cutoff reads as midnight
+  // (Number("") is 0), which made every order late and every date a working day too far out.
+  const late = !!plan.cutoff && Number.isFinite(h) && now.getHours() * 60 + now.getMinutes() >= h * 60 + (m || 0);
   let start = now;
   if (kind === "made") {
     start = new Date(now);

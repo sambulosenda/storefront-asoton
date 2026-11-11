@@ -31,9 +31,9 @@ export const site = {
   /** UK Standard delivery under the free threshold, as Shopify checkout charges it. Shown by prices, in the bag and in search results. */
   ukStandardRate: "4.99",
   /** Ready-to-ship pieces. Made-to-order pieces are made first: the days in their option, else 14. */
-  dispatchDays: "2 to 4",
-  /** UK delivery once dispatched, by priority courier. */
-  deliveryDays: "2 to 4",
+  dispatchDays: "1 to 2",
+  /** UK delivery once dispatched, by priority courier. With dispatch, 2 to 4 working days door to door, as recent orders took. */
+  deliveryDays: "1 to 2",
   internationalDays: "5 to 8",
   /** Ready-to-ship pieces only: made-to-order pieces come back only when faulty. */
   returnDays: "30",

@@ -25,8 +25,8 @@ Open: what else sets the shop apart from other UK African clothing shops and mar
 ## Operating Context
 
 - Catalogue, collections, menus, metaobjects (campaign, look, cloth, occasion, delivery_rules) and metafields are managed in Shopify admin. The storefront reads them through the Storefront API and falls back gracefully when they are missing.
-- Two kinds of pieces: ready to ship (dispatched in 2 to 4 working days) and made to order or custom made (made first, 14 days unless the product option says otherwise). Shoppers choose under "How would you like it?" with arrival dates shown.
-- UK first: prices in GBP, UK delivery in 2 to 4 days after dispatch by priority courier, free UK delivery from £50. International delivery 5 to 8 days. Other markets and currencies appear only once Shopify has two or more.
+- Two kinds of pieces: ready to ship (dispatched in 1 to 2 working days) and made to order or custom made (made first, 14 days unless the product option says otherwise). Shoppers choose under "How would you like it?" with arrival dates shown.
+- UK first: prices in GBP, UK delivery 1 to 2 working days after dispatch by priority courier (2 to 4 working days from order to door), free UK delivery from £50. International delivery 5 to 8 days. Other markets and currencies appear only once Shopify has two or more.
 - Returns within 30 days for ready-to-ship pieces only. Made-to-order pieces come back only when faulty. Refunds in 5 to 10 working days once a return passes its checks.
 - Newsletter sign-ups become Shopify customers with email marketing on.
 
