@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { CollectionBrowser } from "@/components/collection-browser";
 import { CollectionSkeleton } from "@/components/skeletons";
+import { TrackView } from "@/components/track-view";
 import { parseSort } from "@/lib/filters";
 import { getCountry } from "@/lib/market";
 import { searchProducts } from "@/lib/shopify";
@@ -82,6 +83,9 @@ async function SearchResults({ searchParams }: { searchParams: Promise<Record<st
           </form>
         </div>
       </section>
+
+      {/* What was searched for and whether it found anything: a search with no results is a piece the shop lacks, or a word it doesn't know. */}
+      {results && <TrackView event="search_performed" props={{ query: q, results: results.products.length, more: results.pageInfo.hasNextPage }} />}
 
       {!results && (
         <div className="page-x flex flex-col gap-4 pb-24">
