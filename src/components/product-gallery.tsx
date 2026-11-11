@@ -61,7 +61,8 @@ export function ProductGallery({
                     fill
                     loading={i === 0 ? "eager" : undefined}
                     fetchPriority={i === 0 ? "high" : undefined}
-                    sizes="100vw"
+                    // From 48rem this carousel is hidden, yet its first photo still loads: 1vw asks for the smallest file.
+                    sizes="(min-width: 48rem) 1vw, 100vw"
                     className="object-cover"
                   />
                 </ZoomButton>
@@ -98,7 +99,8 @@ export function ProductGallery({
                     fill
                     loading={i === 0 ? "eager" : undefined}
                     fetchPriority={i === 0 ? "high" : undefined}
-                    sizes={full ? "(min-width: 1440px) 760px, 55vw" : "(min-width: 1440px) 380px, 28vw"}
+                    // Below 48rem this grid is hidden, yet its first photo still loads: 1vw asks for the smallest file.
+                    sizes={full ? "(min-width: 1440px) 760px, (min-width: 48rem) 55vw, 1vw" : "(min-width: 1440px) 380px, (min-width: 48rem) 28vw, 1vw"}
                     className="object-cover transition-transform duration-(--duration-slow) ease-(--ease-out-soft) group-hover/zoom:scale-[1.02]"
                   />
                 </ZoomButton>
