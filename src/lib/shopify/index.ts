@@ -25,8 +25,38 @@ const endpoint = domain
   : "https://mock.shop/api";
 const token = process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN;
 
-/** Shopify-hosted customer account sign-in, or null on the demo store. */
-export const accountUrl = domain ? `https://${domain}/account` : null;
+/**
+ * Shopify-hosted customer account sign-in, or null on the demo store. The shop's own account
+ * address once it has one (Settings > Customer accounts in Shopify admin), else /account on its
+ * main domain, so the link carries the shop's name rather than its myshopify.com address.
+ */
+export async function getAccountUrl(): Promise<string | null> {
+  "use cache";
+  cacheTag("shop");
+
+  if (!domain) {
+    cacheLife("hours");
+    return null;
+  }
+  try {
+    const data = await shopifyFetch<{ shop: { customerAccountUrl: string | null; primaryDomain: { url: string } } }>(
+      `query AccountUrl {
+        shop {
+          customerAccountUrl
+          primaryDomain {
+            url
+          }
+        }
+      }`,
+    );
+    cacheLife("hours");
+    return data.shop.customerAccountUrl ?? `${data.shop.primaryDomain.url.replace(/\/$/, "")}/account`;
+  } catch (error) {
+    console.error(error);
+    cacheLife("minutes");
+    return `https://${domain}/account`;
+  }
+}
 
 /**
  * Prices and availability for a country (Shopify Markets): adds `$country` and the

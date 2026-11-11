@@ -10,7 +10,7 @@ import { SearchOverlay } from "@/components/search-overlay";
 import { SizeGuide } from "@/components/size-guide";
 import { StoreProvider } from "@/components/store-provider";
 import { deliveryPlan, deliveryThreshold, mainMenu, menuPromo } from "@/lib/catalog";
-import { accountUrl, getMarkets } from "@/lib/shopify";
+import { getAccountUrl, getMarkets } from "@/lib/shopify";
 import { indexable, menuRows, site, siteUrl } from "@/lib/site";
 import "./globals.css";
 
@@ -38,12 +38,13 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const [threshold, menu, markets, promo, plan] = await Promise.all([
+  const [threshold, menu, markets, promo, plan, accountUrl] = await Promise.all([
     deliveryThreshold(),
     mainMenu(),
     getMarkets(),
     menuPromo(),
     deliveryPlan(),
+    getAccountUrl(),
   ]);
 
   return (
