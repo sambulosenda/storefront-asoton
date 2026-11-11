@@ -139,7 +139,7 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
     (product.fit || product.model) && { title: "Size and fit", body: [product.fit, product.model].filter(Boolean).join(" ") },
     {
       title: "Delivery and returns",
-      body: `UK delivery in ${times.uk} costs £${site.ukStandardRate}, and is free over ${threshold.label}. International rates are shown at checkout. Unworn ready-to-ship pieces can be returned within ${site.returnDays} days. Made-to-order pieces are made to your size before they’re sent, so allow for the making time as well, and they can only be returned if faulty.`,
+      body: `UK delivery takes ${times.uk} once a piece is dispatched. It costs £${site.ukStandardRate}, and is free over ${threshold.label}. International rates are shown at checkout. Unworn ready-to-ship pieces can be returned within ${site.returnDays} days. Made-to-order pieces are made to your size before they’re sent, so allow for the making time as well, and they can only be returned if faulty.`,
     },
   ];
 

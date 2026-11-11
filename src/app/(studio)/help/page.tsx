@@ -37,7 +37,7 @@ export default async function HelpPage() {
   // Shopify's delivery rules fill in the times, else the ones in site.ts. The UK rate is the one in site.ts,
   // as checkout charges it; international rates are worked out at checkout.
   const deliveryRates = [
-    { service: "UK", arrives: times.uk, cost: `£${site.ukStandardRate}, free over ${threshold.label}` },
+    { service: "UK", arrives: `${times.uk} after dispatch`, cost: `£${site.ukStandardRate}, free over ${threshold.label}` },
     { service: "International", arrives: times.international ?? `${site.internationalDays} working days`, cost: "Shown at checkout" },
   ];
   return (
