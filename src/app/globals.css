@@ -111,6 +111,10 @@
       --header-h: 0px;
     }
   }
+  /* A collection's toolbar (58px at its tallest) sticks as well, so what is focused or jumped to there clears both. */
+  :root:has([data-sticky-toolbar]) {
+    scroll-padding-top: calc(var(--header-h) + 58px);
+  }
 
   body {
     background: var(--color-paper);
