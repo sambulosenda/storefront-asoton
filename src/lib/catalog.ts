@@ -205,11 +205,9 @@ export async function clothSwatch(key: Cloth["key"]): Promise<{ image: Image; ha
 /** The free UK delivery amount: the shop metafield, else the "delivery_rules" entry, else the placeholder. */
 export async function deliveryThreshold() {
   const [metafield, rules] = await Promise.all([getFreeDeliveryThreshold(), getDeliveryRules()]);
-  const amount = metafield ?? rules?.freeOver ?? null;
-  return {
-    amount,
-    label: amount ? formatMoney({ amount: String(amount), currencyCode: "GBP" }) : site.freeDeliveryThreshold,
-  };
+  // The amount in site.ts stands in until Shopify holds one, so the bag can count towards it as well as name it.
+  const amount = (metafield ?? rules?.freeOver) || site.freeDeliveryThreshold;
+  return { amount, label: formatMoney({ amount: String(amount), currencyCode: "GBP" }) };
 }
 
 const workingDays = (n: number) => `${n} working ${n === 1 ? "day" : "days"}`;

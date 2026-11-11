@@ -26,8 +26,8 @@ export const site = {
   description:
     "Contemporary African clothing for women, men and kids, in Ankara, kente and dashiki prints and embroidered cloth.",
   market: "United Kingdom · GBP £",
-  /** Used when the shop metafield custom.free_delivery_threshold isn't set. */
-  freeDeliveryThreshold: "£50",
+  /** In pounds. Used until Shopify holds the amount (the shop metafield custom.free_delivery_threshold, or delivery_rules). */
+  freeDeliveryThreshold: 50,
   /** UK Standard delivery under the free threshold, as Shopify checkout charges it. For search results. */
   ukStandardRate: "4.99",
   /** Ready-to-ship pieces. Made-to-order pieces are made first: the days in their option, else 14. */

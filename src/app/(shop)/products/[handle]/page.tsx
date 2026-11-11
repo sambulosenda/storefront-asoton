@@ -158,7 +158,7 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
 
   // Product details for search results (price, stock and rating stars).
   const url = `${siteUrl}/products/${product.handle}`;
-  const freeOver = threshold.amount ?? Number(site.freeDeliveryThreshold.replace(/[^\d.]/g, ""));
+  const freeOver = threshold.amount;
   // UK delivery and returns, so results can show "Free delivery" and the returns window.
   const shipping = (price: number) => ({
     "@type": "OfferShippingDetails",

@@ -30,7 +30,8 @@ export function CartDrawer({
   thresholdLabel,
   delivery,
 }: {
-  threshold: number | null;
+  /** The free UK delivery amount, in pounds. */
+  threshold: number;
   thresholdLabel: string;
   delivery: DeliveryPlan;
 }) {
@@ -48,7 +49,8 @@ export function CartDrawer({
   const count = cart?.totalQuantity ?? 0;
   const subtotal = cart ? Number(cart.cost.subtotalAmount.amount) : 0;
   const currency = cart?.cost.subtotalAmount.currencyCode ?? "GBP";
-  const remaining = threshold ? Math.max(0, threshold - subtotal) : null;
+  // The amount is in pounds, so only a bag priced in pounds can be counted towards it.
+  const remaining = currency === "GBP" ? Math.max(0, threshold - subtotal) : null;
 
   return (
     <Sheet open={overlay === "cart"} onClose={close} placement="right" aria-labelledby="bag-title">
@@ -85,7 +87,7 @@ export function CartDrawer({
                 <div aria-hidden="true" className="relative h-0.5 bg-line">
                   <div
                     className="absolute inset-y-0 left-0 bg-ink"
-                    style={{ width: `${Math.min(100, (subtotal / threshold!) * 100)}%` }}
+                    style={{ width: `${Math.min(100, (subtotal / threshold) * 100)}%` }}
                   />
                 </div>
               </div>
