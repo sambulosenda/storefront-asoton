@@ -1,17 +1,34 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState, ViewTransition, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, ViewTransition, type ReactNode } from "react";
 import { Garment } from "@/components/cloth";
 import { CloseIcon } from "@/components/icons";
 import { Sheet } from "@/components/sheet";
 import type { ClothKey, GarmentKey } from "@/lib/cloths";
 import type { Image as ShopifyImage } from "@/lib/shopify/types";
 
+type LeadPhoto = { photo: ShopifyImage | null; show: (photo: ShopifyImage) => void };
+
+const LeadPhotoContext = createContext<LeadPhoto>({ photo: null, show: () => {} });
+
+/** Carries the chosen variant's photo from the form that picks it to the gallery that shows it. */
+export function ProductPhotos({ children }: { children: ReactNode }) {
+  const [photo, show] = useState<ShopifyImage | null>(null);
+  const value = useMemo(() => ({ photo, show }), [photo]);
+  return <LeadPhotoContext value={value}>{children}</LeadPhotoContext>;
+}
+
+export const useLeadPhoto = () => useContext(LeadPhotoContext);
+
+/** Shopify can hand back one photo under two query strings, so photos are compared by their path. */
+const samePhoto = (a: ShopifyImage, b: ShopifyImage) => a.url.split("?")[0] === b.url.split("?")[0];
+
 /**
  * Desktop: a grid with the first photo full width, two half-width photos, then a wide
  * 3:2 photo. Phones: a swipeable carousel with a progress bar per photo.
  * Until there are photos, the garment drawing stands in. Any photo opens full screen.
+ * Once a colour or print is picked, that variant's photo moves to the front.
  */
 export function ProductGallery({
   images,
@@ -28,7 +45,15 @@ export function ProductGallery({
   const [index, setIndex] = useState(0);
   const [viewing, setViewing] = useState<number | null>(null);
   const rail = useRef<HTMLDivElement>(null);
-  const slides = images.slice(0, 8);
+  const { photo: lead } = useLeadPhoto();
+  // The variant's photo may sit past the photos the page loaded, so it is added when it isn't among them.
+  const ordered = lead ? [images.find((i) => samePhoto(i, lead)) ?? lead, ...images.filter((i) => !samePhoto(i, lead))] : images;
+  const slides = ordered.slice(0, 8);
+
+  // Phones: bring the carousel back to the front, where the picked photo now is.
+  useEffect(() => {
+    if (lead) rail.current?.scrollTo({ left: 0 });
+  }, [lead]);
 
   const placeholder = (
     <div className="flex h-full w-full items-center justify-center bg-stone">
