@@ -89,6 +89,22 @@
   text-decoration: none;
 }
 
+/* A scrim that sits behind light type over a photo, carried by the type's own box. Every line in the
+   box gets at least 72% ink beneath it, enough for AA contrast over pure white, so busy prints never
+   decide whether the copy can be read. It fades out over the box's top padding (--scrim-fade). */
+@utility scrim-up {
+  --scrim-ink: 20 19 16;
+  padding-top: var(--scrim-fade, 8rem);
+  background-image: linear-gradient(
+    to top,
+    rgb(var(--scrim-ink) / 0.86),
+    rgb(var(--scrim-ink) / 0.72) calc(100% - var(--scrim-fade, 8rem)),
+    rgb(var(--scrim-ink) / 0.5) calc(100% - var(--scrim-fade, 8rem) * 0.6),
+    rgb(var(--scrim-ink) / 0.18) calc(100% - var(--scrim-fade, 8rem) * 0.25),
+    transparent
+  );
+}
+
 @utility no-scrollbar {
   scrollbar-width: none;
   &::-webkit-scrollbar {

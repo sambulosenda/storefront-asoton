@@ -110,7 +110,7 @@ export default async function HomePage() {
       >
         <Headline text={headline} italic={italic} />
       </h1>
-      <p style={{ "--i": 2 } as CSSProperties} className="rise max-w-[460px] text-[15px] leading-[1.6] text-pretty text-paper/90 md:text-[17px]">
+      <p style={{ "--i": 2 } as CSSProperties} className="rise max-w-[460px] text-[15px] leading-[1.6] text-pretty text-paper md:text-[17px]">
         {body}
       </p>
       <div style={{ "--i": 3 } as CSSProperties} className="rise grid grid-cols-2 gap-2 pt-1.5 md:flex md:flex-wrap md:gap-3 md:pt-2">
@@ -190,9 +190,11 @@ export default async function HomePage() {
         )}
         {/* Scrims keep the type readable on any photo. */}
         <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[150px] bg-linear-to-b from-ink/40 to-transparent md:h-[220px]" />
-        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[72%] bg-linear-to-t from-ink/78 via-ink/30 via-55% to-transparent md:h-[64%] md:from-ink/70" />
         <div aria-hidden="true" className="absolute inset-y-0 left-0 hidden w-[58%] bg-linear-to-r from-ink/36 to-transparent md:block" />
-        <div className="on-dark absolute inset-x-0 bottom-0 flex flex-col gap-8 px-4 pb-6 md:page-x md:flex-row md:flex-wrap md:items-end md:justify-between md:pb-16">
+        {/* The copy carries its own scrim, so it is as tall as the copy on any screen: at least 72% ink
+            under every line, which keeps light type at AA contrast even over white in a busy print.
+            Above the copy it fades out over the padding, leaving the rest of the photo clear. */}
+        <div className="on-dark scrim-up absolute inset-x-0 bottom-0 flex flex-col gap-8 px-4 pb-6 md:page-x [--scrim-fade:8rem] md:[--scrim-fade:11rem] md:flex-row md:flex-wrap md:items-end md:justify-between md:pb-16">
           {copy}
           {pictured.length > 0 && (
             <nav aria-label="In the picture" className="hidden w-[380px] max-w-full flex-col gap-0.5 lg:flex">
@@ -299,13 +301,12 @@ export default async function HomePage() {
                   sizes="(min-width: 1024px) 25vw, 50vw"
                   className="object-cover transition-transform duration-(--duration-slow) ease-(--ease-out-soft) group-hover:scale-[1.03]"
                 />
-                {/* Keeps the light type readable on light photos. */}
-                <div className="absolute inset-0 bg-linear-to-t from-ink/70 via-ink/10 to-transparent" />
               </>
             )}
-            <div className="absolute inset-x-3 bottom-3 flex flex-col gap-1 md:inset-x-6 md:bottom-6 md:gap-2">
+            {/* The type carries its own scrim, so it stays readable on light or patterned photos. */}
+            <div className="scrim-up absolute inset-x-0 bottom-0 flex flex-col gap-1 px-3 pb-3 [--scrim-fade:4rem] md:gap-2 md:px-6 md:pb-6 md:[--scrim-fade:6rem]">
               <span className="font-display text-[24px] leading-none whitespace-nowrap md:text-[clamp(32px,2.6vw,44px)]">{t.title}</span>
-              <span className="hidden text-[14px] text-paper/85 md:block">{t.blurb}</span>
+              <span className="hidden text-[14px] text-paper/90 md:block">{t.blurb}</span>
               <span className="mt-2 hidden items-center gap-2.5 self-start border-b border-paper pb-1.5 text-[13px] tracking-[0.12em] uppercase md:inline-flex">
                 {t.cta}
                 <ArrowRight size={16} />

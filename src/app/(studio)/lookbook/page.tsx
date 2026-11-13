@@ -70,11 +70,10 @@ async function Hero() {
         {image && (
           <>
             <Image src={image.url} alt={image.altText ?? ""} fill preload sizes="100vw" className="object-cover" />
-            {/* Keeps the white type readable on light photos. */}
-            <div className="absolute inset-0 bg-linear-to-t from-[#1F2438]/80 via-[#1F2438]/25 to-transparent" />
           </>
         )}
-        <div className="absolute bottom-[clamp(24px,4vw,56px)] left-[clamp(16px,4vw,48px)] flex flex-col gap-4 pr-4">
+        {/* The type carries its own scrim in the section's indigo, so it stays readable on any photo. */}
+        <div className="scrim-up absolute inset-x-0 bottom-0 flex flex-col gap-4 px-[clamp(16px,4vw,48px)] pb-[clamp(24px,4vw,56px)] [--scrim-fade:7rem] [--scrim-ink:31_36_56] md:[--scrim-fade:10rem]">
           <span className="text-[12px] tracking-[0.16em] text-indigo-soft uppercase">{campaign?.label ?? site.name}</span>
           <h1 className="font-display text-[clamp(56px,9vw,136px)] leading-[0.9] tracking-[-0.02em]">
             {campaign?.headline ?? "Lookbook"}
