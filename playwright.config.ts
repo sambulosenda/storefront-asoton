@@ -33,6 +33,8 @@ export default defineConfig({
       // Emails to the shop go to the fixture, which accepts them without sending.
       RESEND_API_KEY: "test",
       SHOP_EMAIL: "shop@example.com",
+      // Switches on the shop assistant. The fixture answers for Claude, so no real key is needed.
+      ANTHROPIC_API_KEY: "test",
       // Google Analytics loads only after consent; the test blocks the request itself.
       NEXT_PUBLIC_GA_MEASUREMENT_ID: "G-TEST000000",
       // PostHog too: it loads only after consent, and the test answers its requests itself.

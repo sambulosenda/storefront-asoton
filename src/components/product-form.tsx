@@ -324,7 +324,8 @@ export function ProductForm({
       </div>
 
       {!buyInView && !toast && product.availableForSale && !soldOut && (
-        <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-4 border-t border-line bg-paper px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] md:hidden">
+        // data-buy-bar tells the chat button (chat-assistant.tsx) to sit above this bar.
+        <div data-buy-bar className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-4 border-t border-line bg-paper px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] md:hidden">
           <div className="flex min-w-0 flex-1 flex-col">
             <span className="text-[15px]">{formatMoney(price)}</span>
             <span className="truncate text-[13px] text-ink-2">{chosen ? chosen.full : product.title}</span>

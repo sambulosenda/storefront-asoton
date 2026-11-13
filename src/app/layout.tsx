@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Bodoni_Moda, Hanken_Grotesk } from "next/font/google";
 import { Analytics } from "@/components/analytics";
 import { CartDrawer } from "@/components/cart-drawer";
+import { ChatAssistant } from "@/components/chat-assistant";
 import { ClothPatterns } from "@/components/cloth";
 import { CookieConsent } from "@/components/cookie-consent";
 import { MarketSheet } from "@/components/market-selector";
@@ -9,6 +10,7 @@ import { MobileMenu } from "@/components/mobile-menu";
 import { SearchOverlay } from "@/components/search-overlay";
 import { SizeGuide } from "@/components/size-guide";
 import { StoreProvider } from "@/components/store-provider";
+import { assistantEnabled } from "@/lib/assistant";
 import { deliveryPlan, deliveryThreshold, mainMenu, menuPromo } from "@/lib/catalog";
 import { getAccountUrl, getMarkets } from "@/lib/shopify";
 import { indexable, menuRows, site, siteUrl } from "@/lib/site";
@@ -58,6 +60,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <MobileMenu rows={menuRows(menu)} accountUrl={accountUrl} promo={promo} />
           <SizeGuide />
           <MarketSheet />
+          {assistantEnabled && <ChatAssistant />}
         </StoreProvider>
         <CookieConsent />
         <Analytics />

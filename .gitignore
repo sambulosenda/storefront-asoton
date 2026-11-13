@@ -44,3 +44,7 @@ next-env.d.ts
 # playwright
 /test-results/
 /playwright-report/
+
+# design critique notes and stray profiler output
+/.impeccable/
+*.profraw
