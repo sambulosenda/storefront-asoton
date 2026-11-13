@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-// Who runs the shop, for the brand panel and site name in search results.
+// Who runs the shop and where to reach it, for the brand panel and site name in search results.
 const profiles = Object.values(site.social).filter((url) => url.startsWith("http"));
 const organization = {
   "@context": "https://schema.org",
@@ -35,6 +35,16 @@ const organization = {
   url: siteUrl,
   logo: `${siteUrl}/logo.png`,
   description: site.description,
+  legalName: site.company,
+  telephone: site.phone,
+  email: site.email,
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: site.addressParts.street,
+    addressLocality: site.addressParts.town,
+    postalCode: site.addressParts.postcode,
+    addressCountry: site.addressParts.country,
+  },
   ...(profiles.length ? { sameAs: profiles } : {}),
 };
 const website = { "@context": "https://schema.org", "@type": "WebSite", name: site.brand, url: siteUrl };
