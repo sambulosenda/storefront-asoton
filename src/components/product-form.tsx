@@ -102,12 +102,13 @@ export function ProductForm({
 
   const pick = (name: string, value: string) => {
     setSelection((s) => ({ ...s, [name]: value }));
-    // The gallery leads with the photo of the first variant that fits the choices so far.
+    // The gallery leads with the photo of the first variant that fits the choices so far,
+    // and goes back to its own order when none of them has one.
     const chosenSoFar = Object.entries({ ...selection, [name]: value });
     const pictured = product.variants.find(
       (v) => v.image && chosenSoFar.every(([n, val]) => v.selectedOptions.some((s) => s.name === n && s.value === val)),
     );
-    if (pictured?.image) showPhoto(pictured.image);
+    showPhoto(pictured?.image ?? null);
     // A new choice clears the message, but not an add already on its way.
     setPhase((p) => (p.kind === "adding" ? p : IDLE));
   };

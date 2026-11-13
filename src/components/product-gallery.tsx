@@ -8,7 +8,7 @@ import { Sheet } from "@/components/sheet";
 import type { ClothKey, GarmentKey } from "@/lib/cloths";
 import type { Image as ShopifyImage } from "@/lib/shopify/types";
 
-type LeadPhoto = { photo: ShopifyImage | null; show: (photo: ShopifyImage) => void };
+type LeadPhoto = { photo: ShopifyImage | null; show: (photo: ShopifyImage | null) => void };
 
 const LeadPhotoContext = createContext<LeadPhoto>({ photo: null, show: () => {} });
 
