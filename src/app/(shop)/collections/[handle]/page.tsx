@@ -98,9 +98,10 @@ async function Collection({
     // How many pieces there are in all, so shoppers can see the size of what they're browsing.
     standIns[handle] ? null : getCollectionCount({ handle, filters }),
   ]);
+  // A cursor Shopify no longer accepts, or one with nothing after it: the collection is still there,
+  // so start it from the top. (A stand-in comes back empty rather than missing when its request fails.)
+  if (after && !page?.products.length) redirect(`/collections/${handle}`);
   if (!page) {
-    // A cursor Shopify no longer accepts: the collection is still there, so start it from the top.
-    if (after) redirect(`/collections/${handle}`);
     if (movedCollections[handle]) permanentRedirect(`/collections/${movedCollections[handle]}`);
     notFound();
   }
