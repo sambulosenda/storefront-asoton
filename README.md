@@ -62,6 +62,12 @@ The pages fall back gracefully when these are missing, but they look like the de
 
 To switch on the emails, make a free Resend account with the shop's inbox, create an API key, and set `RESEND_API_KEY` and `SHOP_EMAIL` (that same inbox). Until a domain is verified in Resend, mail comes from `onboarding@resend.dev` and can only go to that inbox, which is all these forms need. Without these, the forms say plainly that they aren't connected, and nothing pretends to send. A hidden field drops form spam from bots.
 
+## Shop assistant
+
+The **Ask us** button opens a chat answered by [Claude](https://platform.claude.com/docs), Anthropic's AI model. It answers from the shop's own FAQs (`src/lib/faqs.ts`) and size charts (`src/lib/size-charts.ts`), the same ones the FAQs page and size guide show, so change an answer there and the assistant follows. It can't see orders or stock yet, and sends those questions to the shop's email and contact form.
+
+To switch it on, make an API key at [console.anthropic.com](https://console.anthropic.com) and set `ANTHROPIC_API_KEY`, then redeploy. Without the key the button doesn't show. Each question costs a fraction of a penny on the model it uses (`claude-haiku-5-5`, set in `src/app/api/chat/route.ts`), but the endpoint is public, so **set a monthly spend limit in the Anthropic Console** as the hard stop. The site also limits each visitor to 20 questions in ten minutes and keeps answers short. The server logs what each question cost in tokens (`[assistant] in …, from cache …`).
+
 ## Analytics
 
 Set `NEXT_PUBLIC_GA_MEASUREMENT_ID` to the shop's Google Analytics 4 measurement ID (`G-…`, from GA4 **Admin > Data streams > Web**) and redeploy. GA4 loads only after a shopper accepts analytics cookies in the banner, using Google Consent Mode, and stops collecting if they later turn it off. It counts page views across the site; sales happen on Shopify's checkout, so connect the same GA4 property in Shopify's **Google & YouTube** app to record purchases.
@@ -80,7 +86,7 @@ The project is assumed to be on PostHog's EU cloud; set `NEXT_PUBLIC_POSTHOG_HOS
 ## Deploying to Vercel
 
 1. Sign in at [vercel.com](https://vercel.com) with GitHub and **Add New > Project**, then import `storefront-asoton`. Vercel finds Next.js on its own; keep the default build settings.
-2. Under **Environment Variables**, add `SHOPIFY_STORE_DOMAIN`, `SHOPIFY_STOREFRONT_ACCESS_TOKEN`, `SHOPIFY_STOREFRONT_API_VERSION`, `SITE_URL` (the address the site will live at, such as `https://africanclothingstore.co.uk`), `RESEND_API_KEY` and `SHOP_EMAIL` if the forms should send, and `NEXT_PUBLIC_GA_MEASUREMENT_ID` for Google Analytics and `NEXT_PUBLIC_POSTHOG_KEY` for PostHog.
+2. Under **Environment Variables**, add `SHOPIFY_STORE_DOMAIN`, `SHOPIFY_STOREFRONT_ACCESS_TOKEN`, `SHOPIFY_STOREFRONT_API_VERSION`, `SITE_URL` (the address the site will live at, such as `https://africanclothingstore.co.uk`), `RESEND_API_KEY` and `SHOP_EMAIL` if the forms should send, `ANTHROPIC_API_KEY` for the shop assistant, and `NEXT_PUBLIC_GA_MEASUREMENT_ID` for Google Analytics and `NEXT_PUBLIC_POSTHOG_KEY` for PostHog.
 3. Click **Deploy**. Every push to `main` deploys again, and every pull request gets its own preview link.
 4. To use your own domain, add it under **Settings > Domains** and follow the DNS steps there, then change `SITE_URL` to it and redeploy (the sitemap and robots file are built with it).
 

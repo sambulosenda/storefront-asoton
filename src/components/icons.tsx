@@ -102,6 +102,12 @@ export const HeartIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const ChatIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 5h16v11H10l-4.5 4v-4H4z" />
+  </Icon>
+);
+
 export const AlertIcon = (p: IconProps) => (
   <Icon size={18} {...p}>
     <circle cx="12" cy="12" r="9" />

@@ -220,5 +220,31 @@ globalThis.fetch = async (input, init) => {
   if (url.startsWith("https://api.resend.com/")) {
     return new Response(JSON.stringify({ id: "test" }), { headers: { "content-type": "application/json" } });
   }
+  // The shop assistant's questions to Claude are answered here, in the API's own streaming format, so
+  // the tests never call (or pay for) the real model. The answer repeats the question and adds a link;
+  // a question with "overloaded" in it fails the way a busy API does.
+  if (url.startsWith("https://api.anthropic.com/v1/messages")) {
+    const question = JSON.parse(init.body).messages.at(-1).content;
+    if (question.includes("overloaded")) {
+      return new Response(JSON.stringify({ type: "error", error: { type: "overloaded_error", message: "Overloaded" } }), {
+        status: 529,
+        headers: { "content-type": "application/json" },
+      });
+    }
+    const words = `You asked: ${question} See [Delivery details](/help#delivery).`.split(/(?<= )/);
+    const event = (type, data) => `event: ${type}\ndata: ${JSON.stringify({ type, ...data })}\n\n`;
+    const usage = { input_tokens: 10, output_tokens: words.length };
+    const body = [
+      event("message_start", {
+        message: { id: "msg_test", type: "message", role: "assistant", model: "claude-haiku-5-5", content: [], stop_reason: null, stop_sequence: null, usage },
+      }),
+      event("content_block_start", { index: 0, content_block: { type: "text", text: "" } }),
+      ...words.map((text) => event("content_block_delta", { index: 0, delta: { type: "text_delta", text } })),
+      event("content_block_stop", { index: 0 }),
+      event("message_delta", { delta: { stop_reason: "end_turn", stop_sequence: null }, usage }),
+      event("message_stop", {}),
+    ].join("");
+    return new Response(body, { headers: { "content-type": "text/event-stream" } });
+  }
   return realFetch(input, init);
 };
