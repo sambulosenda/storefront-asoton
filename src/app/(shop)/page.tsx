@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-// Who runs the shop, for the brand panel and site name in search results.
+// Who runs the shop and where to reach it, for the brand panel and site name in search results.
 const profiles = Object.values(site.social).filter((url) => url.startsWith("http"));
 const organization = {
   "@context": "https://schema.org",
@@ -35,6 +35,16 @@ const organization = {
   url: siteUrl,
   logo: `${siteUrl}/logo.png`,
   description: site.description,
+  legalName: site.company,
+  telephone: site.phone,
+  email: site.email,
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: site.addressParts.street,
+    addressLocality: site.addressParts.town,
+    postalCode: site.addressParts.postcode,
+    addressCountry: site.addressParts.country,
+  },
   ...(profiles.length ? { sameAs: profiles } : {}),
 };
 const website = { "@context": "https://schema.org", "@type": "WebSite", name: site.brand, url: siteUrl };
@@ -341,8 +351,8 @@ export default async function HomePage() {
         {[
           {
             title: "Size guide",
-            body: "Garment measurements on every product page, in centimetres and inches",
-            more: ", with a note on how each piece is meant to fit",
+            body: "A size guide on every product page, with body measurements in centimetres and inches",
+            more: ", and a note on how each style is meant to fit",
             end: ".",
             link: { label: "See the size guide", href: "/help#size-guide" },
           },

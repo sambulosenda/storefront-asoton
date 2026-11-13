@@ -40,6 +40,8 @@ export const site = {
   email: "sales@africanclothingstore.co.uk",
   phone: "+44 1438 211744",
   address: "Unit 41, The Mall, Luton LU1 2TD",
+  /** The same address in parts, for the Organization data search engines read. Keep in step with `address`. */
+  addressParts: { street: "Unit 41, The Mall", town: "Luton", postcode: "LU1 2TD", country: "GB" },
   /** Working days to refund once a return arrives and passes its checks. */
   refundDays: "5 to 10",
   social: {

@@ -30,6 +30,7 @@ export function CollectionBrowser({
   editorial,
   handle,
   query,
+  continued = false,
 }: {
   products: Product[];
   pageInfo: PageInfo;
@@ -45,6 +46,8 @@ export function CollectionBrowser({
   editorial?: ReactNode;
   handle?: string;
   query?: string;
+  /** These products pick up partway through the collection, from a "Load more" link opened on its own. */
+  continued?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -58,6 +61,8 @@ export function CollectionBrowser({
 
   const navigate = (next: { sort?: SortKey; filters?: string[] }) => {
     const params = new URLSearchParams(searchParams.toString());
+    // A place partway through belongs to the order and filters it was reached in.
+    params.delete("after");
     if (next.sort !== undefined) {
       if (next.sort === "featured") params.delete("sort");
       else params.set("sort", next.sort);
@@ -85,6 +90,17 @@ export function CollectionBrowser({
       }
     });
   };
+
+  // "Load more" on a collection is a real link to the next products, so search engines and a new tab
+  // can follow it; a click loads them in place instead. Search results keep a plain button.
+  const linkWith = (after: string | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (after) params.set("after", after);
+    else params.delete("after");
+    const qs = params.toString();
+    return qs ? `${pathname}?${qs}` : pathname;
+  };
+  const nextHref = handle && more.pageInfo.endCursor ? linkWith(more.pageInfo.endCursor) : null;
 
   const chips = selected.flatMap((input) => {
     const label = chipLabel(input, filters);
@@ -234,6 +250,14 @@ export function CollectionBrowser({
             <section aria-label="Products" className="page-x pt-4 md:pt-10">
               {/* Phones: the toolbar is two buttons wide, so the count sits above the first row instead. */}
               {pieces && <p className="pb-3 text-[13px] text-ink-2 md:hidden">{pieces}</p>}
+              {continued && (
+                <p className="pb-4 text-[14px] text-ink-2">
+                  You’re partway through.{" "}
+                  <Link href={linkWith(null)} className="underline-offset-4">
+                    Start from the first piece
+                  </Link>
+                </p>
+              )}
               <ProductGrid products={first} wide={wide} lead />
             </section>
 
@@ -251,21 +275,31 @@ export function CollectionBrowser({
             )}
 
             <div className="page-x flex flex-col items-center gap-4 pt-10 pb-14 md:pt-[72px] md:pb-[120px]">
-              {total !== null && total > shown && (
+              {total !== null && total > shown && !continued && (
                 <p className="text-[13px] text-ink-2">
                   Showing {shown} of {total.toLocaleString("en-GB")}
                 </p>
               )}
-              {more.pageInfo.hasNextPage && (
-                <button
-                  type="button"
-                  onClick={loadMore}
-                  disabled={loadingMore}
-                  className="btn btn-outline w-full md:w-auto md:px-10"
-                >
-                  {loadingMore ? "Loading…" : "Load more"}
-                </button>
-              )}
+              {more.pageInfo.hasNextPage &&
+                (nextHref ? (
+                  <a
+                    href={nextHref}
+                    rel="next"
+                    aria-disabled={loadingMore || undefined}
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                      e.preventDefault();
+                      if (!loadingMore) loadMore();
+                    }}
+                    className="btn btn-outline w-full md:w-auto md:px-10"
+                  >
+                    {loadingMore ? "Loading…" : "Load more"}
+                  </a>
+                ) : (
+                  <button type="button" onClick={loadMore} disabled={loadingMore} className="btn btn-outline w-full md:w-auto md:px-10">
+                    {loadingMore ? "Loading…" : "Load more"}
+                  </button>
+                ))}
               {moreError && (
                 <p role="alert" className="text-[14px] text-error">
                   We couldn’t load more pieces. Check your connection and try again.

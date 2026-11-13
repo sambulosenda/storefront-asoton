@@ -1,9 +1,27 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getPolicy, policyHandles, type PolicyHandle } from "@/lib/shopify";
 import { site } from "@/lib/site";
 
 const isPolicy = (handle: string): handle is PolicyHandle => (policyHandles as string[]).includes(handle);
+
+/**
+ * Where the same rules are written while Shopify has no policy of that name (Settings → Policies).
+ * A temporary redirect: once the policy is written in Shopify, its own page takes over.
+ */
+const ELSEWHERE: Partial<Record<PolicyHandle, string>> = {
+  "refund-policy": "/help#returns",
+  "shipping-policy": "/help#delivery",
+};
+
+async function load(handle: string) {
+  if (!isPolicy(handle)) notFound();
+  const policy = await getPolicy(handle);
+  if (policy) return policy;
+  const elsewhere = ELSEWHERE[handle];
+  if (elsewhere) redirect(elsewhere);
+  notFound();
+}
 
 export function generateStaticParams() {
   return policyHandles.map((handle) => ({ handle }));
@@ -11,8 +29,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps<"/policies/[handle]">): Promise<Metadata> {
   const { handle } = await params;
-  const policy = isPolicy(handle) ? await getPolicy(handle) : null;
-  if (!policy) notFound();
+  const policy = await load(handle);
   return {
     title: policy.title,
     description: `${site.brand}'s ${policy.title.toLowerCase()}.`,
@@ -22,8 +39,7 @@ export async function generateMetadata({ params }: PageProps<"/policies/[handle]
 
 export default async function PolicyPage({ params }: PageProps<"/policies/[handle]">) {
   const { handle } = await params;
-  const policy = isPolicy(handle) ? await getPolicy(handle) : null;
-  if (!policy) notFound();
+  const policy = await load(handle);
 
   return (
     <article className="page-x pt-12 pb-20 md:pt-[72px] md:pb-[120px]">

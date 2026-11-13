@@ -5,7 +5,7 @@ import { CollectionBrowser } from "@/components/collection-browser";
 import { Editorial } from "@/components/editorial";
 import { breadcrumbs, JsonLd } from "@/components/json-ld";
 import { CollectionSkeleton } from "@/components/skeletons";
-import { notFound, permanentRedirect } from "next/navigation";
+import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { movedCollections } from "@/lib/old-links";
 import { departmentMenu, parentDepartment } from "@/lib/catalog";
 import { parseFilters, parseSort } from "@/lib/filters";
@@ -20,8 +20,11 @@ const titleFromHandle = (handle: string) =>
 /** Pages that show the newest or all products when the store has no collection for them. */
 const standIns: Record<string, string> = { all: "All products", [collections.newIn]: "New in" };
 
-export async function generateMetadata({ params }: PageProps<"/collections/[handle]">): Promise<Metadata> {
-  const { handle } = await params;
+/** Where "Load more" had reached, when its link is opened on its own: the cursor Shopify gave for the last product shown. */
+const cursorIn = (query: Record<string, string | string[] | undefined>) => (typeof query.after === "string" && query.after ? query.after : null);
+
+export async function generateMetadata({ params, searchParams }: PageProps<"/collections/[handle]">): Promise<Metadata> {
+  const [{ handle }, query] = await Promise.all([params, searchParams]);
   const page = await getCollection({ handle, first: 1 });
   const collection = page?.collection;
   // Throwing here, before the page streams, sends search engines a real 404 status
@@ -45,8 +48,12 @@ export async function generateMetadata({ params }: PageProps<"/collections/[hand
   return {
     title,
     description,
-    // Sorted and filtered views point search engines back at the plain collection.
-    alternates: { canonical: `/collections/${handle}` },
+    // Sorted and filtered views point search engines back at the plain collection. A later stretch of
+    // it is a page of its own, so the products on it are found by more than the sitemap.
+    alternates: {
+      canonical:
+        cursorIn(query) && !query.sort && !query.filter ? `/collections/${handle}?after=${encodeURIComponent(cursorIn(query)!)}` : `/collections/${handle}`,
+    },
     openGraph: {
       title,
       description,
@@ -78,11 +85,12 @@ async function Collection({
   const [{ handle }, query, country] = await Promise.all([params, searchParams, getCountry()]);
   const sort = parseSort(query.sort);
   const filters = parseFilters(query.filter);
+  const after = cursorIn(query);
   // Sub-categories like Dresses show their department's chips and breadcrumb, with themselves selected.
   const parent = await parentDepartment(handle);
   const dept = departmentOf(handle) ?? parent;
   const [page, menu, campaign, total] = await Promise.all([
-    standIns[handle] ? getCollectionOrAll({ handle, sort, filters, country }) : getCollection({ handle, sort, filters, country }),
+    standIns[handle] ? getCollectionOrAll({ handle, sort, filters, after, country }) : getCollection({ handle, sort, filters, after, country }),
     // Departments fall back to the design's categories until their menus exist in Shopify.
     dept ? departmentMenu(dept) : getMenu(handle),
     // Department campaigns go by the department ("women"), others by the collection's handle.
@@ -90,6 +98,9 @@ async function Collection({
     // How many pieces there are in all, so shoppers can see the size of what they're browsing.
     standIns[handle] ? null : getCollectionCount({ handle, filters }),
   ]);
+  // A cursor Shopify no longer accepts, or one with nothing after it: the collection is still there,
+  // so start it from the top. (A stand-in comes back empty rather than missing when its request fails.)
+  if (after && !page?.products.length) redirect(`/collections/${handle}`);
   if (!page) {
     if (movedCollections[handle]) permanentRedirect(`/collections/${movedCollections[handle]}`);
     notFound();
@@ -164,7 +175,7 @@ async function Collection({
       </section>
 
       <CollectionBrowser
-        key={JSON.stringify([sort, filters, country])}
+        key={JSON.stringify([sort, filters, country, after])}
         products={page.products}
         pageInfo={page.pageInfo}
         total={total}
@@ -175,6 +186,7 @@ async function Collection({
         categoriesLabel={`${title} categories`}
         editorial={editorial && <Editorial content={editorial} />}
         handle={handle}
+        continued={!!after}
       />
 
       {more && (

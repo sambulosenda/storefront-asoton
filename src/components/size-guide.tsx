@@ -1,53 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { CloseIcon } from "@/components/icons";
 import { Sheet } from "@/components/sheet";
 import { type SizeGuideSizes, useStore } from "@/components/store-provider";
+import { sizeCharts, toInches } from "@/lib/size-charts";
 
-// Body measurements in centimetres, from the shop size guide.
-const CHARTS = {
-  women: {
-    sizeHead: "UK size",
-    firstHead: "Bust",
-    rows: [
-      ["UK 6", 78, 60, 86],
-      ["UK 8", 82, 64, 90],
-      ["UK 10", 86, 68, 94],
-      ["UK 12", 91, 73, 99],
-      ["UK 14", 96, 78, 104],
-      ["UK 16", 101, 83, 109],
-      ["UK 18", 106, 88, 114],
-      ["UK 20", 111, 93, 119],
-    ],
-    fits: [
-      { style: "Wrap dresses", note: "Adjustable at the waist. Choose by bust." },
-      { style: "Tops and blouses", note: "Choose by bust." },
-      { style: "Boubous and kaftans", note: "Cut loose. Take your usual size, or one down for a closer fit." },
-      { style: "Two-piece sets", note: "Top and wrapper are sized together. Choose by your larger measurement." },
-    ],
-  },
-  men: {
-    sizeHead: "Size",
-    firstHead: "Chest",
-    rows: [
-      ["S", 94, 80, 96],
-      ["M", 100, 86, 102],
-      ["L", 106, 92, 108],
-      ["XL", 112, 98, 114],
-      ["XXL", 118, 104, 120],
-      ["3XL", 124, 110, 126],
-    ],
-    fits: [
-      { style: "Kaftans", note: "Cut straight with room to move. Choose by chest." },
-      { style: "Agbada", note: "The outer robe is generous; the shirt and trousers follow this chart." },
-      { style: "Shirts", note: "Regular fit. Size up for a relaxed look." },
-    ],
-  },
-} as const;
-
-const toInches = (cm: number) => Math.round((cm / 2.54) * 2) / 2;
+/**
+ * A link to the size guide that opens it in place. Without JavaScript, in a new tab, or for a
+ * search engine, it leads to the same charts on the help page.
+ */
+export function SizeGuideLink({ className, children }: { className?: string; children: ReactNode }) {
+  const { openSizeGuide } = useStore();
+  return (
+    <Link
+      href="/help#size-guide"
+      className={className}
+      onClick={(e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        openSizeGuide();
+      }}
+    >
+      {children}
+    </Link>
+  );
+}
 
 export function SizeGuide() {
   const { overlay, close, sizeGuideDept, sizeGuideSizes } = useStore();
@@ -69,7 +48,7 @@ export function SizeGuideBody({
 }) {
   const [dept, setDept] = useState(initialDept);
   const [unit, setUnit] = useState<"cm" | "in">("cm");
-  const chart = CHARTS[dept];
+  const chart = sizeCharts[dept];
   const value = (cm: number) => (unit === "cm" ? cm : toInches(cm));
   // From a product page: shade the size chosen, and grey out the sizes this piece doesn't come in
   // (only when the piece's sizes are on this chart, so a men's piece doesn't grey out the women's chart).

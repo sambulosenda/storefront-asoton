@@ -6,7 +6,7 @@ import { Logo } from "@/components/logo";
 import { MarketButton, MarketLabel } from "@/components/market-selector";
 import { MinusIcon, PlusIcon } from "@/components/icons";
 import { PaymentMarks } from "@/components/payment-marks";
-import { useStore } from "@/components/store-provider";
+import { SizeGuideLink } from "@/components/size-guide";
 import { footerNav, site } from "@/lib/site";
 
 const year = 2026;
@@ -16,14 +16,7 @@ export function openCookieSettings() {
 }
 
 function FooterLink({ href, label, className }: { href: string; label: string; className: string }) {
-  const { openSizeGuide } = useStore();
-  if (href === "/help#size-guide") {
-    return (
-      <button type="button" onClick={() => openSizeGuide()} className={`${className} cursor-pointer text-left`}>
-        {label}
-      </button>
-    );
-  }
+  if (href === "/help#size-guide") return <SizeGuideLink className={className}>{label}</SizeGuideLink>;
   return (
     <Link href={href} className={className}>
       {label}
