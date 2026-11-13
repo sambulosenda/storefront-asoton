@@ -4,6 +4,7 @@ import { useActionState, useEffect, useId, useRef, useState, useSyncExternalStor
 import { variantLabel } from "@/components/cart-drawer";
 import { ProductVisual } from "@/components/cloth";
 import { SecureCheckout } from "@/components/payment-marks";
+import { useLeadPhoto } from "@/components/product-gallery";
 import { AlertIcon, HeartIcon } from "@/components/icons";
 import { useStore } from "@/components/store-provider";
 import { notifyAction } from "@/lib/actions";
@@ -39,6 +40,7 @@ export function ProductForm({
   delivery: DeliveryPlan;
 }) {
   const { add, open, openSizeGuide } = useStore();
+  const { show: showPhoto } = useLeadPhoto();
   const id = useId();
   const options = product.options.filter((o) => !(o.optionValues.length === 1 && o.optionValues[0].name === "Default Title"));
   const colourOption = options.find((o) => isColourOption(o.name));
@@ -101,6 +103,13 @@ export function ProductForm({
 
   const pick = (name: string, value: string) => {
     setSelection((s) => ({ ...s, [name]: value }));
+    // The gallery leads with the photo of the first variant that fits the choices so far,
+    // and goes back to its own order when none of them has one.
+    const chosenSoFar = Object.entries({ ...selection, [name]: value });
+    const pictured = product.variants.find(
+      (v) => v.image && chosenSoFar.every(([n, val]) => v.selectedOptions.some((s) => s.name === n && s.value === val)),
+    );
+    showPhoto(pictured?.image ?? null);
     // A new choice clears the message, but not an add already on its way.
     setPhase((p) => (p.kind === "adding" ? p : IDLE));
   };

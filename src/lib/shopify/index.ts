@@ -422,6 +422,9 @@ const productDetailQuery = /* GraphQL */ `
             name
             value
           }
+          image {
+            ...ImageFields
+          }
         }
       }
       images(first: 10) {

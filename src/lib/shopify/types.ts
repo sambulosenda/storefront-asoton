@@ -29,6 +29,8 @@ export type Variant = {
   price: Money;
   compareAtPrice: Money | null;
   selectedOptions: { name: string; value: string }[];
+  /** The photo Shopify has assigned to this variant, when there is one. */
+  image?: Image | null;
 };
 
 export type ProductDetail = Product & {

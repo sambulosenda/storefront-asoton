@@ -10,7 +10,7 @@ import { breadcrumbs, JsonLd } from "@/components/json-ld";
 import { TrackView } from "@/components/track-view";
 import { ProductGrid, ProductRail } from "@/components/product-card";
 import { ProductForm } from "@/components/product-form";
-import { ProductGallery } from "@/components/product-gallery";
+import { ProductGallery, ProductPhotos } from "@/components/product-gallery";
 import { ProductSkeleton } from "@/components/skeletons";
 import { clothLinks, clothSwatch, deliveryPlan, deliveryThreshold, deliveryTimes } from "@/lib/catalog";
 import { clothByName, clothInDescription, clothOf } from "@/lib/cloths";
@@ -247,39 +247,42 @@ async function Product({ params }: { params: Promise<{ handle: string }> }) {
         </ol>
       </nav>
 
-      <section className="flex flex-col md:page-x md:flex-row md:flex-wrap md:items-start md:gap-x-16 md:gap-y-12">
-        <ProductGallery images={product.images} title={product.title} handle={product.handle} drawing={drawingFor(product)} />
+      {/* Picking a colour or print in the form moves that variant's photo to the front of the gallery. */}
+      <ProductPhotos key={product.handle}>
+        <section className="flex flex-col md:page-x md:flex-row md:flex-wrap md:items-start md:gap-x-16 md:gap-y-12">
+          <ProductGallery images={product.images} title={product.title} handle={product.handle} drawing={drawingFor(product)} />
 
-        <div className="flex min-w-0 flex-col gap-6 px-4 pt-5 pb-12 md:sticky md:top-6 md:flex-[5_1_380px] md:gap-8 md:p-0">
-          <div className="flex flex-col gap-2 md:gap-3">
-            {cloth && (
-              <Link
-                href={cloth.href}
-                className="self-start text-[11px] tracking-[0.14em] text-ink-2 uppercase no-underline md:text-[12px]"
-              >
-                {printed ? `${cloth.name} print` : `${cloth.name} · ${cloth.technique}`}
-              </Link>
-            )}
-            <h1 className="font-display text-[32px] leading-[1.1] tracking-[-0.01em] md:text-[clamp(36px,3.4vw,48px)] md:leading-[1.05]">
-              {product.title}
-            </h1>
+          <div className="flex min-w-0 flex-col gap-6 px-4 pt-5 pb-12 md:sticky md:top-6 md:flex-[5_1_380px] md:gap-8 md:p-0">
+            <div className="flex flex-col gap-2 md:gap-3">
+              {cloth && (
+                <Link
+                  href={cloth.href}
+                  className="self-start text-[11px] tracking-[0.14em] text-ink-2 uppercase no-underline md:text-[12px]"
+                >
+                  {printed ? `${cloth.name} print` : `${cloth.name} · ${cloth.technique}`}
+                </Link>
+              )}
+              <h1 className="font-display text-[32px] leading-[1.1] tracking-[-0.01em] md:text-[clamp(36px,3.4vw,48px)] md:leading-[1.05]">
+                {product.title}
+              </h1>
+            </div>
+
+            <ProductForm
+              product={product}
+              dept={dept}
+              model={product.model}
+              delivery={plan}
+            />
+
+            <ul className="flex flex-col gap-1.5 border-t border-line pt-4 text-[13px] text-ink-2 md:gap-2">
+              <li>Free UK delivery on orders over {threshold.label}</li>
+              <li>Returns within {site.returnDays} days on ready-to-ship pieces</li>
+            </ul>
+
+            <Accordion panels={panels.filter((p) => !!p)} />
           </div>
-
-          <ProductForm
-            product={product}
-            dept={dept}
-            model={product.model}
-            delivery={plan}
-          />
-
-          <ul className="flex flex-col gap-1.5 border-t border-line pt-4 text-[13px] text-ink-2 md:gap-2">
-            <li>Free UK delivery on orders over {threshold.label}</li>
-            <li>Returns within {site.returnDays} days on ready-to-ship pieces</li>
-          </ul>
-
-          <Accordion panels={panels.filter((p) => !!p)} />
-        </div>
-      </section>
+        </section>
+      </ProductPhotos>
 
       {cloth && about && (
         <section aria-labelledby="about-cloth" className="bg-stone md:mt-[120px]">
