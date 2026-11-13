@@ -1,10 +1,13 @@
 // Tidies the search titles and descriptions that came over from the shop's old Shopify theme.
 
+// A tag, to its real end: a ">" inside a quoted attribute (class="[&>*]:…", as pasted from a chat
+// app) is not the end of it. Read as one, the rest of the tag was left in the text as words.
+const TAG = /<\/?[a-z!][^>"']*(?:(?:"[^"]*"|'[^']*')[^>"']*)*>/gi;
+
 /** Text with its HTML tags and the common entities taken out, and its spaces closed up. */
 export function plainText(html: string) {
   return html
-    .replace(/<(br|\/p|\/div|\/li)\b[^>]*>/gi, " ")
-    .replace(/<[^>]*>/g, "")
+    .replace(TAG, (tag) => (/^<(br|\/p|\/div|\/li)\b/i.test(tag) ? " " : ""))
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
