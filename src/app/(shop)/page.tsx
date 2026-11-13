@@ -351,8 +351,8 @@ export default async function HomePage() {
         {[
           {
             title: "Size guide",
-            body: "Garment measurements on every product page, in centimetres and inches",
-            more: ", with a note on how each piece is meant to fit",
+            body: "A size guide on every product page, with body measurements in centimetres and inches",
+            more: ", and a note on how each style is meant to fit",
             end: ".",
             link: { label: "See the size guide", href: "/help#size-guide" },
           },

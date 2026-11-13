@@ -4,6 +4,7 @@ import { ContactForm } from "@/components/contact-form";
 import { HelpNav } from "@/components/help-nav";
 import { deliveryThreshold, deliveryTimes } from "@/lib/catalog";
 import { site } from "@/lib/site";
+import { sizeCharts, toInches } from "@/lib/size-charts";
 
 export const metadata: Metadata = {
   title: "Help",
@@ -27,6 +28,12 @@ const RETURN_STEPS = [
   { title: "Start your return", text: "Use your order number and email to choose what you’re sending back." },
   { title: "Pack it up", text: "Unworn, with tags attached, in the original packaging if you still have it." },
   { title: "Send it back", text: `Once it arrives and passes our checks, we refund your original payment within ${site.refundDays} working days.` },
+];
+
+const MEASURE = [
+  { term: "Bust or chest", text: "Around the fullest part, with the tape level under your arms." },
+  { term: "Waist", text: "Around your natural waist, the narrowest part of your torso." },
+  { term: "Hips", text: "Around the fullest part, with your feet together." },
 ];
 
 const h2 = "font-display text-[36px] leading-[1.05] md:text-[44px]";
@@ -143,6 +150,71 @@ export default async function HelpPage() {
                 </div>
               ))}
             </dl>
+          </section>
+
+          {/* The same charts as the size guide that opens over a page, here in both units for anyone following a link to it. */}
+          <section id="size-guide" aria-labelledby="h-size-guide" className="flex scroll-mt-6 flex-col gap-10">
+            <div className="flex flex-col gap-5">
+              <h2 id="h-size-guide" className={h2}>
+                Size guide
+              </h2>
+              <p className="text-[15px] leading-[1.6] text-ink-2">
+                Body measurements for each size, in centimetres and inches. Measure yourself, then choose the size closest to you.
+              </p>
+              <dl className="border-t border-ink">
+                {MEASURE.map((m) => (
+                  <div key={m.term} className="flex flex-col gap-1 border-b border-line py-4 md:grid md:grid-cols-[200px_minmax(0,1fr)] md:gap-6">
+                    <dt className="font-medium">{m.term}</dt>
+                    <dd className="text-[15px] leading-[1.6] text-ink-2">{m.text}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+            {([["women", "Women"], ["men", "Men"]] as const).map(([dept, name]) => {
+              const chart = sizeCharts[dept];
+              return (
+                <div key={dept} className="flex flex-col gap-5">
+                  <h3 id={`h-sizes-${dept}`} className="font-display text-[26px] leading-[1.2]">
+                    {name}
+                  </h3>
+                  <div className="overflow-x-auto" tabIndex={0} role="region" aria-labelledby={`h-sizes-${dept}`}>
+                    <table className="w-full min-w-[520px] border-collapse text-[15px] tabular-nums">
+                      <thead>
+                        <tr>
+                          {[chart.sizeHead, chart.firstHead, "Waist", "Hips"].map((head) => (
+                            <th key={head} scope="col" className={`${th} pr-4`}>
+                              {head}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {chart.rows.map(([size, ...measures]) => (
+                          <tr key={size}>
+                            <th scope="row" className="border-b border-line py-3 pr-4 text-left font-medium">
+                              {size}
+                            </th>
+                            {measures.map((cm, i) => (
+                              <td key={i} className="border-b border-line py-3 pr-4">
+                                {cm} cm <span className="text-ink-2">/ {toInches(cm)} in</span>
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <dl className="flex flex-col gap-3 text-[15px] leading-[1.6]">
+                    {chart.fits.map((fit) => (
+                      <div key={fit.style}>
+                        <dt className="font-medium">{fit.style}</dt>
+                        <dd className="text-ink-2">{fit.note}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              );
+            })}
           </section>
 
           <section id="contact" aria-labelledby="h-contact" className="flex scroll-mt-6 flex-col gap-6">
