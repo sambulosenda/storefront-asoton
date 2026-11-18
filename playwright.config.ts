@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { whatsappOutbox } from "./e2e/helpers";
 
 const port = 3100;
 
@@ -35,6 +36,12 @@ export default defineConfig({
       SHOP_EMAIL: "shop@example.com",
       // Switches on the shop assistant. The fixture answers for Claude, so no real key is needed.
       ANTHROPIC_API_KEY: "test",
+      // Switches on WhatsApp. The fixture plays Meta's API and writes what would be sent to the outbox file.
+      WHATSAPP_ACCESS_TOKEN: "test",
+      WHATSAPP_APP_SECRET: "test-app-secret",
+      WHATSAPP_PHONE_NUMBER_ID: "100000000000001",
+      WHATSAPP_VERIFY_TOKEN: "test-verify-token",
+      WHATSAPP_OUTBOX: whatsappOutbox,
       // Google Analytics loads only after consent; the test blocks the request itself.
       NEXT_PUBLIC_GA_MEASUREMENT_ID: "G-TEST000000",
       // PostHog too: it loads only after consent, and the test answers its requests itself.

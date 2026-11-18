@@ -231,7 +231,17 @@ globalThis.fetch = async (input, init) => {
         headers: { "content-type": "application/json" },
       });
     }
-    const words = `You asked: ${question} See [Delivery details](/help#delivery).`.split(/(?<= )/);
+    const answer = `You asked: ${question} See [Delivery details](/help#delivery).`;
+    // WhatsApp (src/lib/whatsapp.ts) asks for the whole answer at once rather than streamed.
+    if (!JSON.parse(init.body).stream) {
+      const message = {
+        id: "msg_test", type: "message", role: "assistant", model: "claude-haiku-5-5",
+        content: [{ type: "text", text: answer }], stop_reason: "end_turn", stop_sequence: null,
+        usage: { input_tokens: 10, output_tokens: 10 },
+      };
+      return new Response(JSON.stringify(message), { headers: { "content-type": "application/json" } });
+    }
+    const words = answer.split(/(?<= )/);
     const event = (type, data) => `event: ${type}\ndata: ${JSON.stringify({ type, ...data })}\n\n`;
     const usage = { input_tokens: 10, output_tokens: words.length };
     const body = [
@@ -245,6 +255,14 @@ globalThis.fetch = async (input, init) => {
       event("message_stop", {}),
     ].join("");
     return new Response(body, { headers: { "content-type": "text/event-stream" } });
+  }
+  // WhatsApp messages the shop sends (src/lib/whatsapp.ts) go to Meta's API. Here each one is written as a line
+  // of JSON to the file in WHATSAPP_OUTBOX, where the test reads it, and nothing is sent.
+  if (url.startsWith("https://graph.facebook.com/")) {
+    process.getBuiltinModule("node:fs").appendFileSync(process.env.WHATSAPP_OUTBOX, `${JSON.stringify({ url, ...JSON.parse(init.body) })}\n`);
+    return new Response(JSON.stringify({ messaging_product: "whatsapp", messages: [{ id: "wamid.test" }] }), {
+      headers: { "content-type": "application/json" },
+    });
   }
   return realFetch(input, init);
 };
