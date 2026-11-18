@@ -10,6 +10,13 @@ import { MAX_QUESTION_LENGTH, type ChatMessage } from "./protocol";
 export const assistantEnabled = Boolean(process.env.ANTHROPIC_API_KEY);
 
 /**
+ * The smallest and cheapest current Claude model, which is plenty for answering from a page of facts. The
+ * website chat and WhatsApp both use it. Changing model is this one line: "claude-sonnet-5-5" is the next
+ * step up, at about twenty times the price.
+ */
+export const MODEL = "claude-haiku-5-5";
+
+/**
  * Everything the assistant knows and how it should behave, sent with every question as the "system
  * prompt". The facts come from the same places as the FAQs page and the size guide.
  *

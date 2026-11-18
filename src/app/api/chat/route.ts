@@ -2,13 +2,9 @@
 // to Claude with the shop's facts, and the answer streams back a few words at a time.
 
 import Anthropic from "@anthropic-ai/sdk";
-import { allowQuestion, assistantEnabled, readMessages, systemPrompt } from "@/lib/assistant";
+import { allowQuestion, assistantEnabled, MODEL, readMessages, systemPrompt } from "@/lib/assistant";
 import type { ChatEvent } from "@/lib/assistant/protocol";
 import { site } from "@/lib/site";
-
-// The smallest and cheapest current Claude model, which is plenty for answering from a page of facts.
-// Changing model is this one line: "claude-sonnet-5-5" is the next step up, at about twenty times the price.
-const MODEL = "claude-haiku-5-5";
 
 const FAILED = `Sorry, I couldn’t answer just then. Please try again, or email ${site.email}.`;
 const DECLINED = `Sorry, I can’t help with that. For anything about the shop, email ${site.email}.`;

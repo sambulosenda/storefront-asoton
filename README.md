@@ -66,7 +66,19 @@ To switch on the emails, make a free Resend account with the shop's inbox, creat
 
 The **Ask us** button opens a chat answered by [Claude](https://platform.claude.com/docs), Anthropic's AI model. It answers from the shop's own FAQs (`src/lib/faqs.ts`) and size charts (`src/lib/size-charts.ts`), the same ones the FAQs page and size guide show, so change an answer there and the assistant follows. It can't see orders or stock yet, and sends those questions to the shop's email and contact form.
 
-To switch it on, make an API key at [console.anthropic.com](https://console.anthropic.com) and set `ANTHROPIC_API_KEY`, then redeploy. Without the key the button doesn't show. Each question costs a fraction of a penny on the model it uses (`claude-haiku-5-5`, set in `src/app/api/chat/route.ts`), but the endpoint is public, so **set a monthly spend limit in the Anthropic Console** as the hard stop. The site also limits each visitor to 20 questions in ten minutes and keeps answers short. The server logs what each question cost in tokens (`[assistant] in …, from cache …`).
+To switch it on, make an API key at [console.anthropic.com](https://console.anthropic.com) and set `ANTHROPIC_API_KEY`, then redeploy. Without the key the button doesn't show. Each question costs a fraction of a penny on the model it uses (`claude-haiku-5-5`, set in `src/lib/assistant/index.ts`), but the endpoint is public, so **set a monthly spend limit in the Anthropic Console** as the hard stop. The site also limits each visitor to 20 questions in ten minutes and keeps answers short. The server logs what each question cost in tokens (`[assistant] in …, from cache …`).
+
+### On WhatsApp
+
+The same assistant can answer messages sent to the shop's WhatsApp number, through Meta's WhatsApp Cloud API. Meta posts each message to `/api/whatsapp` (`src/app/api/whatsapp/route.ts`), which checks Meta signed it, asks Claude with the same facts, and replies from the shop's number (`src/lib/whatsapp.ts`). Links to the site's pages arrive as full addresses built from `SITE_URL`. Photos and voice notes get a reply asking for text. Conversations are remembered for 30 minutes in the server's memory, so after a restart or on another server the assistant answers the latest message on its own; keeping them for good needs a database.
+
+The Meta app is **Storefront Assistant** at [developers.facebook.com/apps](https://developers.facebook.com/apps). To switch it on:
+
+1. Set `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_APP_SECRET` (App settings > Basic), `WHATSAPP_ACCESS_TOKEN` and `WHATSAPP_VERIFY_TOKEN` (any long random string you make up), with `ANTHROPIC_API_KEY`, and redeploy.
+2. In the app, **WhatsApp > Configuration > Webhook**: callback URL `https://<your site>/api/whatsapp` and the same verify token, then subscribe to the **messages** field. Meta can't reach `localhost`, so this needs the live site.
+3. While testing, Meta's test number only messages up to five phones added under **WhatsApp > API Setup**, and the token made there lasts a day. For customers, add the shop's own number there, make a permanent token for a system user in Business Settings > Users > System users (permissions `whatsapp_business_messaging` and `whatsapp_business_management`), and complete business verification.
+
+Each customer counts against the same 20 questions in ten minutes as the website chat. Replies to a customer within 24 hours of their message are free from Meta; the cost is Claude's, logged as `[whatsapp] in …, from cache …`.
 
 ## Analytics
 
@@ -86,7 +98,7 @@ The project is assumed to be on PostHog's EU cloud; set `NEXT_PUBLIC_POSTHOG_HOS
 ## Deploying to Vercel
 
 1. Sign in at [vercel.com](https://vercel.com) with GitHub and **Add New > Project**, then import `storefront-asoton`. Vercel finds Next.js on its own; keep the default build settings.
-2. Under **Environment Variables**, add `SHOPIFY_STORE_DOMAIN`, `SHOPIFY_STOREFRONT_ACCESS_TOKEN`, `SHOPIFY_STOREFRONT_API_VERSION`, `SITE_URL` (the address the site will live at, such as `https://africanclothingstore.co.uk`), `RESEND_API_KEY` and `SHOP_EMAIL` if the forms should send, `ANTHROPIC_API_KEY` for the shop assistant, and `NEXT_PUBLIC_GA_MEASUREMENT_ID` for Google Analytics and `NEXT_PUBLIC_POSTHOG_KEY` for PostHog.
+2. Under **Environment Variables**, add `SHOPIFY_STORE_DOMAIN`, `SHOPIFY_STOREFRONT_ACCESS_TOKEN`, `SHOPIFY_STOREFRONT_API_VERSION`, `SITE_URL` (the address the site will live at, such as `https://africanclothingstore.co.uk`), `RESEND_API_KEY` and `SHOP_EMAIL` if the forms should send, `ANTHROPIC_API_KEY` for the shop assistant, the four `WHATSAPP_` settings for it to answer on WhatsApp, and `NEXT_PUBLIC_GA_MEASUREMENT_ID` for Google Analytics and `NEXT_PUBLIC_POSTHOG_KEY` for PostHog.
 3. Click **Deploy**. Every push to `main` deploys again, and every pull request gets its own preview link.
 4. To use your own domain, add it under **Settings > Domains** and follow the DNS steps there, then change `SITE_URL` to it and redeploy (the sitemap and robots file are built with it).
 
