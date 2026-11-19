@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { site } from "../src/lib/site";
 import { acceptCookies } from "./helpers";
 
 // Claude is played by the fixture (e2e/fixtures/storefront.cjs): it repeats the question and adds a link.
@@ -68,4 +69,28 @@ test("on a phone the chat button sits above the product page's buy bar", async (
   await expect(bar).toBeVisible();
   const [button, buyBar] = await Promise.all([page.getByRole("button", { name: "Ask us" }).boundingBox(), bar.boundingBox()]);
   expect(button!.y + button!.height).toBeLessThanOrEqual(buyBar!.y);
+});
+
+test("when the assistant can't help, it offers WhatsApp with the question already typed", async ({ page }) => {
+  test.skip(!site.whatsapp, "Only once the shop has a WhatsApp number (site.whatsapp).");
+  await page.goto("/");
+  await page.getByRole("button", { name: "Ask us" }).click();
+  const chat = page.getByRole("dialog", { name: "Ask us" });
+  const log = chat.getByRole("log");
+
+  // An answer it could give has no button.
+  await chat.getByRole("button", { name: "How long does delivery take?" }).click();
+  await expect(log.getByRole("listitem")).toHaveCount(2);
+  await expect(chat.getByRole("link", { name: "Message us on WhatsApp" })).toHaveCount(0);
+
+  // One about a particular order offers WhatsApp, under that answer.
+  await chat.getByLabel("Your question").fill("Where is my order 1234?");
+  await chat.getByLabel("Your question").press("Enter");
+  const button = log.getByRole("listitem").nth(3).getByRole("link", { name: "Message us on WhatsApp" });
+  await expect(button).toBeVisible();
+  const href = new URL((await button.getAttribute("href"))!);
+  expect(href.origin + href.pathname).toBe(`https://wa.me/${site.whatsapp}`);
+  expect(href.searchParams.get("text")).toBe("Hi, I have a question: Where is my order 1234?");
+  await expect(button).toHaveAttribute("target", "_blank");
+  await expectAccessible(page);
 });

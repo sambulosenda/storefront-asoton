@@ -39,6 +39,12 @@ export const site = {
   returnDays: "30",
   email: "sales@africanclothingstore.co.uk",
   phone: "+44 1438 211744",
+  /**
+   * The WhatsApp number a person at the shop answers, as digits with the country code and no "+" (e.g. "447700900123").
+   * When the "Ask us" assistant can't help, it offers a button that opens a WhatsApp chat with this number. Not the
+   * number the assistant itself answers on (WHATSAPP_PHONE_NUMBER_ID). Empty: no button.
+   */
+  whatsapp: "447956849201",
   address: "Unit 41, The Mall, Luton LU1 2TD",
   /** The same address in parts, for the Organization data search engines read. Keep in step with `address`. */
   addressParts: { street: "Unit 41, The Mall", town: "Luton", postcode: "LU1 2TD", country: "GB" },

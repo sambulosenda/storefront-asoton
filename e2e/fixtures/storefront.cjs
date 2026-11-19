@@ -232,6 +232,7 @@ globalThis.fetch = async (input, init) => {
       });
     }
     const answer = `You asked: ${question} See [Delivery details](/help#delivery).`;
+    const handOff = question.includes("my order") && JSON.parse(init.body).tools?.some((tool) => tool.name === "offer_whatsapp");
     // WhatsApp (src/lib/whatsapp.ts) asks for the whole answer at once rather than streamed.
     if (!JSON.parse(init.body).stream) {
       const message = {
@@ -251,7 +252,15 @@ globalThis.fetch = async (input, init) => {
       event("content_block_start", { index: 0, content_block: { type: "text", text: "" } }),
       ...words.map((text) => event("content_block_delta", { index: 0, delta: { type: "text_delta", text } })),
       event("content_block_stop", { index: 0 }),
-      event("message_delta", { delta: { stop_reason: "end_turn", stop_sequence: null }, usage }),
+      // A question about "my order" is one it can't help with: after the answer it calls offer_whatsapp, as the
+      // real model is told to, when the chat offers it.
+      ...(handOff
+        ? [
+            event("content_block_start", { index: 1, content_block: { type: "tool_use", id: "toolu_test", name: "offer_whatsapp", input: {} } }),
+            event("content_block_stop", { index: 1 }),
+          ]
+        : []),
+      event("message_delta", { delta: { stop_reason: handOff ? "tool_use" : "end_turn", stop_sequence: null }, usage }),
       event("message_stop", {}),
     ].join("");
     return new Response(body, { headers: { "content-type": "text/event-stream" } });

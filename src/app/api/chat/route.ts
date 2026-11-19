@@ -7,6 +7,19 @@ import type { ChatEvent } from "@/lib/assistant/protocol";
 import { site } from "@/lib/site";
 
 const FAILED = `Sorry, I couldn’t answer just then. Please try again, or email ${site.email}.`;
+const HANDED_OFF = "I can’t help with that one here, but someone at the shop can. Tap the button below to message us on WhatsApp.";
+
+/**
+ * How the assistant says it couldn't help: it calls this tool, and the chat shows a button that opens WhatsApp
+ * with a person at the shop (site.whatsapp). Offered only when the shop has that number. Nothing runs when it is
+ * called; the call itself is the signal, so the conversation ends there rather than going back to the model.
+ */
+const OFFER_WHATSAPP: Anthropic.Tool = {
+  name: "offer_whatsapp",
+  description:
+    "Shows the customer a button that opens a WhatsApp chat with a person at the shop. Write your answer first, then call this, only when you couldn't fully help: the facts don't cover the question, it is about one particular order (where it is, changing, cancelling or returning it), or the customer asks to talk to a person. In that answer, say they can message the shop on WhatsApp with the button below, alongside the email or contact form. Don't call it for a question you answered from the facts.",
+  input_schema: { type: "object", properties: {} },
+};
 const DECLINED = `Sorry, I can’t help with that. For anything about the shop, email ${site.email}.`;
 
 // Made on the first question rather than when the file loads, so a build without a key still works.
@@ -40,6 +53,7 @@ export async function POST(request: Request) {
     // The system prompt is the same for every customer, so it's marked to be cached: after the first
     // question, Anthropic reads it back at a tenth of the price for the next five minutes.
     system: [{ type: "text", text: await systemPrompt(), cache_control: { type: "ephemeral" } }],
+    ...(site.whatsapp ? { tools: [OFFER_WHATSAPP] } : {}),
     messages,
   });
 
@@ -57,6 +71,11 @@ export async function POST(request: Request) {
         const message = await stream.finalMessage();
         // The model's safety checks can decline a question. That arrives as a normal reply with this reason.
         if (message.stop_reason === "refusal") send({ type: "error", message: DECLINED });
+        // It couldn't help: offer WhatsApp, with a line of its own if the model wrote nothing before the call.
+        else if (message.content.some((block) => block.type === "tool_use" && block.name === OFFER_WHATSAPP.name)) {
+          if (!message.content.some((block) => block.type === "text" && block.text.trim())) send({ type: "text", text: HANDED_OFF });
+          send({ type: "whatsapp" });
+        }
         // What the question cost, in tokens. After the first one, most of the input should be "from cache".
         const { input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens } = message.usage;
         console.log(

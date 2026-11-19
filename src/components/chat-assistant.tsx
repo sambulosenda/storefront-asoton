@@ -10,6 +10,14 @@ import { site } from "@/lib/site";
 const STARTERS = ["How long does delivery take?", "How do I find my size?", "Can I return something?"];
 const FAILED = "Sorry, that didn’t go through. Check your connection and try again.";
 
+/** A turn as the chat shows it. `whatsapp` marks an answer where the assistant couldn't help, so it offers WhatsApp. */
+type Shown = ChatMessage & { whatsapp?: boolean };
+
+/** Opens WhatsApp with a person at the shop, with the customer's question already typed. */
+function whatsappLink(question: string) {
+  return `https://wa.me/${site.whatsapp}?text=${encodeURIComponent(`Hi, I have a question: ${question}`)}`;
+}
+
 /** An error whose message is written for the customer. Any other error shows the FAILED line instead. */
 class ChatError extends Error {}
 
@@ -32,21 +40,23 @@ async function* readEvents(body: ReadableStream<Uint8Array>): AsyncGenerator<Cha
 export function ChatAssistant() {
   const [open, setOpen] = useState(false);
   // The conversation lives here, in the browser. The server keeps nothing, so every question sends all of it.
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<Shown[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   /** Sends a conversation that ends with the customer's question, and shows the answer as it is written. */
-  async function ask(conversation: ChatMessage[]) {
+  async function ask(conversation: Shown[]) {
     setMessages(conversation);
     setError(null);
     setBusy(true);
     let answer = "";
+    let whatsapp = false;
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: conversation }),
+        // Only the words go to the server.
+        body: JSON.stringify({ messages: conversation.map(({ role, content }) => ({ role, content })) }),
       });
       if (!response.ok || !response.body) {
         const refused = (await response.json().catch(() => null)) as { error?: string } | null;
@@ -54,8 +64,9 @@ export function ChatAssistant() {
       }
       for await (const event of readEvents(response.body)) {
         if (event.type === "error") throw new ChatError(event.message);
-        answer += event.text;
-        setMessages([...conversation, { role: "assistant", content: answer }]);
+        if (event.type === "whatsapp") whatsapp = true;
+        else answer += event.text;
+        setMessages([...conversation, { role: "assistant", content: answer, whatsapp }]);
       }
       if (!answer) throw new ChatError(FAILED);
     } catch (problem) {
@@ -100,7 +111,7 @@ function ChatPanel({
   onRetry,
   onClose,
 }: {
-  messages: ChatMessage[];
+  messages: Shown[];
   busy: boolean;
   error: string | null;
   onAsk: (question: string) => void;
@@ -178,6 +189,17 @@ function ChatPanel({
               >
                 <span className="sr-only">{message.role === "user" ? "You: " : "Assistant: "}</span>
                 {message.role === "user" ? message.content : <Answer text={message.content} onNavigate={onClose} />}
+                {message.whatsapp && site.whatsapp && (
+                  <a
+                    href={whatsappLink(messages[i - 1]?.content ?? "")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 flex min-h-11 items-center justify-between gap-3 border border-ink px-3.5 text-[14px] font-medium no-underline"
+                  >
+                    Message us on WhatsApp
+                    <ArrowRight size={16} className="flex-none" />
+                  </a>
+                )}
               </li>
             ))}
           </ol>
