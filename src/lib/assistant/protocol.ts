@@ -6,9 +6,10 @@ export type ChatMessage = { role: "user" | "assistant"; content: string };
 
 /**
  * The answer comes back as lines of JSON, one event a line, while the assistant is still writing:
- * `text` adds to the answer, and `error` ends it with words for the customer.
+ * `text` adds to the answer, `error` ends it with words for the customer, and `whatsapp` means the assistant
+ * couldn't help with this one, so the chat offers a WhatsApp message to a person at the shop.
  */
-export type ChatEvent = { type: "text"; text: string } | { type: "error"; message: string };
+export type ChatEvent = { type: "text"; text: string } | { type: "error"; message: string } | { type: "whatsapp" };
 
 /** The longest question the box takes, in characters. */
 export const MAX_QUESTION_LENGTH = 800;

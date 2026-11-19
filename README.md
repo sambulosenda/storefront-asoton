@@ -68,6 +68,8 @@ The **Ask us** button opens a chat answered by [Claude](https://platform.claude.
 
 To switch it on, make an API key at [console.anthropic.com](https://console.anthropic.com) and set `ANTHROPIC_API_KEY`, then redeploy. Without the key the button doesn't show. Each question costs a fraction of a penny on the model it uses (`claude-haiku-5-5`, set in `src/lib/assistant/index.ts`), but the endpoint is public, so **set a monthly spend limit in the Anthropic Console** as the hard stop. The site also limits each visitor to 20 questions in ten minutes and keeps answers short. The server logs what each question cost in tokens (`[assistant] in …, from cache …`).
 
+When it can't help (the facts don't cover a question, it's about one particular order, or the customer asks for a person), it shows a **Message us on WhatsApp** button under that answer. The button opens WhatsApp with a person at the shop, with the customer's question already typed. Set that number as `whatsapp` in `src/lib/site.ts` (digits with the country code, no "+"); left empty, there's no button.
+
 ### On WhatsApp
 
 The same assistant can answer messages sent to the shop's WhatsApp number, through Meta's WhatsApp Cloud API. Meta posts each message to `/api/whatsapp` (`src/app/api/whatsapp/route.ts`), which checks Meta signed it, asks Claude with the same facts, and replies from the shop's number (`src/lib/whatsapp.ts`). Links to the site's pages arrive as full addresses built from `SITE_URL`. Photos and voice notes get a reply asking for text. Conversations are remembered for 30 minutes in the server's memory, so after a restart or on another server the assistant answers the latest message on its own; keeping them for good needs a database.
